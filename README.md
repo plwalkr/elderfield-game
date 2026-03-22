@@ -13,7 +13,7 @@ A simple original retro top-down browser adventure inspired by classic 16-bit fi
 - **Interact:** Enter key or the mobile Enter button
 
 ## Goal
-Defeat every enemy in the field, then walk back to the shrine and interact with it.
+Defeat every enemy in the field, gather the rupees they drop, then walk back to the shrine and interact with it.
 
 ## Run locally
 Open `index.html` directly in a browser, or serve the folder with any simple local server.
@@ -26,19 +26,9 @@ Open `index.html` directly in a browser, or serve the folder with any simple loc
 5. Save.
 6. Open the generated Pages URL.
 
-## Good next upgrades
-- Hearts rendered as pixel icons instead of HUD text
-- Rupees and pickups
-- NPC dialogue and signs
-- Interior dungeon rooms
-- Sword cooldown tuning and enemy knockback polish
-- Pause menu and title music
-- Save points and multi-map zones
+## Upgrade pass v2.0.0 — Diagnostics Pass
 
-
-## Upgrade pass v2.0.0
-
-This build turns the old hidden overlay into a real diagnostics layer so you can verify GitHub uploads and copy a clean debug report fast.
+This build turned the old hidden overlay into a real diagnostics layer so you can verify GitHub uploads and copy a clean debug report fast.
 
 ### New in v2.0.0
 - always-visible on-screen build/version badge
@@ -50,9 +40,33 @@ This build turns the old hidden overlay into a real diagnostics layer so you can
 - runtime error capture for window errors and rejected promises
 - hitbox and aggro-circle rendering when debug draw is enabled
 
+## Upgrade pass v2.1.0 — Hero Pass
+
+This build adds the first real reward loop and a little more combat juice.
+
+### New in v2.1.0
+- pixel-style heart HUD instead of plain health text
+- rupee counter in the top HUD
+- enemies drop rupees when defeated
+- player can collect rupees directly in the field
+- stronger enemy knockback and hit feel
+- extra slash sparkle polish
+- area banner for major moments like entering the meadow or clearing the field
+- shrine victory flow now reports your rupee total
+- debug report now includes zone, rupees, pickups, and camera shake
+
 ### Debug shortcuts
 - `F3` or `` ` ``: toggle debug overlay
 - `F4`: toggle hitboxes and aggro circles
 - `F6`: clear all enemies
 - `H`: heal player
 - `F8`: reset the field
+
+## Good next upgrades
+- first cave or dungeon entrance
+- locked door + key system
+- rupee spend/use loop
+- NPC dialogue and signs
+- interior dungeon rooms
+- title screen music and effects
+- save points and multi-map zones

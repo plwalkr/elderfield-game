@@ -7,6 +7,10 @@
   const messageBox = document.getElementById("messageBox");
   const heartsValue = document.getElementById("heartsValue");
   const enemiesValue = document.getElementById("enemiesValue");
+  const rupeesValue = document.getElementById("rupeesValue");
+  const zoneValue = document.getElementById("zoneValue");
+  const areaBanner = document.getElementById("areaBanner");
+  const areaBannerTitle = document.getElementById("areaBannerTitle");
   const startCard = document.getElementById("startCard");
   const startButton = document.getElementById("startButton");
   const restartButton = document.getElementById("restartButton");
@@ -29,9 +33,10 @@
   const ATTACK_COOLDOWN = 0.25;
   const ATTACK_TIME = 0.13;
   const ENEMY_TOUCH_DAMAGE = 1;
-  const GAME_VERSION = "v2.0.0";
+  const GAME_VERSION = "v2.1.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Diagnostics Pass";
+  const BUILD_NAME = "Hero Pass";
+  const ZONE_NAME = "South Meadow";
 
   const keys = Object.create(null);
   const touchState = { up: false, down: false, left: false, right: false };
@@ -44,14 +49,19 @@
     logicalWidth: 480,
     logicalHeight: 270,
     camera: { x: 0, y: 0 },
+    cameraShake: { x: 0, y: 0, time: 0, power: 0 },
     world: [],
     solids: [],
     decorations: [],
     interactables: [],
     enemies: [],
+    pickups: [],
     particles: [],
     strikeDust: [],
     player: null,
+    rupees: 0,
+    zoneName: ZONE_NAME,
+    areaBannerTimer: 0,
     lastTime: 0,
     message: "",
     messageTimer: 0,
@@ -80,10 +90,38 @@
     state.debug.lastAction = text;
   }
 
+  function formatRupees(value) {
+    return String(value).padStart(3, "0");
+  }
+
+  function renderHearts(current, max) {
+    heartsValue.innerHTML = "";
+    for (let i = 0; i < max; i += 1) {
+      const heart = document.createElement("span");
+      const filled = i < current;
+      heart.className = `heart-icon ${filled ? "full" : "empty"}`;
+      if (filled && current <= 1) heart.classList.add("low");
+      heart.setAttribute("aria-hidden", "true");
+      heartsValue.appendChild(heart);
+    }
+  }
+
+  function showAreaBanner(title, time = 2.4) {
+    areaBannerTitle.textContent = title;
+    areaBanner.hidden = false;
+    state.areaBannerTimer = time;
+  }
+
+  function addCameraShake(power = 5, time = 0.12) {
+    state.cameraShake.power = Math.max(state.cameraShake.power, power);
+    state.cameraShake.time = Math.max(state.cameraShake.time, time);
+  }
+
   function syncBuildStamp() {
     versionValue.textContent = GAME_VERSION;
     debugBuildValue.textContent = GAME_VERSION;
     buildWatermark.textContent = `${GAME_VERSION} • ${BUILD_NAME}`;
+    zoneValue.textContent = state.zoneName;
   }
 
   function updateStatusUi() {
@@ -166,21 +204,25 @@
       `- Running=${state.running}`,
       `- Victory=${state.victory}`,
       `- GameOver=${state.gameOver}`,
+      `- Zone=${state.zoneName}`,
       ``,
       `Viewport`,
       `- LogicalSize=${state.logicalWidth}x${state.logicalHeight}`,
       `- CanvasBacking=${canvas.width}x${canvas.height}`,
       `- Camera=${state.camera.x.toFixed(1)}, ${state.camera.y.toFixed(1)}`,
+      `- CameraShake=${state.cameraShake.power.toFixed(2)} @ ${state.cameraShake.time.toFixed(3)}`,
       ``,
       `Player`,
       `- Pos=${player.x.toFixed(1)}, ${player.y.toFixed(1)}`,
       `- Health=${player.health}/${player.maxHealth}`,
+      `- Rupees=${state.rupees}`,
       `- Facing=${player.lastDir.x.toFixed(2)}, ${player.lastDir.y.toFixed(2)}`,
       `- AttackTimer=${player.attackTimer.toFixed(3)}`,
       `- Invuln=${player.invuln.toFixed(3)}`,
       ``,
       `World`,
       `- EnemiesAlive=${enemyCount}`,
+      `- Pickups=${state.pickups.length}`,
       `- Particles=${state.particles.length}`,
       `- StrikeDust=${state.strikeDust.length}`,
       ``,
@@ -333,6 +375,9 @@
     state.solids = make2DArray(WORLD_W, WORLD_H, false);
     state.decorations = [];
     state.interactables = [];
+    state.pickups = [];
+    state.rupees = 0;
+    state.zoneName = ZONE_NAME;
 
     for (let y = 0; y < WORLD_H; y += 1) {
       for (let x = 0; x < WORLD_W; x += 1) {
@@ -391,6 +436,7 @@
     };
 
     spawnEnemies();
+    showAreaBanner(state.zoneName, 2.8);
     updateHud();
   }
 
@@ -474,7 +520,7 @@
       y: tileY * TILE,
       w: TILE,
       h: TILE,
-      text: "The old shrine wakes only after every creature falls.",
+      text: "The old shrine wakes only after every creature falls. Gather the green shards they leave behind.",
     });
   }
 
@@ -497,6 +543,9 @@
       hurt: 0,
       dead: false,
       tint: index % 2 === 0 ? "moss" : "ember",
+      kbX: 0,
+      kbY: 0,
+      stun: 0,
     }));
   }
 
@@ -511,8 +560,10 @@
   }
 
   function updateHud() {
-    heartsValue.textContent = `${state.player.health}/${state.player.maxHealth}`;
+    renderHearts(state.player.health, state.player.maxHealth);
     enemiesValue.textContent = state.enemies.filter((e) => !e.dead).length;
+    rupeesValue.textContent = formatRupees(state.rupees);
+    zoneValue.textContent = state.zoneName;
     computeStatus();
   }
 
@@ -571,6 +622,27 @@
     return { x: vx / len, y: vy / len };
   }
 
+  function spawnPickup(x, y, kind = "rupeeGreen", value = 1) {
+    state.pickups.push({
+      x,
+      y,
+      w: 12,
+      h: 12,
+      kind,
+      value,
+      bob: Math.random() * Math.PI * 2,
+      life: 10,
+      collectDelay: 0.15,
+      vx: (Math.random() - 0.5) * 36,
+      vy: -18 - Math.random() * 16,
+    });
+  }
+
+  function spawnRupeeDrop(x, y) {
+    const blue = Math.random() > 0.8;
+    spawnPickup(x, y, blue ? "rupeeBlue" : "rupeeGreen", blue ? 5 : 1);
+  }
+
   function screenToWorld(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = state.logicalWidth / rect.width;
@@ -592,13 +664,16 @@
     player.attackCooldown = ATTACK_COOLDOWN;
     player.slashHitIds.clear();
 
-    state.strikeDust.push({
-      x: player.x + dir.x * 18,
-      y: player.y + dir.y * 18,
-      life: 0.18,
-      maxLife: 0.18,
-      dir,
-    });
+    addCameraShake(2.2, 0.08);
+    for (let i = 0; i < 3; i += 1) {
+      state.strikeDust.push({
+        x: player.x + dir.x * (16 + i * 5),
+        y: player.y + dir.y * (16 + i * 5),
+        life: 0.16 + i * 0.02,
+        maxLife: 0.2,
+        dir,
+      });
+    }
   }
 
   function currentSlashBox() {
@@ -633,12 +708,16 @@
         }
         item.active = true;
         state.victory = true;
+        state.running = false;
+        addCameraShake(5, 0.35);
+        showAreaBanner("Shrine Rekindled", 3.4);
+        burst(item.x + item.w / 2, item.y + item.h / 2, ["#d8ecff", "#93b9ff", "#fff3af"]);
         restartButton.hidden = false;
         startCard.hidden = false;
         startButton.hidden = true;
-        setMessage("The shrine answers your courage. Elderfield is safe.", 4.5);
+        setMessage(`The shrine answers your courage. Elderfield is safe. Rupees gathered: ${state.rupees}.`, 4.5);
         startCard.querySelector("h2").textContent = "Field Cleansed";
-        startCard.querySelector("p").textContent = "You cut down every creature in the meadow and rekindled the shrine. Next we can add items, dungeons, NPCs, and more.";
+        startCard.querySelector("p").textContent = `You cut down every creature in the meadow, gathered ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}, and rekindled the shrine. Next we can add items, dungeons, NPCs, and more.`;
         return;
       }
     }
@@ -676,20 +755,39 @@
           p.slashHitIds.add(enemy.id);
           enemy.health -= 1;
           enemy.hurt = 0.16;
+          enemy.stun = 0.12;
           const knock = normalize(enemy.x - p.x, enemy.y - p.y);
-          moveWithCollision(enemy, knock.x * 10, knock.y * 10);
-          spawnSpark(enemy.x, enemy.y, enemy.tint === "moss" ? "#9df58e" : "#ffb05a");
+          enemy.kbX = knock.x * 112;
+          enemy.kbY = knock.y * 112;
+          addCameraShake(enemy.health <= 0 ? 5 : 3.6, enemy.health <= 0 ? 0.18 : 0.12);
+          for (let i = 0; i < 4; i += 1) {
+            spawnSpark(enemy.x + (Math.random() - 0.5) * 8, enemy.y + (Math.random() - 0.5) * 8, enemy.tint === "moss" ? "#9df58e" : "#ffb05a");
+          }
           if (enemy.health <= 0) {
             enemy.dead = true;
-            burst(enemy.x, enemy.y, enemy.tint === "moss" ? ["#98f58d", "#d7ffd0"] : ["#ffb25e", "#fff0c2"]);
+            spawnRupeeDrop(enemy.x, enemy.y);
+            burst(enemy.x, enemy.y, enemy.tint === "moss" ? ["#98f58d", "#d7ffd0", "#fff6c2"] : ["#ffb25e", "#fff0c2", "#ffe1aa"]);
             updateHud();
             const alive = state.enemies.filter((e) => !e.dead).length;
             if (alive === 0) {
+              showAreaBanner("Field Cleared", 2.8);
               setMessage("Every foe has fallen. Return to the shrine and press Enter.", 4);
             }
           }
         }
       }
+    }
+
+    for (let i = state.pickups.length - 1; i >= 0; i -= 1) {
+      const pickup = state.pickups[i];
+      if (pickup.collectDelay > 0) continue;
+      if (!rectsOverlap(p, pickup)) continue;
+      state.rupees += pickup.value;
+      addCameraShake(1.2, 0.06);
+      burst(pickup.x, pickup.y, pickup.kind === "rupeeBlue" ? ["#7ac8ff", "#d8f1ff"] : ["#7de46e", "#eaffd8"]);
+      state.pickups.splice(i, 1);
+      updateHud();
+      setDebugAction(`pickup-${pickup.kind}`);
     }
 
     for (const enemy of state.enemies) {
@@ -699,6 +797,7 @@
         p.invuln = INVULN_TIME;
         const shove = normalize(p.x - enemy.x, p.y - enemy.y);
         moveWithCollision(p, shove.x * 18, shove.y * 18);
+        addCameraShake(4.2, 0.16);
         burst(p.x, p.y, ["#ff8a8a", "#ffe3e3"]);
         updateHud();
         if (p.health <= 0) {
@@ -709,7 +808,7 @@
           startButton.hidden = true;
           restartButton.hidden = false;
           startCard.querySelector("h2").textContent = "Felled in the Field";
-          startCard.querySelector("p").textContent = "The meadow won this round. Start again and cut a cleaner path.";
+          startCard.querySelector("p").textContent = `The meadow won this round. You still banked ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}. Start again and cut a cleaner path.`;
           setMessage("You were overwhelmed. Try a sharper route through the field.", 4);
         }
       }
@@ -722,6 +821,15 @@
       if (enemy.dead) continue;
       enemy.hurt = Math.max(0, enemy.hurt - dt);
       enemy.changeTimer -= dt;
+      enemy.stun = Math.max(0, enemy.stun - dt);
+
+      if (Math.abs(enemy.kbX) > 1 || Math.abs(enemy.kbY) > 1) {
+        moveWithCollision(enemy, enemy.kbX * dt, enemy.kbY * dt);
+        enemy.kbX *= 0.82;
+        enemy.kbY *= 0.82;
+      }
+
+      if (enemy.stun > 0) continue;
 
       const dx = p.x - enemy.x;
       const dy = p.y - enemy.y;
@@ -760,6 +868,21 @@
         if (p.life <= 0) bucket.splice(i, 1);
       }
     }
+
+    for (let i = state.pickups.length - 1; i >= 0; i -= 1) {
+      const pickup = state.pickups[i];
+      pickup.life -= dt;
+      pickup.collectDelay = Math.max(0, pickup.collectDelay - dt);
+      pickup.bob += dt * 5;
+      pickup.vx *= 0.92;
+      pickup.vy += 40 * dt;
+      pickup.vy *= 0.92;
+      pickup.x += pickup.vx * dt;
+      pickup.y += pickup.vy * dt;
+      if (pickup.life <= 0) {
+        state.pickups.splice(i, 1);
+      }
+    }
   }
 
   function burst(x, y, palette) {
@@ -790,12 +913,42 @@
     });
   }
 
+  function drawPickups() {
+    for (const pickup of state.pickups) {
+      const sx = pickup.x - state.camera.x;
+      const sy = pickup.y - state.camera.y + Math.sin(pickup.bob) * 2;
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(sx - 4, sy + 6, 8, 2);
+      if (pickup.kind === "rupeeBlue") {
+        ctx.fillStyle = "#67b8ff";
+        ctx.fillRect(sx - 4, sy - 6, 8, 12);
+        ctx.fillStyle = "#d8f1ff";
+        ctx.fillRect(sx - 2, sy - 4, 4, 8);
+      } else {
+        ctx.fillStyle = "#67db58";
+        ctx.fillRect(sx - 4, sy - 6, 8, 12);
+        ctx.fillStyle = "#e6ffd8";
+        ctx.fillRect(sx - 2, sy - 4, 4, 8);
+      }
+    }
+  }
+
   function updateCamera(dt) {
     const targetX = clamp(state.player.x - state.logicalWidth / 2, 0, WORLD_W * TILE - state.logicalWidth);
     const targetY = clamp(state.player.y - state.logicalHeight / 2, 0, WORLD_H * TILE - state.logicalHeight);
     const lerpFactor = 1 - Math.pow(0.001, dt * 2.2);
     state.camera.x += (targetX - state.camera.x) * lerpFactor;
     state.camera.y += (targetY - state.camera.y) * lerpFactor;
+
+    if (state.cameraShake.time > 0) {
+      state.cameraShake.time = Math.max(0, state.cameraShake.time - dt);
+      const fade = state.cameraShake.time <= 0 ? 0 : state.cameraShake.time / Math.max(state.cameraShake.time, 0.001);
+      state.camera.x += (Math.random() - 0.5) * state.cameraShake.power;
+      state.camera.y += (Math.random() - 0.5) * state.cameraShake.power;
+      state.cameraShake.power *= 0.82;
+    } else {
+      state.cameraShake.power = 0;
+    }
   }
 
   function clamp(v, min, max) {
@@ -806,6 +959,7 @@
     ctx.clearRect(0, 0, state.logicalWidth, state.logicalHeight);
     drawGround();
     drawWorldObjects();
+    drawPickups();
     drawInteractables();
     drawEnemies();
     drawPlayer();
@@ -937,14 +1091,17 @@
       } else if (item.type === "shrine") {
         const alive = state.enemies.filter((e) => !e.dead).length;
         const glow = alive === 0 || item.active;
+        const pulse = 0.55 + Math.sin(performance.now() / 220) * 0.25;
         ctx.fillStyle = glow ? "#93b9ff" : "#7f857f";
         ctx.fillRect(sx + 6, sy + 6, 36, 8);
         ctx.fillRect(sx + 10, sy + 14, 28, 22);
         ctx.fillStyle = glow ? "#d8ecff" : "#adb4aa";
         ctx.fillRect(sx + 18, sy + 18, 12, 12);
         if (glow) {
-          ctx.fillStyle = "rgba(150, 210, 255, 0.28)";
-          ctx.fillRect(sx + 14, sy + 14, 20, 20);
+          ctx.fillStyle = `rgba(150, 210, 255, ${0.18 + pulse * 0.25})`;
+          ctx.fillRect(sx + 12, sy + 12, 24, 24);
+          ctx.fillStyle = `rgba(255, 243, 176, ${0.08 + pulse * 0.12})`;
+          ctx.fillRect(sx + 8, sy + 8, 32, 32);
         }
       }
     }
@@ -1015,15 +1172,19 @@
     ctx.globalAlpha = alpha;
 
     if (Math.abs(dir.x) > Math.abs(dir.y)) {
-      ctx.fillStyle = "#f8f1d4";
-      ctx.fillRect(px + (dir.x > 0 ? 0 : -18), py - 3, 18, 6);
+      ctx.fillStyle = "#fff4ce";
+      ctx.fillRect(px + (dir.x > 0 ? 0 : -20), py - 4, 20, 8);
+      ctx.fillStyle = "#f6d86f";
+      ctx.fillRect(px + (dir.x > 0 ? 2 : -18), py - 2, 16, 4);
       ctx.fillStyle = "#cfd8e9";
-      ctx.fillRect(px + (dir.x > 0 ? 16 : -20), py - 2, 6, 4);
+      ctx.fillRect(px + (dir.x > 0 ? 17 : -22), py - 2, 6, 4);
     } else {
-      ctx.fillStyle = "#f8f1d4";
-      ctx.fillRect(px - 3, py + (dir.y > 0 ? 0 : -18), 6, 18);
+      ctx.fillStyle = "#fff4ce";
+      ctx.fillRect(px - 4, py + (dir.y > 0 ? 0 : -20), 8, 20);
+      ctx.fillStyle = "#f6d86f";
+      ctx.fillRect(px - 2, py + (dir.y > 0 ? 2 : -18), 4, 16);
       ctx.fillStyle = "#cfd8e9";
-      ctx.fillRect(px - 2, py + (dir.y > 0 ? 16 : -20), 4, 6);
+      ctx.fillRect(px - 2, py + (dir.y > 0 ? 17 : -22), 4, 6);
     }
 
     ctx.restore();
@@ -1037,6 +1198,8 @@
       ctx.globalAlpha = dust.life / dust.maxLife;
       ctx.fillStyle = "#fff8df";
       ctx.fillRect(sx - 4, sy - 4, 8, 8);
+      ctx.fillStyle = "#f6d86f";
+      ctx.fillRect(sx - 2, sy - 2, 4, 4);
       ctx.restore();
     }
 
@@ -1118,6 +1281,11 @@
     state.lastTime = ts;
     dt = Math.min(dt, 0.033);
 
+    if (state.areaBannerTimer > 0) {
+      state.areaBannerTimer = Math.max(0, state.areaBannerTimer - dt);
+      if (state.areaBannerTimer === 0) areaBanner.hidden = true;
+    }
+
     if (state.messageTimer > 0) {
       state.messageTimer = Math.max(0, state.messageTimer - dt);
       if (state.messageTimer === 0 && !state.victory && !state.gameOver) {
@@ -1146,8 +1314,13 @@
     state.lastTime = 0;
     state.camera.x = 0;
     state.camera.y = 0;
+    state.cameraShake.x = 0;
+    state.cameraShake.y = 0;
+    state.cameraShake.time = 0;
+    state.cameraShake.power = 0;
     state.particles.length = 0;
     state.strikeDust.length = 0;
+    state.pickups.length = 0;
     state.debug.errors.length = 0;
     state.debug.copyResult = "idle";
     setDebugAction("reset-game");

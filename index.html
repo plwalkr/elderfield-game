@@ -29,15 +29,24 @@
         <canvas id="gameCanvas" aria-label="Elderfield game"></canvas>
 
         <div class="hud hud-top">
-          <div class="hud-pill"><span class="label">Hearts</span><span id="heartsValue">5</span></div>
+          <div class="hud-pill hud-hearts-pill">
+            <span class="label">Hearts</span>
+            <div class="hearts-meter" id="heartsValue" aria-label="Hearts meter"></div>
+          </div>
           <div class="hud-pill"><span class="label">Enemies</span><span id="enemiesValue">0</span></div>
-          <div class="hud-pill"><span class="label">Zone</span><span>Elderfield</span></div>
-          <div class="hud-pill hud-build"><span class="label">Build</span><span id="versionValue">v2.0.0</span></div>
+          <div class="hud-pill"><span class="label">Rupees</span><span id="rupeesValue">000</span></div>
+          <div class="hud-pill"><span class="label">Zone</span><span id="zoneValue">South Meadow</span></div>
+          <div class="hud-pill hud-build"><span class="label">Build</span><span id="versionValue">v2.1.0</span></div>
           <div class="hud-pill status-pill" id="statusPill" data-state="good">
             <span class="status-dot"></span>
             <span class="label">Status</span>
             <span id="statusValue">GOOD</span>
           </div>
+        </div>
+
+        <div class="area-banner" id="areaBanner" hidden>
+          <span class="area-banner-overline">Region entered</span>
+          <strong id="areaBannerTitle">South Meadow</strong>
         </div>
 
         <div class="message-box" id="messageBox">Clear the field, then approach the shrine and press Enter.</div>
@@ -51,18 +60,18 @@
             <button class="debug-copy-btn" id="copyDebugButton" type="button">Copy Debug Report</button>
           </div>
           <div class="debug-status-row">
-            <span class="mini-badge">Build <strong id="debugBuildValue">v2.0.0</strong></span>
+            <span class="mini-badge">Build <strong id="debugBuildValue">v2.1.0</strong></span>
             <span class="mini-badge mini-status" id="debugStatusBadge" data-state="good">GOOD</span>
           </div>
           <pre id="debugContent">debug booting...</pre>
         </aside>
 
-        <div class="build-watermark" id="buildWatermark">v2.0.0 • Diagnostics Pass</div>
+        <div class="build-watermark" id="buildWatermark">v2.1.0 • Hero Pass</div>
 
         <div class="start-card" id="startCard">
           <h2>Elderfield</h2>
           <p>
-            The meadow is overrun. Cut through every creature, then return to the shrine and awaken it.
+            The meadow is overrun. Cut through every creature, gather what they drop, then return to the shrine and awaken it.
           </p>
           <div class="start-controls">
             <button id="startButton" class="primary-btn">Start Adventure</button>
