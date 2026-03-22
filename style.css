@@ -75,6 +75,24 @@ h1 {
   margin: 14px 0 0;
 }
 
+.story-seed {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+.story-seed span {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(13, 24, 18, 0.78);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #d6e5c4;
+  font-size: 0.92rem;
+}
+.story-seed strong {
+  color: var(--gold);
+  margin-right: 6px;
+}
+
 .legend {
   display: grid;
   gap: 10px;

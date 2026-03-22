@@ -1,4 +1,4 @@
-# Elderfield — World Bible Starter
+# Elderfield — World Bible Starter (v2.6.0)
 
 ## Core Promise
 Elderfield is a top-down action-adventure love letter to classic Zelda structure with heavier high-fantasy atmosphere, deeper history, and more emotional legendary weight.
@@ -6,43 +6,48 @@ Elderfield is a top-down action-adventure love letter to classic Zelda structure
 ## Tone
 Heroic, magical, adventurous, mysterious, ancient, beautiful, dangerous, and emotionally sincere.
 
-## Foundational Pillars
-- Top-down exploration with satisfying item progression
-- Memorable dungeons with strong identities
-- Hidden areas, secrets, tablets, relics, and side quests
-- An old kingdom with scars from older wars
-- Dragons that matter to the story and history
-- Sacred relics, wise figures, ruined roads, and rising corruption
+## Story Foundations
+- **Kingdom:** Elderfield
+- **Princess:** Elaria Vale
+- **Ancient Evil:** the Briar King
+- **Forgotten Order:** the Dawn Wardens
+- **Heroic Bloodline:** the Aurel line
+- **Sacred Shrine:** the Dawn Shrine
 
-## Working Story Spine
-A peaceful kingdom is beginning to stir under old shadows. A princess is trapped or taken by a dark force tied to ancient magic. The hero is connected to an older order or bloodline that once guarded the sacred relic roads. Recovering relics, opening temples, and learning the truth of the kingdom will lead to a greater confrontation with an ancient evil.
+## Dragon Foundations
+- **Vaelor the High Wyrm** — a wise dawn-dragon remembered in tablets and road-stones
+- **Cindervane** — a black-winged dragon name spoken with caution in ember lore
 
-## Early World Terms
-- Kingdom: Elderfield
-- Southern starting region: South Meadow
-- Northern stone region: North Ruins
-- Eastern forest region: East Woods
-- Western ash region: Ashen Reach
+## Current Regions
+- **Greenhollow** — the safer southern meadowlands where the first roads begin
+- **Crownfall Ruins** — old stone and shattered royal memory in the north
+- **Rootwood March** — root-bound eastern woods that remember blood and names
+- **Cinderreach** — western ash lands tied to oath, forge, and sleeping flame
 
-## Early Dungeon Identity
-1. Ancient Ruins
-   - Stone, memory, wardens, old kings
-   - Reward path: sacred blade growth / ancient martial legacy
+## Current Dungeon Identity
+1. **Crownfall Archive**
+   - stone, memory, wardens, royal oaths
+   - reward: **Aurel Crest**
+   - narrative role: remembers the Wardens and the Aurel line
 
-2. Rootwood Cavern
-   - Roots, sap, forgotten names, woodland oath
-   - Reward path: Wind Spear / reach / forest progression
+2. **Thornroot Hollow**
+   - roots, wind, old blood, hidden names
+   - reward: **Galespine Spear**
+   - narrative role: ties the hero to bloodline memory and Vaelor lore
 
-3. Ember Vault
-   - Heat, forge-oaths, sealed fire, ash
-   - Reward path: Ember Wand / ranged magic / ancient fire doors
+3. **Cinderwake Vault**
+   - forge-oaths, sleeping fire, sealed protection
+   - reward: **Cinderwake Wand**
+   - narrative role: hints that the princess was hidden beneath warded flame
 
-## Story Elements To Define Next
-- Princess name and role
-- Hero bloodline or order
-- Name of the ancient evil
-- The three relics and their deeper purpose
-- Dragon mythology
-- Major kingdom history beats
-- Key NPC cast
-- Temple sequence beyond the first three dungeons
+## Early Story Spine
+A peaceful kingdom is beginning to wake under old shadows. Princess Elaria Vale lies trapped in the Thornglass Sleep while the Briar King gathers strength beneath forgotten halls and root-bound roads. The relic roads of the Dawn Wardens are waking again, and a hand of the Aurel line appears to be answering them.
+
+## Things To Define Next
+- what the Thornglass Sleep actually is
+- the nature and true history of the Briar King
+- whether the hero knows their bloodline or learns it gradually
+- Vaelor's role in the late-game story
+- what Cindervane became and whether it can be redeemed
+- the kingdom capital, castle, and sacred temple names
+- key NPC arcs and factions

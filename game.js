@@ -40,52 +40,62 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.5.0";
+  const GAME_VERSION = "v2.6.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Visual Identity Pass";
-  const START_ZONE = "South Meadow";
+  const BUILD_NAME = "Lore & Structure Pass";
+  const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
+  const STORY = {
+    kingdom: "Elderfield",
+    princess: "Princess Elaria Vale",
+    evil: "the Briar King",
+    order: "the Dawn Wardens",
+    bloodline: "the Aurel line",
+    wiseDragon: "Vaelor the High Wyrm",
+    fallenDragon: "Cindervane",
+    shrine: "Dawn Shrine",
+  };
 
   const DUNGEONS = {
     ruins: {
       id: "ruins",
-      name: "Ancient Ruins",
-      overline: "North Ruins",
-      reward: "Blade Crest",
+      name: "Crownfall Archive",
+      overline: "Crownfall Ruins",
+      reward: "Aurel Crest",
       rewardType: "sword",
-      entranceText: "The old arch answers with cold blue fire.",
-      names: ["Threshold of Kings", "Archivist Walk", "Crown Sepulcher"],
+      entranceText: "Cold blue fire wakes in the arch as if it remembers your hand.",
+      names: ["Gate of Fallen Crowns", "Hall of Quiet Oaths", "Sepulcher of the First Warden"],
       theme: "ruins",
       bossTint: "stone",
     },
     rootwood: {
       id: "rootwood",
-      name: "Rootwood Cavern",
-      overline: "East Woods",
-      reward: "Wind Spear",
+      name: "Thornroot Hollow",
+      overline: "Rootwood March",
+      reward: "Galespine Spear",
       rewardType: "spear",
-      entranceText: "The cave breathes sap-scent and root-song.",
-      names: ["Hollow Root", "Spore Hall", "Verdant Keep"],
+      entranceText: "The hollow breathes sap-song, as if the roots still know your name.",
+      names: ["Rootwake Mouth", "Lantern Spoor", "Verdant Oathhall"],
       theme: "rootwood",
       bossTint: "vine",
     },
     ember: {
       id: "ember",
-      name: "Ember Vault",
-      overline: "Ashen Reach",
-      reward: "Ember Wand",
+      name: "Cinderwake Vault",
+      overline: "Cinderreach",
+      reward: "Cinderwake Wand",
       rewardType: "wand",
-      entranceText: "Heat shivers through the hatch below.",
-      names: ["Ashen Mouth", "Forge Gallery", "Molten Reliquary"],
+      entranceText: "Heat shivers through the hatch below like a sealed vow trying to breathe.",
+      names: ["Ashwake Descent", "Forge of Sleeping Oaths", "Reliquary of Fire"],
       theme: "ember",
       bossTint: "embersteel",
     },
   };
 
   const WEAPONS = {
-    sword: { id: "sword", name: "Sword", iconClass: "weapon-sword", damage: 1, reach: 30, cooldown: 0.24, attackTime: 0.13, narrow: false },
-    spear: { id: "spear", name: "Wind Spear", iconClass: "weapon-spear", damage: 2, reach: 48, cooldown: 0.17, attackTime: 0.09, narrow: true, rapid: true },
-    wand: { id: "wand", name: "Ember Wand", iconClass: "weapon-wand", damage: 1, reach: 0, cooldown: 0.15, attackTime: 0.04, projectile: true, rapid: true, projectileSpeed: 330, projectileLife: 1.05 },
+    sword: { id: "sword", name: "Warden Blade", iconClass: "weapon-sword", damage: 1, reach: 30, cooldown: 0.24, attackTime: 0.13, narrow: false },
+    spear: { id: "spear", name: "Galespine Spear", iconClass: "weapon-spear", damage: 2, reach: 48, cooldown: 0.17, attackTime: 0.09, narrow: true, rapid: true },
+    wand: { id: "wand", name: "Cinderwake Wand", iconClass: "weapon-wand", damage: 1, reach: 0, cooldown: 0.15, attackTime: 0.04, projectile: true, rapid: true, projectileSpeed: 330, projectileLife: 1.05 },
   };
 
   const keys = Object.create(null);
@@ -106,7 +116,7 @@
     player: null,
     rupees: 0,
     zoneName: START_ZONE,
-    objectiveText: "Find the three dungeon paths across Elderfield.",
+    objectiveText: "Walk the relic roads of the Dawn Wardens and learn why Princess Elaria was hidden away.",
     areaBannerTimer: 0,
     message: "",
     messageTimer: 0,
@@ -348,6 +358,12 @@
       `- Region=${state.zoneName}`,
       `- Objective=${state.objectiveText}`,
       ``,
+      `Lore`,
+      `- Princess=${STORY.princess}`,
+      `- AncientEvil=${STORY.evil}`,
+      `- Order=${STORY.order}`,
+      `- Bloodline=${STORY.bloodline}`,
+      ``,
       `Viewport`,
       `- LogicalSize=${state.logicalWidth}x${state.logicalHeight}`,
       `- CanvasBacking=${canvas.width}x${canvas.height}`,
@@ -519,16 +535,16 @@
     state.player = makePlayer();
     state.areas = buildAreas();
     setArea("overworld", "start", true);
-    state.objectiveText = "Travel the field. Find the three dungeon paths, claim their relics, and read what the old stones remember.";
+    state.objectiveText = "Walk the relic roads of the Dawn Wardens. Read the old stones and learn why Princess Elaria was hidden away.";
     startCard.hidden = true;
     startButton.hidden = false;
     restartButton.hidden = true;
     startTitle.textContent = "Elderfield";
-    startText.textContent = "Three relic roads cut across the kingdom. Claim each sacred reward, read the old stones, and carry the first sparks of Elderfield\'s deeper legend.";
+    startText.textContent = "Princess Elaria sleeps beneath the Thorn Veil while the Briar King gathers strength in the old places. Walk the three relic roads, claim what the Dawn Wardens hid, and discover why the blood of Aurel was called again.";
     setDebugAction("reset-game");
     updateHud();
     refreshDebugPanel();
-    setMessage("Explore the kingdom. Press Enter near tablets, gates, signs, and the shrine.", 4);
+    setMessage("Explore the kingdom. Press Enter near tablets, gates, signs, and the Dawn Shrine. The old stones remember more than men do.", 4.4);
     showAreaBanner(state.zoneName, "Region entered", 2.8);
   }
 
@@ -712,10 +728,10 @@
   function buildOverworld() {
     const area = makeArea("overworld", WORLD_AREA_NAME, 160, 96, 0, "field");
     area.regions = [
-      { name: "South Meadow", x: 40, y: 58, w: 80, h: 32 },
-      { name: "North Ruins", x: 54, y: 8, w: 48, h: 28 },
-      { name: "East Woods", x: 114, y: 20, w: 34, h: 34 },
-      { name: "Ashen Reach", x: 10, y: 22, w: 36, h: 34 },
+      { name: "Crownfall Ruins", x: 50, y: 2, w: 56, h: 34 },
+      { name: "Rootwood March", x: 108, y: 12, w: 50, h: 42 },
+      { name: "Cinderreach", x: 2, y: 16, w: 48, h: 42 },
+      { name: "Greenhollow", x: 18, y: 50, w: 126, h: 44 },
     ];
 
     for (let y = 0; y < area.height; y += 1) {
@@ -776,7 +792,7 @@
       y: 53 * TILE,
       w: TILE,
       h: TILE,
-      text: "North lies old stone, east lies root and shadow, west lies ash and fire. Bring every relic home.",
+      text: "North waits Crownfall, east waits Rootwood, west waits Cinderreach. Walk every relic road and bring their light home to the Dawn Shrine.",
     });
 
 
@@ -786,7 +802,7 @@ area.interactables.push({
   y: 18 * TILE,
   w: TILE * 2,
   h: TILE * 2,
-  text: "Tablet of Kings: When dragonfire lit the northern crowns, the Wardens sealed three roads beneath stone, root, and ember.",
+  text: "Tablet of Crowns: When the Briar King first rose, the Dawn Wardens sealed three roads beneath stone, root, and ember and hid the crown-heir from his grasp.",
 });
 
 area.interactables.push({
@@ -795,7 +811,7 @@ area.interactables.push({
   y: 36 * TILE,
   w: TILE * 2,
   h: TILE * 2,
-  text: "Tablet of Roots: The green road once answered the keepers of the old blood. Even now the woods remember names the kingdom has forgotten.",
+  text: "Tablet of Roots: The green road answered only the old blood of Aurel. Even now the roots turn toward a forgotten heir and away from oathbreakers.",
 });
 
 area.interactables.push({
@@ -804,7 +820,7 @@ area.interactables.push({
   y: 41 * TILE,
   w: TILE * 2,
   h: TILE * 2,
-  text: "Tablet of Ash: Beneath the western stone, heat and oath were bound together. Break neither lightly.",
+  text: "Tablet of Ash: Beneath the western stone, fire was chained to oath. The wand of Cinderwake would guard the princess should shadow breach the gates.",
 });
 
     area.interactables.push({
@@ -844,6 +860,24 @@ area.interactables.push({
       targetAreaId: "ember_1",
       targetSpawn: "entry",
       text: DUNGEONS.ember.entranceText,
+    });
+
+    area.interactables.push({
+      type: "loreTablet",
+      x: 72 * TILE,
+      y: 72 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: "Shrine Stone: Let the hand of Aurel walk the relic roads. Let the Dawn Shrine remain dark until Princess Elaria can be named in safety.",
+    });
+
+    area.interactables.push({
+      type: "loreTablet",
+      x: 100 * TILE,
+      y: 60 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: "Waystone of Vaelor: In the elder years the high wyrm Vaelor circled these roads in silver dawnfire. Only one black wing answered him and was not forgiven.",
     });
 
     area.spawns.start = { x: 80.5 * TILE, y: 88.5 * TILE };
@@ -925,6 +959,19 @@ area.interactables.push({
       openText: "The first gate wakes and opens.",
     });
     area.interactables.push({
+      type: "loreTablet",
+      x: 27 * TILE,
+      y: 15 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: dungeonId === "ruins"
+        ? "Inscription: Here the Dawn Wardens swore that the Aurel line would keep the crown roads sealed until thorn returned."
+        : dungeonId === "rootwood"
+          ? "Moss script: Vaelor once watched these woods and answered only wardens who carried the old oath in their blood."
+          : "Forge mark: In the red years, smith-priests chained sleeping flame to oath and named it Cinderwake.",
+    });
+
+    area.interactables.push({
       type: "dungeonKeyPedestal",
       dungeonId,
       x: 16 * TILE,
@@ -981,6 +1028,19 @@ area.interactables.push({
       title: "Return stair",
       openText: "You step back toward the entry chamber.",
     });
+    area.interactables.push({
+      type: "loreTablet",
+      x: 30 * TILE,
+      y: 15 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: dungeonId === "ruins"
+        ? "Inscription: Princess Elaria was hidden not from death, but from waking shadow. The seal would hold only while the relic roads slept."
+        : dungeonId === "rootwood"
+          ? "Moss script: The roots know true names. They bent aside from oathbreakers and toward the lost heir when the Briar King came."
+          : "Forge mark: When the Briar King sought the princess, the last wardens sent her beneath sleeping flame and swore no tyrant would wake her.",
+    });
+
     area.interactables.push({
       type: "lockedSeal",
       dungeonId,
@@ -1039,6 +1099,19 @@ area.interactables.push({
       openText: "You retreat through the opened seal.",
     });
     area.interactables.push({
+      type: "loreTablet",
+      x: 30 * TILE,
+      y: 17 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: dungeonId === "ruins"
+        ? "Inscription: Should dragonfire fail and wardens fall, let the crest choose the hand that remembers."
+        : dungeonId === "rootwood"
+          ? "Moss script: The spear was cut for the road between worlds, to pierce bramble, veil, and spell."
+          : "Forge mark: Beware the black-wing Cindervane, for dragonfire may guard a kingdom or ruin it alike.",
+    });
+
+    area.interactables.push({
       type: "rewardChest",
       dungeonId,
       x: 18 * TILE,
@@ -1072,7 +1145,7 @@ area.interactables.push({
       tint: DUNGEONS[dungeonId].bossTint,
       type: "knight",
       isBoss: true,
-      bossName: dungeonId === "ruins" ? "Stone Warden" : dungeonId === "rootwood" ? "Rootbound Knight" : "Ashen Knight",
+      bossName: dungeonId === "ruins" ? "Caldris, Stone Warden" : dungeonId === "rootwood" ? "Mirethorn Knight" : "Ashen Castellan",
       damage: dungeonId === "ember" ? 3 : 2,
       touchPush: 28,
       dashCooldown: dungeonId === "ruins" ? 1.4 : 1.9,
@@ -1185,23 +1258,23 @@ area.interactables.push({
     const progress = dungeonProgress(dungeonId);
 
     if (state.victory) {
-      state.objectiveText = "Shrine rekindled. Elderfield is awake.";
+      state.objectiveText = "The Dawn Shrine blazes again. Elderfield remembers its name.";
       return;
     }
 
     if (dungeonId && progress) {
-      if (area.roomIndex === 1) state.objectiveText = progress.keyOwned ? "Take the depth gate upward." : "Clear the chamber and claim the dungeon key.";
-      else if (area.roomIndex === 2) state.objectiveText = progress.sealUnlocked ? "Push deeper toward the knight." : "Quiet this hall and open the Knight Seal.";
-      else if (area.roomIndex === 3) state.objectiveText = progress.rewardGranted ? "Take the ascent and return to the field." : "Defeat the knight and claim the relic chest.";
+      if (area.roomIndex === 1) state.objectiveText = progress.keyOwned ? "Take the depth gate and follow the Warden road inward." : "Clear the chamber and claim the Warden key.";
+      else if (area.roomIndex === 2) state.objectiveText = progress.sealUnlocked ? "Push deeper toward the guardian knight." : "Quiet this hall and wake the Knight Seal.";
+      else if (area.roomIndex === 3) state.objectiveText = progress.rewardGranted ? "Take the ascent and carry the relic back into daylight." : "Defeat the guardian and claim the sacred relic.";
       return;
     }
 
     if (!allDungeonsCleared()) {
-      state.objectiveText = `Relics ${state.rewardsOwned.length}/3 — seek the remaining relic roads of the old kingdom.`;
+      state.objectiveText = `Relics ${state.rewardsOwned.length}/3 — seek the remaining Warden roads before the Briar King wakes fully.`;
     } else if (!state.overworld.fieldCleared) {
-      state.objectiveText = "All relics claimed. Clear the field and return to the shrine.";
+      state.objectiveText = "All relics claimed. Quiet the kingdom road and return to the Dawn Shrine.";
     } else {
-      state.objectiveText = "Return to the shrine and press Enter.";
+      state.objectiveText = "Return to the Dawn Shrine and press Enter.";
     }
   }
 
@@ -1504,7 +1577,11 @@ function onAreaEnemiesCleared(area) {
     if (exitPortal) exitPortal.visible = true;
 
     showAreaBanner("Sacred Relic Claimed", reward, 3);
-    setMessage(`${reward} obtained. Ancient doors remember your hand. The ascent gate is now awake.`, 4);
+    setMessage(dungeonId === "ruins"
+      ? `${reward} obtained. The Warden Blade remembers an older edge, and the crown-road answers your hand.`
+      : dungeonId === "rootwood"
+        ? `${reward} obtained. Wind, root, and hidden roads now answer your stride.`
+        : `${reward} obtained. Sleeping flame bends to your hand, and ember-sealed doors stir awake.`, 4.2);
     updateObjective();
     updateHud();
   }
@@ -1526,26 +1603,26 @@ function onAreaEnemiesCleared(area) {
 
       if (item.type === "shrine") {
         if (!allDungeonsCleared()) {
-          setMessage(`The shrine is still missing ${3 - state.rewardsOwned.length} relic${3 - state.rewardsOwned.length === 1 ? "" : "s"}.`, 3);
+          setMessage(`The Dawn Shrine still lacks ${3 - state.rewardsOwned.length} relic${3 - state.rewardsOwned.length === 1 ? "" : "s"}. Princess Elaria remains beyond the Thorn Veil.`, 3.5);
           return;
         }
         if (!state.overworld.fieldCleared) {
           const alive = area.enemies.filter((e) => !e.dead).length;
-          setMessage(`The shrine still hears ${alive} field foe${alive === 1 ? "" : "s"}.`, 3);
+          setMessage(`The Dawn Shrine still hears ${alive} field foe${alive === 1 ? "" : "s"}. Peace the road before you call its fire.`, 3.2);
           return;
         }
         item.active = true;
         state.victory = true;
         state.running = false;
         addCameraShake(6, 0.35);
-        showAreaBanner("Shrine Rekindled", "Victory", 3.4);
+        showAreaBanner("Dawn Shrine Rekindled", "Victory", 3.4);
         burst(item.x + item.w / 2, item.y + item.h / 2, ["#d8ecff", "#93b9ff", "#fff3af"]);
         startCard.hidden = false;
         startButton.hidden = true;
         restartButton.hidden = false;
-        startTitle.textContent = "Elderfield Rekindled";
-        startText.textContent = `You reclaimed all three relics — ${state.rewardsOwned.join(", ")} — and rekindled the first hope of the kingdom.`;
-        setMessage(`Victory. Relics: ${state.rewardsOwned.join(", ")} • Rupees: ${state.rupees}.`, 4.4);
+        startTitle.textContent = "The First Dawn Rekindled";
+        startText.textContent = `You reclaimed all three relics — ${state.rewardsOwned.join(", ")} — and rekindled the first hope of Elderfield against the Briar King.`;
+        setMessage(`Victory. The Dawn Shrine burns again. Relics: ${state.rewardsOwned.join(", ")} • Rupees: ${state.rupees}.`, 4.4);
         updateObjective();
         updateHud();
         return;
@@ -2638,7 +2715,7 @@ function drawDebug() {
     };
     state.areas = buildAreas();
     setArea("overworld", "start", true);
-    setMessage("Press Start, move with WASD, click or tap to attack, Enter to interact.", 999);
+    setMessage("Press Start, move with WASD, click or tap to attack, and Enter to read stones, gates, and the Dawn Shrine.", 999);
     computeStatus();
     refreshDebugPanel();
     requestAnimationFrame(loop);

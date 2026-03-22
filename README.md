@@ -1,13 +1,22 @@
-# Elderfield — v2.5.0 Visual Identity Pass
+# Elderfield — v2.6.0 Lore & Structure Pass
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v2.5.0
-- lighter HUD with less top-edge obstruction
-- visual detail pass on grass, stone, water, trees, ruins, enemies, and player sprite
-- first overworld lore tablets
-- clearer debug reporting with the full overworld labeled as Kingdom of Elderfield and regions reported separately
-- version badge updated to `v2.5.0 • Visual Identity Pass`
+## New in v2.6.0
+- named story foundations for the kingdom, princess, dark force, old order, and bloodline
+- stronger relic identity with **Aurel Crest**, **Galespine Spear**, and **Cinderwake Wand**
+- reworked region and dungeon naming for a more legendary high-fantasy tone
+- new lore tablets across the overworld and inside each dungeon path
+- richer opening text and start-card story framing
+- debug report now includes a small lore section for quick verification
+- version badge updated to `v2.6.0 • Lore & Structure Pass`
+
+## Story foundations introduced here
+- **Princess:** Elaria Vale
+- **Ancient Evil:** the Briar King
+- **Forgotten Order:** the Dawn Wardens
+- **Heroic Line:** the Aurel line
+- **Dragon Names:** Vaelor the High Wyrm, Cindervane
 
 ## Controls
 - **Move:** WASD or Arrow Keys
@@ -29,13 +38,15 @@ A browser-playable top-down fantasy adventure built with plain HTML, CSS, and Ja
 - `README.md`
 - `WORLD_BIBLE_STARTER.md`
 - `VERSION_SPINE.md`
+- `LORE_FOUNDATION.md`
 
 ## GitHub Pages
 Upload the files to your repo root and enable GitHub Pages from the main branch root.
 
 ## Verify the update worked
 Look for:
-- on-screen build badge: `v2.5.0 • Visual Identity Pass`
-- smaller HUD footprint
-- first lore tablets in the overworld
-- debug report showing region and world area more clearly
+- on-screen build badge: `v2.6.0 • Lore & Structure Pass`
+- story seed box in the left panel
+- renamed relics and dungeons
+- additional lore tablets in the overworld and dungeons
+- debug report including Princess / AncientEvil / Order / Bloodline
