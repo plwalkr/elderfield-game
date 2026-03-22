@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Elderfield — Lore & Structure Pass</title>
+  <title>Elderfield — Save & Progress Pass</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -58,16 +58,19 @@
           <div class="boss-health" id="bossHealthValue">0 / 0</div>
         </div>
 
-        <div class="hud-cluster hud-right">
-          <div class="hud-strip" id="weaponHud" aria-label="Weapons"></div>
-          <div class="hud-strip" id="dungeonHud" aria-label="Dungeon progress"></div>
+        <div class="hud-cluster hud-top-right">
           <div class="hud-meta">
-            <div class="build-watermark" id="buildWatermark">v2.6.0 • Lore & Structure Pass</div>
+            <div class="build-watermark" id="buildWatermark">v2.7.0 • Save & Progress Pass</div>
             <div class="status-pill" id="statusPill" data-state="good">
               <span class="status-dot"></span>
               <span id="statusValue">GOOD</span>
             </div>
           </div>
+        </div>
+
+        <div class="hud-cluster hud-right">
+          <div class="hud-strip" id="weaponHud" aria-label="Weapons"></div>
+          <div class="hud-strip" id="dungeonHud" aria-label="Dungeon progress"></div>
         </div>
 
         <div class="area-banner" id="areaBanner" hidden>
@@ -86,7 +89,7 @@
             <button class="debug-copy-btn" id="copyDebugButton" type="button">Copy Debug Report</button>
           </div>
           <div class="debug-status-row">
-            <span class="mini-badge">Build <strong id="debugBuildValue">v2.6.0</strong></span>
+            <span class="mini-badge">Build <strong id="debugBuildValue">v2.7.0</strong></span>
             <span class="mini-badge mini-status" id="debugStatusBadge" data-state="good">GOOD</span>
             <span class="mini-badge mini-zone"><strong id="zoneValue">South Meadow</strong></span>
             <span class="mini-badge mini-objective"><span id="objectiveValue">Find a dungeon.</span></span>
@@ -100,7 +103,9 @@
             Princess Elaria lies in the Thornglass Sleep while the Briar King gathers strength beneath the old kingdom. Walk the relic roads of the Dawn Wardens, read what the stones remember, and learn why the blood of Aurel has been called again.
           </p>
           <div class="start-controls">
-            <button id="startButton" class="primary-btn">Start Adventure</button>
+            <button id="startButton" class="primary-btn">Continue Adventure</button>
+            <button id="newGameButton" class="ghost-btn">New Journey</button>
+            <button id="clearSaveButton" class="ghost-btn" hidden>Delete Save</button>
             <button id="restartButton" class="ghost-btn" hidden>Restart</button>
           </div>
         </div>

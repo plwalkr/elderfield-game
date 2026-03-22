@@ -1,4 +1,4 @@
-# Elderfield — Planned Version Spine (updated at v2.6.0)
+# Elderfield — Planned Version Spine (updated through v2.7.0)
 
 ## Current Build
 - **v2.6.0 — Lore & Structure Pass**

@@ -17,25 +17,26 @@
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
-  min-height: 100%;
+  height: 100%;
   background:
     radial-gradient(circle at top, rgba(82, 124, 89, 0.18), transparent 40%),
     linear-gradient(180deg, var(--bg-2), var(--bg-0));
   color: var(--text);
   font-family: "Trebuchet MS", "Verdana", sans-serif;
 }
-body { min-height: 100vh; }
+body { min-height: 100vh; overflow: hidden; }
 button { font: inherit; }
 
 .app-shell {
   width: min(1800px, 100%);
   margin: 0 auto;
+  height: 100dvh;
   padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
     max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   display: grid;
   grid-template-columns: 272px minmax(0, 1fr);
   gap: 16px;
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 .title-panel,
@@ -43,6 +44,7 @@ button { font: inherit; }
   background: linear-gradient(180deg, rgba(9, 19, 13, 0.92), rgba(10, 18, 13, 0.78));
   border: 1px solid var(--line);
   box-shadow: 0 18px 40px var(--shadow);
+  min-height: 0;
 }
 
 .title-panel {
@@ -52,6 +54,7 @@ button { font: inherit; }
   flex-direction: column;
   justify-content: space-between;
   gap: 16px;
+  overflow: auto;
 }
 
 .eyebrow {
@@ -108,12 +111,15 @@ h1 {
 .game-panel {
   border-radius: 28px;
   padding: 10px;
+  display: flex;
+  min-height: 0;
 }
 
 .canvas-wrap {
   position: relative;
   width: 100%;
-  min-height: 90vh;
+  height: 100%;
+  min-height: 0;
   border-radius: 22px;
   overflow: hidden;
   background: #061009;
@@ -138,6 +144,7 @@ canvas {
   pointer-events: none;
 }
 .hud-left { left: 10px; align-items: flex-start; flex-wrap: wrap; max-width: 40%; }
+.hud-top-right { right: 10px; top: 8px; align-items: flex-start; }
 .hud-right { right: 10px; top: auto; bottom: 10px; flex-direction: column; align-items: flex-end; }
 
 .hud-chip,
@@ -492,6 +499,7 @@ canvas {
   display: flex;
   justify-content: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 .primary-btn, .ghost-btn {
   padding: 11px 18px;
@@ -550,15 +558,17 @@ canvas {
 .action-btn.interact { left: 0; bottom: 0; width: 62px; height: 62px; }
 
 @media (max-width: 1120px) {
-  .app-shell { grid-template-columns: 1fr; }
-  .title-panel { order: 2; }
-  .game-panel { order: 1; }
+  body { overflow: auto; }
+  .app-shell { grid-template-columns: 1fr; height: auto; min-height: 100dvh; overflow: visible; }
+  .title-panel { order: 2; max-height: 34vh; }
+  .game-panel { order: 1; min-height: 58vh; }
 }
 
 @media (max-width: 760px) {
-  .canvas-wrap { min-height: 80vh; }
+  .canvas-wrap { min-height: 58vh; }
   .hud-left { max-width: calc(100% - 24px); }
   .hud-right { left: auto; right: 10px; bottom: 84px; top: auto; }
+  .hud-top-right { right: 10px; top: 8px; }
   .hud-meta { flex-direction: column; align-items: flex-end; }
   .build-watermark { font-size: 0.66rem; }
   .message-box {
@@ -573,7 +583,7 @@ canvas {
 }
 
 @media (max-width: 540px) {
-  .title-panel { padding: 18px 16px; }
+  .title-panel { padding: 18px 16px; max-height: 40vh; }
   .legend { grid-template-columns: 1fr; }
   .area-banner { top: 52px; }
   .debug-panel {

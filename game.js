@@ -20,6 +20,8 @@
   const startTitle = startCard.querySelector("h2");
   const startText = startCard.querySelector("p");
   const startButton = document.getElementById("startButton");
+  const newGameButton = document.getElementById("newGameButton");
+  const clearSaveButton = document.getElementById("clearSaveButton");
   const restartButton = document.getElementById("restartButton");
   const touchAttack = document.getElementById("touchAttack");
   const touchInteract = document.getElementById("touchInteract");
@@ -40,9 +42,11 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.6.0";
+  const GAME_VERSION = "v2.7.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Lore & Structure Pass";
+  const BUILD_NAME = "Save & Progress Pass";
+  const SAVE_KEY = "elderfield-save-v2_7";
+  const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
   const STORY = {
@@ -139,6 +143,14 @@
       lastAction: "boot",
       copyResult: "idle",
       errors: [],
+    },
+    save: {
+      available: false,
+      hasSave: false,
+      lastSavedAt: null,
+      checkpoint: null,
+      lastReason: "none",
+      autosaveTimer: 0,
     },
   };
 
@@ -316,6 +328,11 @@
       }
     }
 
+    if (!state.save.available && status === "good") {
+      status = "warn";
+      issues.push("save storage unavailable");
+    }
+
     if (state.transition.active && state.debug.status !== "issue" && status === "good") {
       issues.push("transition in progress");
     }
@@ -402,6 +419,13 @@
       `- DungeonsCleared=${totalDungeonsCleared()}/${Object.keys(DUNGEONS).length}`,
       `- RewardsOwned=${state.rewardsOwned.join(", ") || "none"}`,
       ...dungeonLines,
+      ``,
+      `Save`,
+      `- Available=${state.save.available}`,
+      `- HasSave=${state.save.hasSave}`,
+      `- LastSaved=${state.save.lastSavedAt ? formatSaveTime(state.save.lastSavedAt) : "none"}`,
+      `- SaveReason=${state.save.lastReason}`,
+      `- Checkpoint=${state.save.checkpoint ? `${state.save.checkpoint.label} @ ${state.save.checkpoint.areaId}` : "none"}`,
       ``,
       `Input`,
       `- Pointer=${pointerText}`,
@@ -509,7 +533,221 @@
     };
   }
 
-  function resetGame() {
+  function storageAvailable() {
+    try {
+      const probe = "__elderfield_save_probe__";
+      localStorage.setItem(probe, "1");
+      localStorage.removeItem(probe);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function formatSaveTime(value) {
+    try {
+      return new Date(value).toLocaleString();
+    } catch (error) {
+      return String(value);
+    }
+  }
+
+  function checkpointLabel() {
+    const area = currentArea();
+    if (!area) return state.zoneName || STORY.kingdom;
+    return area.id === "overworld" ? state.zoneName : area.name;
+  }
+
+  function setCheckpoint(areaId = state.currentAreaId, x = state.player?.x || 0, y = state.player?.y || 0, label = checkpointLabel()) {
+    state.save.checkpoint = { areaId, x, y, label };
+  }
+
+  function updateStartScreenText() {
+    if (state.save.hasSave && state.save.checkpoint) {
+      startTitle.textContent = "Elderfield";
+      startText.textContent = `A saved road waits in ${state.save.checkpoint.label}. Last saved ${state.save.lastSavedAt ? formatSaveTime(state.save.lastSavedAt) : "recently"}. Princess Elaria still sleeps beneath the Thorn Veil.`;
+    } else {
+      startTitle.textContent = "Elderfield";
+      startText.textContent = "Princess Elaria sleeps beneath the Thorn Veil while the Briar King gathers strength in the old places. Walk the three relic roads, claim what the Dawn Wardens hid, and discover why the blood of Aurel was called again.";
+    }
+  }
+
+  function updateStartButtons() {
+    startButton.textContent = state.save.hasSave ? "Continue Adventure" : "Start Adventure";
+    clearSaveButton.hidden = !state.save.hasSave;
+    newGameButton.hidden = false;
+    updateStartScreenText();
+  }
+
+  function serializeSave() {
+    return {
+      saveKey: SAVE_KEY,
+      version: GAME_VERSION,
+      build: BUILD_NAME,
+      savedAt: new Date().toISOString(),
+      currentAreaId: state.currentAreaId,
+      zoneName: state.zoneName,
+      position: { x: state.player.x, y: state.player.y },
+      checkpoint: state.save.checkpoint || { areaId: state.currentAreaId, x: state.player.x, y: state.player.y, label: checkpointLabel() },
+      player: {
+        health: state.player.health,
+        maxHealth: state.player.maxHealth,
+        swordLevel: state.player.swordLevel,
+        activeWeapon: state.player.activeWeapon,
+        weaponsOwned: [...state.player.weaponsOwned],
+      },
+      rupees: state.rupees,
+      rewardsOwned: [...state.rewardsOwned],
+      overworld: { fieldCleared: !!state.overworld.fieldCleared },
+      dungeons: JSON.parse(JSON.stringify(state.dungeons)),
+    };
+  }
+
+  function saveGame(reason = "autosave", silent = true) {
+    if (!state.save.available || !state.player) return false;
+    try {
+      setCheckpoint();
+      const payload = serializeSave();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      state.save.hasSave = true;
+      state.save.lastSavedAt = payload.savedAt;
+      state.save.lastReason = reason;
+      state.save.autosaveTimer = 0;
+      if (!silent) setMessage(`Progress saved at ${payload.checkpoint.label}.`, 1.8);
+      updateStartButtons();
+      refreshDebugPanel();
+      return true;
+    } catch (error) {
+      recordRuntimeError("save", error && error.message ? error.message : error);
+      computeStatus();
+      refreshDebugPanel();
+      return false;
+    }
+  }
+
+  function clearSavedProgress(showMessage = true) {
+    if (!state.save.available) return;
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (error) {
+      recordRuntimeError("save-clear", error && error.message ? error.message : error);
+    }
+    state.save.hasSave = false;
+    state.save.lastSavedAt = null;
+    state.save.checkpoint = null;
+    state.save.lastReason = "cleared";
+    updateStartButtons();
+    if (showMessage) setMessage("Saved progress cleared.", 1.6);
+  }
+
+  function killAreaEnemies(area) {
+    for (const enemy of area.enemies) {
+      enemy.dead = true;
+      enemy.health = 0;
+    }
+  }
+
+  function applyPersistentWorldState() {
+    if (state.overworld.fieldCleared) killAreaEnemies(state.areas.overworld);
+
+    for (const id of Object.keys(DUNGEONS)) {
+      const progress = state.dungeons[id];
+      const room1 = state.areas[`${id}_1`];
+      const room2 = state.areas[`${id}_2`];
+      const room3 = state.areas[`${id}_3`];
+      if (!progress || !room1 || !room2 || !room3) continue;
+
+      if (progress.roomClears?.r1 || progress.keyOwned) killAreaEnemies(room1);
+      if (progress.roomClears?.r2 || progress.sealUnlocked) killAreaEnemies(room2);
+      if (progress.roomClears?.r3 || progress.rewardGranted || progress.cleared) killAreaEnemies(room3);
+
+      const pedestal = room1.interactables.find((item) => item.type === "dungeonKeyPedestal");
+      if (pedestal && progress.keyOwned) {
+        pedestal.taken = true;
+        pedestal.visible = false;
+      }
+
+      const chest = room3.interactables.find((item) => item.type === "rewardChest");
+      if (chest && (progress.roomClears?.r3 || progress.rewardGranted || progress.cleared)) {
+        chest.visible = true;
+      }
+      if (chest && progress.rewardGranted) {
+        chest.opened = true;
+      }
+
+      const exitPortal = room3.interactables.find((item) => item.type === "exitPortal");
+      if (exitPortal && progress.rewardGranted) {
+        exitPortal.visible = true;
+      }
+    }
+  }
+
+  function loadSavePayload(payload, silent = false) {
+    resetGame({ autosave: false });
+
+    state.rewardsOwned = Array.isArray(payload.rewardsOwned) ? [...payload.rewardsOwned] : [];
+    state.overworld = { fieldCleared: !!payload.overworld?.fieldCleared };
+    state.dungeons = {
+      ruins: Object.assign(emptyDungeonProgress(), payload.dungeons?.ruins || {}),
+      rootwood: Object.assign(emptyDungeonProgress(), payload.dungeons?.rootwood || {}),
+      ember: Object.assign(emptyDungeonProgress(), payload.dungeons?.ember || {}),
+    };
+    state.rupees = Number.isFinite(payload.rupees) ? payload.rupees : 0;
+    state.player = Object.assign(makePlayer(), payload.player || {});
+    state.player.weaponsOwned = Array.isArray(payload.player?.weaponsOwned) && payload.player.weaponsOwned.length ? [...new Set(payload.player.weaponsOwned)] : ["sword"];
+    if (!state.player.weaponsOwned.includes("sword")) state.player.weaponsOwned.unshift("sword");
+    if (!state.player.weaponsOwned.includes(state.player.activeWeapon)) state.player.activeWeapon = "sword";
+    state.areas = buildAreas();
+    applyPersistentWorldState();
+
+    const loadAreaId = payload.currentAreaId && state.areas[payload.currentAreaId] ? payload.currentAreaId : payload.checkpoint?.areaId && state.areas[payload.checkpoint.areaId] ? payload.checkpoint.areaId : "overworld";
+    setArea(loadAreaId, "start", true);
+    const area = currentArea();
+    const pos = payload.position || payload.checkpoint;
+    if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+      state.player.x = clamp(pos.x, 12, area.width * TILE - 12);
+      state.player.y = clamp(pos.y, 12, area.height * TILE - 12);
+    }
+
+    state.save.hasSave = true;
+    state.save.lastSavedAt = payload.savedAt || null;
+    state.save.lastReason = "loaded";
+    state.save.checkpoint = payload.checkpoint || { areaId: loadAreaId, x: state.player.x, y: state.player.y, label: checkpointLabel() };
+
+    updateObjective();
+    updateHud();
+    startCard.hidden = true;
+    startButton.hidden = false;
+    restartButton.hidden = true;
+    showAreaBanner(state.zoneName, "Journey Restored", 2.1);
+    setDebugAction("load-save");
+    if (!silent) setMessage(`Progress restored in ${state.save.checkpoint?.label || state.zoneName}.`, 2.1);
+    refreshDebugPanel();
+    return true;
+  }
+
+  function tryLoadSavedGame(silent = false) {
+    if (!state.save.available) return false;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) {
+        state.save.hasSave = false;
+        updateStartButtons();
+        return false;
+      }
+      const payload = JSON.parse(raw);
+      return loadSavePayload(payload, silent);
+    } catch (error) {
+      recordRuntimeError("load", error && error.message ? error.message : error);
+      state.save.hasSave = false;
+      updateStartButtons();
+      computeStatus();
+      refreshDebugPanel();
+      return false;
+    }
+  }
+
+  function resetGame(options = {}) {
     state.running = true;
     state.victory = false;
     state.gameOver = false;
@@ -524,6 +762,7 @@
     state.projectiles.length = 0;
     state.debug.errors.length = 0;
     state.debug.copyResult = "idle";
+    state.save.autosaveTimer = 0;
     state.rewardsOwned = [];
     state.overworld = { fieldCleared: false };
     state.dungeons = {
@@ -539,13 +778,14 @@
     startCard.hidden = true;
     startButton.hidden = false;
     restartButton.hidden = true;
-    startTitle.textContent = "Elderfield";
-    startText.textContent = "Princess Elaria sleeps beneath the Thorn Veil while the Briar King gathers strength in the old places. Walk the three relic roads, claim what the Dawn Wardens hid, and discover why the blood of Aurel was called again.";
+    updateStartButtons();
     setDebugAction("reset-game");
     updateHud();
     refreshDebugPanel();
     setMessage("Explore the kingdom. Press Enter near tablets, gates, signs, and the Dawn Shrine. The old stones remember more than men do.", 4.4);
     showAreaBanner(state.zoneName, "Region entered", 2.8);
+    setCheckpoint();
+    if (autosave) saveGame("new-journey", true);
   }
 
   function resizeCanvas() {
@@ -1214,6 +1454,7 @@ area.interactables.push({
     }
     updateObjective();
     updateHud();
+    setCheckpoint(areaId, state.player.x, state.player.y, state.zoneName);
     if (snapCamera) {
       state.camera.x = clamp(state.player.x - state.logicalWidth / 2, 0, area.width * TILE - state.logicalWidth);
       state.camera.y = clamp(state.player.y - state.logicalHeight / 2, 0, area.height * TILE - state.logicalHeight);
@@ -1551,6 +1792,7 @@ function onAreaEnemiesCleared(area) {
 
     updateObjective();
     updateHud();
+    saveGame(area.dungeonId ? `clear-${area.dungeonId}-r${area.roomIndex}` : "field-cleared", true);
   }
 
   function grantReward(dungeonId) {
@@ -1584,6 +1826,7 @@ function onAreaEnemiesCleared(area) {
         : `${reward} obtained. Sleeping flame bends to your hand, and ember-sealed doors stir awake.`, 4.2);
     updateObjective();
     updateHud();
+    saveGame(`reward-${dungeonId}`, true);
   }
 
   function interact() {
@@ -1603,7 +1846,8 @@ function onAreaEnemiesCleared(area) {
 
       if (item.type === "shrine") {
         if (!allDungeonsCleared()) {
-          setMessage(`The Dawn Shrine still lacks ${3 - state.rewardsOwned.length} relic${3 - state.rewardsOwned.length === 1 ? "" : "s"}. Princess Elaria remains beyond the Thorn Veil.`, 3.5);
+          saveGame("shrine", false);
+          setMessage(`The Dawn Shrine keeps your road for later. ${3 - state.rewardsOwned.length} relic${3 - state.rewardsOwned.length === 1 ? "" : "s"} still answer in shadow.`, 3.5);
           return;
         }
         if (!state.overworld.fieldCleared) {
@@ -1625,6 +1869,7 @@ function onAreaEnemiesCleared(area) {
         setMessage(`Victory. The Dawn Shrine burns again. Relics: ${state.rewardsOwned.join(", ")} • Rupees: ${state.rupees}.`, 4.4);
         updateObjective();
         updateHud();
+        saveGame("victory", true);
         return;
       }
 
@@ -1728,7 +1973,9 @@ function damagePlayer(amount, source, push = 18, burstPalette = ["#ff8a8a", "#ff
     state.gameOver = true;
     state.running = false;
     startCard.hidden = false;
-    startButton.hidden = true;
+    startButton.hidden = state.save.hasSave ? false : true;
+    newGameButton.hidden = false;
+    clearSaveButton.hidden = !state.save.hasSave;
     restartButton.hidden = false;
     startTitle.textContent = "Felled in Elderfield";
     startText.textContent = `You reached ${state.zoneName} and gathered ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}. The knights still wait below.`;
@@ -2695,6 +2942,10 @@ function drawDebug() {
     if (state.running && !state.transition.active) {
       updatePlayer(dt);
       updateEnemies(dt);
+      state.save.autosaveTimer += dt;
+      if (state.save.autosaveTimer >= AUTOSAVE_INTERVAL) {
+        saveGame("autosave", true);
+      }
     }
     updatePickupsAndParticles(dt);
     updateTransition(dt);
@@ -2705,6 +2956,7 @@ function drawDebug() {
   }
 
   function init() {
+    state.save.available = storageAvailable();
     syncBuildStamp();
     resizeCanvas();
     state.player = makePlayer();
@@ -2715,7 +2967,16 @@ function drawDebug() {
     };
     state.areas = buildAreas();
     setArea("overworld", "start", true);
-    setMessage("Press Start, move with WASD, click or tap to attack, and Enter to read stones, gates, and the Dawn Shrine.", 999);
+    updateStartButtons();
+    if (state.save.available) {
+      tryLoadSavedGame(true);
+      startCard.hidden = false;
+      state.running = false;
+      updateStartButtons();
+      setMessage(state.save.hasSave ? "Continue your road or begin a new one." : "Press Start to begin your road through Elderfield.", 999);
+    } else {
+      setMessage("Press Start, move with WASD, click or tap to attack, and Enter to read stones, gates, and the Dawn Shrine.", 999);
+    }
     computeStatus();
     refreshDebugPanel();
     requestAnimationFrame(loop);
@@ -2777,7 +3038,12 @@ function drawDebug() {
     if (event.code === "Enter") {
       event.preventDefault();
       if (!state.running) {
-        resetGame();
+        if (state.save.hasSave) {
+          const loaded = tryLoadSavedGame(false);
+          if (!loaded) resetGame();
+        } else {
+          resetGame();
+        }
       } else {
         interact();
       }
@@ -2819,8 +3085,26 @@ function drawDebug() {
     pointerState.attackHeld = false;
   });
 
-  startButton.addEventListener("click", resetGame);
-  restartButton.addEventListener("click", resetGame);
+  startButton.addEventListener("click", () => {
+    if (state.save.hasSave) {
+      const loaded = tryLoadSavedGame(false);
+      if (!loaded) resetGame();
+    } else {
+      resetGame();
+    }
+  });
+  newGameButton.addEventListener("click", () => {
+    clearSavedProgress(false);
+    resetGame();
+  });
+  clearSaveButton.addEventListener("click", () => {
+    clearSavedProgress(true);
+    updateStartButtons();
+  });
+  restartButton.addEventListener("click", () => {
+    clearSavedProgress(false);
+    resetGame();
+  });
   copyDebugButton.addEventListener("click", () => copyDebugReport());
 
   window.addEventListener("error", (event) => {
@@ -2860,7 +3144,12 @@ function drawDebug() {
   touchInteract.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     if (!state.running) {
-      resetGame();
+      if (state.save.hasSave) {
+        const loaded = tryLoadSavedGame(false);
+        if (!loaded) resetGame();
+      } else {
+        resetGame();
+      }
       return;
     }
     interact();
