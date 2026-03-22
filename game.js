@@ -40,10 +40,11 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.4.0";
+  const GAME_VERSION = "v2.5.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Boss & Arsenal Pass";
+  const BUILD_NAME = "Visual Identity Pass";
   const START_ZONE = "South Meadow";
+  const WORLD_AREA_NAME = "Kingdom of Elderfield";
 
   const DUNGEONS = {
     ruins: {
@@ -344,7 +345,7 @@
       `- Victory=${state.victory}`,
       `- GameOver=${state.gameOver}`,
       `- CurrentArea=${state.currentAreaId}`,
-      `- Zone=${state.zoneName}`,
+      `- Region=${state.zoneName}`,
       `- Objective=${state.objectiveText}`,
       ``,
       `Viewport`,
@@ -518,16 +519,16 @@
     state.player = makePlayer();
     state.areas = buildAreas();
     setArea("overworld", "start", true);
-    state.objectiveText = "Travel the field. Find the three dungeon paths and claim their relics.";
+    state.objectiveText = "Travel the field. Find the three dungeon paths, claim their relics, and read what the old stones remember.";
     startCard.hidden = true;
     startButton.hidden = false;
     restartButton.hidden = true;
     startTitle.textContent = "Elderfield";
-    startText.textContent = "Three dungeon roads now cut across the land. Claim every relic, unlock new weapons, and return to the shrine.";
+    startText.textContent = "Three relic roads cut across the kingdom. Claim each sacred reward, read the old stones, and carry the first sparks of Elderfield\'s deeper legend.";
     setDebugAction("reset-game");
     updateHud();
     refreshDebugPanel();
-    setMessage("Explore the larger field. Press Enter near signs, gates, and the shrine.", 4);
+    setMessage("Explore the kingdom. Press Enter near tablets, gates, signs, and the shrine.", 4);
     showAreaBanner(state.zoneName, "Region entered", 2.8);
   }
 
@@ -709,7 +710,7 @@
   }
 
   function buildOverworld() {
-    const area = makeArea("overworld", "South Meadow", 160, 96, 0, "field");
+    const area = makeArea("overworld", WORLD_AREA_NAME, 160, 96, 0, "field");
     area.regions = [
       { name: "South Meadow", x: 40, y: 58, w: 80, h: 32 },
       { name: "North Ruins", x: 54, y: 8, w: 48, h: 28 },
@@ -777,6 +778,34 @@
       h: TILE,
       text: "North lies old stone, east lies root and shadow, west lies ash and fire. Bring every relic home.",
     });
+
+
+area.interactables.push({
+  type: "loreTablet",
+  x: 88 * TILE,
+  y: 18 * TILE,
+  w: TILE * 2,
+  h: TILE * 2,
+  text: "Tablet of Kings: When dragonfire lit the northern crowns, the Wardens sealed three roads beneath stone, root, and ember.",
+});
+
+area.interactables.push({
+  type: "loreTablet",
+  x: 137 * TILE,
+  y: 36 * TILE,
+  w: TILE * 2,
+  h: TILE * 2,
+  text: "Tablet of Roots: The green road once answered the keepers of the old blood. Even now the woods remember names the kingdom has forgotten.",
+});
+
+area.interactables.push({
+  type: "loreTablet",
+  x: 17 * TILE,
+  y: 41 * TILE,
+  w: TILE * 2,
+  h: TILE * 2,
+  text: "Tablet of Ash: Beneath the western stone, heat and oath were bound together. Break neither lightly.",
+});
 
     area.interactables.push({
       type: "dungeonEntrance",
@@ -1168,7 +1197,7 @@
     }
 
     if (!allDungeonsCleared()) {
-      state.objectiveText = `Relics ${state.rewardsOwned.length}/3 — seek the remaining dungeon paths.`;
+      state.objectiveText = `Relics ${state.rewardsOwned.length}/3 — seek the remaining relic roads of the old kingdom.`;
     } else if (!state.overworld.fieldCleared) {
       state.objectiveText = "All relics claimed. Clear the field and return to the shrine.";
     } else {
@@ -1474,8 +1503,8 @@ function onAreaEnemiesCleared(area) {
     const exitPortal = currentArea().interactables.find((i) => i.type === "exitPortal");
     if (exitPortal) exitPortal.visible = true;
 
-    showAreaBanner("Relic Claimed", reward, 3);
-    setMessage(`${reward} obtained. The ascent gate is now awake.`, 4);
+    showAreaBanner("Sacred Relic Claimed", reward, 3);
+    setMessage(`${reward} obtained. Ancient doors remember your hand. The ascent gate is now awake.`, 4);
     updateObjective();
     updateHud();
   }
@@ -1490,8 +1519,8 @@ function onAreaEnemiesCleared(area) {
       const box = { x: item.x + item.w / 2, y: item.y + item.h / 2, w: item.w + 20, h: item.h + 20 };
       if (!rectsOverlap(p, box)) continue;
 
-      if (item.type === "sign") {
-        setMessage(item.text, 3.8);
+      if (item.type === "sign" || item.type === "loreTablet") {
+        setMessage(item.text, item.type === "loreTablet" ? 4.4 : 3.8);
         return;
       }
 
@@ -1515,7 +1544,7 @@ function onAreaEnemiesCleared(area) {
         startButton.hidden = true;
         restartButton.hidden = false;
         startTitle.textContent = "Elderfield Rekindled";
-        startText.textContent = `You reclaimed all three relics — ${state.rewardsOwned.join(", ")} — and brought them home.`;
+        startText.textContent = `You reclaimed all three relics — ${state.rewardsOwned.join(", ")} — and rekindled the first hope of the kingdom.`;
         setMessage(`Victory. Relics: ${state.rewardsOwned.join(", ")} • Rupees: ${state.rupees}.`, 4.4);
         updateObjective();
         updateHud();
@@ -1923,6 +1952,7 @@ function burst(x, y, palette) {
   function draw() {
     ctx.clearRect(0, 0, state.logicalWidth, state.logicalHeight);
     drawGround();
+    drawAtmosphere();
     drawWorldObjects();
     drawInteractables();
     drawPickups();
@@ -1933,6 +1963,35 @@ function burst(x, y, palette) {
     drawVignette();
     drawTransition();
   }
+
+
+
+function drawAtmosphere() {
+  const area = currentArea();
+  ctx.save();
+  if (area.id === "overworld") {
+    if (state.zoneName === "East Woods") {
+      ctx.fillStyle = "rgba(62, 104, 58, 0.08)";
+      ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+    } else if (state.zoneName === "North Ruins") {
+      ctx.fillStyle = "rgba(150, 132, 96, 0.07)";
+      ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+    } else if (state.zoneName === "Ashen Reach") {
+      ctx.fillStyle = "rgba(144, 88, 52, 0.08)";
+      ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+    }
+  } else if (area.theme === "rootwood") {
+    ctx.fillStyle = "rgba(60, 106, 58, 0.08)";
+    ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+  } else if (area.theme === "ember") {
+    ctx.fillStyle = "rgba(140, 78, 42, 0.08)";
+    ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+  } else if (area.theme === "ruins") {
+    ctx.fillStyle = "rgba(152, 138, 104, 0.06)";
+    ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+  }
+  ctx.restore();
+}
 
   function drawGround() {
     const area = currentArea();
@@ -1951,165 +2010,217 @@ function burst(x, y, palette) {
     }
   }
 
-  function drawTile(tile, sx, sy, x, y, theme) {
-    switch (tile) {
-      case 0: {
-        const a = (x + y) % 2 === 0 ? "#5e9948" : "#69a851";
-        const b = theme === "field" && seededNoise(x * 3, y * 5) > 0.78 ? "#7fbe63" : a;
-        ctx.fillStyle = b;
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = (x + y) % 3 === 0 ? "rgba(122, 180, 90, 0.20)" : "rgba(25, 64, 25, 0.10)";
-        ctx.fillRect(sx + 2, sy + 2, 5, 2);
-        ctx.fillRect(sx + 14, sy + 5, 4, 2);
-        ctx.fillStyle = "#3f7e35";
-        ctx.fillRect(sx + 3, sy + 18, 4, 2);
-        ctx.fillRect(sx + 11, sy + 14, 3, 2);
-        ctx.fillRect(sx + 17, sy + 9, 2, 3);
-        ctx.fillRect(sx + 7, sy + 11, 2, 4);
-        break;
-      }
-      case 1:
-        ctx.fillStyle = "#25552e";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#1a3e23";
-        ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
-        ctx.fillStyle = "#7b4d28";
-        ctx.fillRect(sx + 10, sy + 14, 4, 8);
-        ctx.fillStyle = "#4ea451";
-        ctx.fillRect(sx + 4, sy + 4, 16, 7);
-        ctx.fillRect(sx + 2, sy + 8, 20, 6);
-        ctx.fillStyle = "#85d670";
-        ctx.fillRect(sx + 6, sy + 6, 4, 2);
-        break;
-      case 2:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#2d7ca0" : "#276d90";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#7cd1ef";
-        ctx.fillRect(sx + 2, sy + 5, 8, 2);
-        ctx.fillRect(sx + 12, sy + 11, 7, 2);
-        ctx.fillRect(sx + 7, sy + 16, 10, 2);
-        ctx.fillStyle = "rgba(200,240,255,0.18)";
-        ctx.fillRect(sx + 4, sy + 3, 5, 1);
-        break;
-      case 3:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#c5a86b" : "#b79558";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(105, 67, 32, 0.16)";
-        ctx.fillRect(sx + 6, sy, 2, TILE);
-        ctx.fillRect(sx + 14, sy, 2, TILE);
-        ctx.fillStyle = "rgba(255, 237, 184, 0.18)";
-        ctx.fillRect(sx + 2, sy + 4, 4, 1);
-        break;
-      case 4:
-        ctx.fillStyle = "#5d666f";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#79848e";
-        ctx.fillRect(sx + 4, sy + 4, TILE - 8, TILE - 8);
-        ctx.fillStyle = "#bac5cf";
-        ctx.fillRect(sx + 7, sy + 6, 4, 3);
-        break;
-      case 5:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#679f50" : "#73ac5b";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        drawFlower(sx + 8, sy + 8, "#ffd86e");
-        drawFlower(sx + 14, sy + 14, "#fff5a8");
-        break;
-      case 6:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#5e9949" : "#6ca853";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        drawFlower(sx + 9, sy + 7, "#e9d3ff");
-        drawFlower(sx + 15, sy + 13, "#ffd2ea");
-        break;
-      case 7:
-        ctx.fillStyle = theme === "ember" ? "#54443a" : "#4e4a42";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(255,255,255,0.05)";
-        ctx.fillRect(sx + 3, sy + 4, 5, 1);
-        ctx.fillRect(sx + 12, sy + 10, 6, 1);
-        break;
-      case 8:
-        ctx.fillStyle = theme === "ruins" ? "#6e6658" : theme === "rootwood" ? "#4e5642" : "#6b6154";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = theme === "ember" ? "#ac7d5f" : "#928369";
-        ctx.fillRect(sx + 6, sy + 6, 3, 3);
-        ctx.fillRect(sx + 14, sy + 13, 3, 3);
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(sx + 4, sy + 4, 2, 1);
-        ctx.fillRect(sx + 16, sy + 8, 2, 1);
-        break;
-      case 9:
-        ctx.fillStyle = theme === "rootwood" ? "#2b3d28" : theme === "ember" ? "#3d2b27" : "#272831";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = theme === "rootwood" ? "#3e5a3a" : theme === "ember" ? "#614033" : "#3a3c47";
-        ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
-        ctx.fillStyle = "rgba(255,255,255,0.08)";
-        ctx.fillRect(sx + 5, sy + 5, 4, 2);
-        break;
-      case 10:
-        ctx.fillStyle = "#1c1f26";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#6fb7ff";
-        ctx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
-        ctx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
-        ctx.fillStyle = "rgba(180,220,255,0.2)";
-        ctx.fillRect(sx + 6, sy + 6, 12, 12);
-        break;
-      case 12:
-        ctx.fillStyle = "#4a433d";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        ctx.beginPath();
-        ctx.moveTo(sx + 4, sy + 7);
-        ctx.lineTo(sx + 11, sy + 13);
-        ctx.lineTo(sx + 16, sy + 9);
-        ctx.stroke();
-        break;
-      case 13:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#47693e" : "#537645";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(184, 227, 146, 0.12)";
-        ctx.fillRect(sx + 3, sy + 3, 6, 2);
-        ctx.fillStyle = "#2d4d2b";
-        ctx.fillRect(sx + 5, sy + 6, 2, 10);
-        ctx.fillRect(sx + 12, sy + 10, 2, 7);
-        ctx.fillRect(sx + 16, sy + 5, 2, 8);
-        break;
-      case 14:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#7b7566" : "#8a8373";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(54,46,35,0.18)";
-        ctx.fillRect(sx + 2, sy + 12, 8, 1);
-        ctx.fillStyle = "#c7bda2";
-        ctx.fillRect(sx + 4, sy + 4, 4, 2);
-        ctx.fillRect(sx + 12, sy + 12, 5, 2);
-        break;
-      case 15:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#764732" : "#8a5234";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(255, 165, 88, 0.12)";
-        ctx.fillRect(sx + 2, sy + 3, 5, 2);
-        ctx.fillStyle = "#d28b4a";
-        ctx.fillRect(sx + 6, sy + 5, 2, 2);
-        ctx.fillRect(sx + 13, sy + 11, 3, 2);
-        ctx.fillStyle = "#341d14";
-        ctx.fillRect(sx + 17, sy + 16, 3, 2);
-        break;
-      case 16:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#492920" : "#592f23";
-        ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(255, 118, 56, 0.18)";
-        ctx.fillRect(sx + 3, sy + 14, 6, 2);
-        ctx.fillStyle = "#b55c2e";
-        ctx.fillRect(sx + 8, sy + 7, 3, 3);
-        ctx.fillRect(sx + 15, sy + 13, 2, 2);
-        break;
-      default:
-        ctx.fillStyle = "magenta";
-        ctx.fillRect(sx, sy, TILE, TILE);
-    }
-  }
 
-  function drawFlower(x, y, color) {
+
+function themeColors(theme) {
+  if (theme === "rootwood") {
+    return {
+      grassA: "#507343", grassB: "#5f824d", dark: "#294126", mid: "#7ba062", light: "#b6d38d",
+      stoneA: "#4e5642", stoneB: "#66725a", pathA: "#5a6b48", pathB: "#6d7f56",
+      waterA: "#2b5c69", waterB: "#377786",
+    };
+  }
+  if (theme === "ember") {
+    return {
+      grassA: "#744731", grassB: "#865238", dark: "#3c2015", mid: "#b86f36", light: "#e3a666",
+      stoneA: "#534037", stoneB: "#6b5248", pathA: "#845739", pathB: "#9a6642",
+      waterA: "#7f4424", waterB: "#a95b2e",
+    };
+  }
+  if (theme === "ruins") {
+    return {
+      grassA: "#7f7a68", grassB: "#918a78", dark: "#4d4538", mid: "#b7ae94", light: "#ddd3b7",
+      stoneA: "#6f695b", stoneB: "#8f8776", pathA: "#a98d62", pathB: "#bea170",
+      waterA: "#496a7d", waterB: "#5a8297",
+    };
+  }
+  return {
+    grassA: "#5f9748", grassB: "#6ba754", dark: "#355f2e", mid: "#8fc86d", light: "#cbe99e",
+    stoneA: "#656e75", stoneB: "#828d96", pathA: "#c3a165", pathB: "#b18f56",
+    waterA: "#2c789a", waterB: "#3792b8",
+  };
+}
+
+function px(x, y, w = 1, h = 1, color = "#fff") {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawGrassTile(sx, sy, x, y, palette) {
+  ctx.fillStyle = seededNoise(x * 2, y * 3) > 0.56 ? palette.grassB : palette.grassA;
+  ctx.fillRect(sx, sy, TILE, TILE);
+  px(sx + 2, sy + 18, 4, 2, palette.dark);
+  px(sx + 7, sy + 14, 2, 4, palette.dark);
+  px(sx + 12, sy + 16, 3, 3, palette.mid);
+  px(sx + 16, sy + 10, 2, 5, palette.dark);
+  px(sx + 19, sy + 5, 2, 3, palette.light);
+  px(sx + 3, sy + 4, 5, 2, "rgba(255,255,255,0.08)");
+  if (seededNoise(x * 7, y * 11) > 0.72) {
+    px(sx + 11, sy + 4, 1, 7, palette.light);
+    px(sx + 10, sy + 5, 3, 1, palette.light);
+  }
+  if (seededNoise(x * 13, y * 17) > 0.78) {
+    px(sx + 5, sy + 8, 1, 6, palette.mid);
+    px(sx + 4, sy + 11, 3, 1, palette.mid);
+  }
+}
+
+function drawPathTile(sx, sy, x, y, palette) {
+  ctx.fillStyle = (x + y) % 2 === 0 ? palette.pathA : palette.pathB;
+  ctx.fillRect(sx, sy, TILE, TILE);
+  px(sx + 5, sy + 2, 2, 20, "rgba(72,49,22,0.14)");
+  px(sx + 14, sy + 0, 2, 24, "rgba(72,49,22,0.12)");
+  px(sx + 3, sy + 5, 4, 1, "rgba(255,240,196,0.12)");
+  px(sx + 17, sy + 14, 3, 1, "rgba(255,240,196,0.12)");
+  if (seededNoise(x * 5, y * 9) > 0.65) {
+    px(sx + 9, sy + 9, 4, 2, "rgba(90,66,33,0.16)");
+    px(sx + 10, sy + 16, 3, 1, "rgba(90,66,33,0.14)");
+  }
+}
+
+function drawWaterTile(sx, sy, x, y, palette) {
+  ctx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
+  ctx.fillRect(sx, sy, TILE, TILE);
+  px(sx + 2, sy + 4, 7, 2, "rgba(206,244,255,0.34)");
+  px(sx + 12, sy + 10, 8, 2, "rgba(206,244,255,0.28)");
+  px(sx + 7, sy + 16, 10, 2, "rgba(206,244,255,0.18)");
+  if (seededNoise(x * 4, y * 7) > 0.7) px(sx + 15, sy + 5, 4, 1, "rgba(255,255,255,0.2)");
+}
+
+function drawStoneTile(sx, sy, x, y, palette, major = false) {
+  ctx.fillStyle = seededNoise(x * 3, y * 5) > 0.5 ? palette.stoneA : palette.stoneB;
+  ctx.fillRect(sx, sy, TILE, TILE);
+  px(sx + 4, sy + 4, 5, 1, "rgba(255,255,255,0.10)");
+  px(sx + 13, sy + 12, 6, 1, "rgba(255,255,255,0.08)");
+  px(sx + 6, sy + 15, 2, 4, "rgba(0,0,0,0.12)");
+  ctx.strokeStyle = major ? "rgba(72, 58, 42, 0.22)" : "rgba(42, 38, 34, 0.16)";
+  ctx.beginPath();
+  ctx.moveTo(sx + 5, sy + 7);
+  ctx.lineTo(sx + 11, sy + 12);
+  ctx.lineTo(sx + 16, sy + 8);
+  ctx.stroke();
+  if (major) {
+    px(sx + 3, sy + 19, 18, 2, "rgba(64,54,42,0.18)");
+  }
+}
+
+function drawAshTile(sx, sy, x, y, palette) {
+  ctx.fillStyle = seededNoise(x * 2, y * 3) > 0.5 ? "#4f2920" : "#5d2f24";
+  ctx.fillRect(sx, sy, TILE, TILE);
+  px(sx + 3, sy + 13, 6, 2, "rgba(255,120,60,0.16)");
+  px(sx + 9, sy + 6, 3, 3, palette.mid);
+  px(sx + 16, sy + 15, 2, 2, palette.light);
+  px(sx + 18, sy + 18, 2, 1, "#23130e");
+  if (seededNoise(x * 11, y * 13) > 0.75) {
+    px(sx + 11, sy + 11, 4, 1, "rgba(255,190,120,0.24)");
+  }
+}
+
+function drawTile(tile, sx, sy, x, y, theme) {
+  const palette = themeColors(theme);
+  switch (tile) {
+    case 0:
+      drawGrassTile(sx, sy, x, y, palette);
+      break;
+    case 1:
+      drawGrassTile(sx, sy, x, y, palette);
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(sx + 2, sy + 19, 20, 3);
+      ctx.fillStyle = "#6b4728";
+      ctx.fillRect(sx + 10, sy + 13, 4, 9);
+      ctx.fillStyle = theme === "rootwood" ? "#2d5a2f" : "#336b32";
+      ctx.fillRect(sx + 3, sy + 6, 18, 7);
+      ctx.fillStyle = theme === "rootwood" ? "#477a40" : "#4b8a44";
+      ctx.fillRect(sx + 1, sy + 10, 22, 5);
+      ctx.fillStyle = theme === "rootwood" ? "#7dc272" : "#88d875";
+      ctx.fillRect(sx + 5, sy + 7, 5, 2);
+      ctx.fillRect(sx + 15, sy + 9, 4, 2);
+      break;
+    case 2:
+      drawWaterTile(sx, sy, x, y, palette);
+      break;
+    case 3:
+      drawPathTile(sx, sy, x, y, palette);
+      break;
+    case 4:
+      drawGrassTile(sx, sy, x, y, palette);
+      ctx.fillStyle = "rgba(0,0,0,0.16)";
+      ctx.fillRect(sx + 3, sy + 18, 18, 3);
+      ctx.fillStyle = "#606870";
+      ctx.fillRect(sx + 4, sy + 6, 16, 11);
+      ctx.fillStyle = "#8d99a4";
+      ctx.fillRect(sx + 6, sy + 7, 11, 6);
+      px(sx + 11, sy + 9, 3, 2, "#dfe8ef");
+      break;
+    case 5:
+      drawGrassTile(sx, sy, x, y, palette);
+      drawFlower(sx + 8, sy + 8, "#ffd86e");
+      drawFlower(sx + 14, sy + 14, "#fff5a8");
+      break;
+    case 6:
+      drawGrassTile(sx, sy, x, y, palette);
+      drawFlower(sx + 9, sy + 7, "#e9d3ff");
+      drawFlower(sx + 15, sy + 13, "#ffd2ea");
+      break;
+    case 7:
+      drawStoneTile(sx, sy, x, y, palette, false);
+      break;
+    case 8:
+      drawStoneTile(sx, sy, x, y, palette, true);
+      break;
+    case 9:
+      ctx.fillStyle = theme === "rootwood" ? "#283c29" : theme === "ember" ? "#34231f" : "#2b2c31";
+      ctx.fillRect(sx, sy, TILE, TILE);
+      ctx.fillStyle = theme === "rootwood" ? "#3f5940" : theme === "ember" ? "#5b3c31" : "#494a52";
+      ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
+      px(sx + 5, sy + 5, 4, 2, "rgba(255,255,255,0.08)");
+      px(sx + 8, sy + 16, 8, 2, "rgba(0,0,0,0.16)");
+      break;
+    case 10:
+      ctx.fillStyle = "#1a2231";
+      ctx.fillRect(sx, sy, TILE, TILE);
+      ctx.fillStyle = "#6fb7ff";
+      ctx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
+      ctx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
+      ctx.fillStyle = "rgba(180,220,255,0.22)";
+      ctx.fillRect(sx + 6, sy + 6, 12, 12);
+      break;
+    case 12:
+      drawStoneTile(sx, sy, x, y, palette, false);
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy + 7);
+      ctx.lineTo(sx + 11, sy + 13);
+      ctx.lineTo(sx + 16, sy + 9);
+      ctx.stroke();
+      break;
+    case 13:
+      drawGrassTile(sx, sy, x, y, themeColors("rootwood"));
+      px(sx + 5, sy + 6, 2, 10, "#2d4d2b");
+      px(sx + 12, sy + 10, 2, 7, "#2d4d2b");
+      px(sx + 16, sy + 5, 2, 8, "#2d4d2b");
+      break;
+    case 14:
+      drawStoneTile(sx, sy, x, y, themeColors("ruins"), true);
+      break;
+    case 15:
+      ctx.fillStyle = (x + y) % 2 === 0 ? "#764732" : "#8a5234";
+      ctx.fillRect(sx, sy, TILE, TILE);
+      px(sx + 2, sy + 3, 5, 2, "rgba(255, 165, 88, 0.12)");
+      px(sx + 6, sy + 5, 2, 2, "#d28b4a");
+      px(sx + 13, sy + 11, 3, 2, "#d28b4a");
+      px(sx + 17, sy + 16, 3, 2, "#341d14");
+      break;
+    case 16:
+      drawAshTile(sx, sy, x, y, themeColors("ember"));
+      break;
+    default:
+      ctx.fillStyle = "magenta";
+      ctx.fillRect(sx, sy, TILE, TILE);
+  }
+}
+
+function drawFlower(x, y, color) {
     ctx.fillStyle = color;
     ctx.fillRect(x, y, 2, 2);
     ctx.fillRect(x + 2, y + 2, 2, 2);
@@ -2118,22 +2229,34 @@ function burst(x, y, palette) {
     ctx.fillRect(x + 1, y + 6, 2, 3);
   }
 
-  function drawWorldObjects() {
-    const area = currentArea();
-    for (let y = 0; y < area.height; y += 1) {
-      for (let x = 0; x < area.width; x += 1) {
-        const tile = area.world[y][x];
-        if (![1, 4, 9].includes(tile)) continue;
-        const sx = x * TILE - state.camera.x;
-        const sy = y * TILE - state.camera.y;
-        if (sx < -TILE || sy < -TILE || sx > state.logicalWidth || sy > state.logicalHeight) continue;
+function drawWorldObjects() {
+  const area = currentArea();
+  for (let y = 0; y < area.height; y += 1) {
+    for (let x = 0; x < area.width; x += 1) {
+      const tile = area.world[y][x];
+      if (![1, 4, 9].includes(tile)) continue;
+      const sx = x * TILE - state.camera.x;
+      const sy = y * TILE - state.camera.y;
+      if (sx < -TILE || sy < -TILE || sx > state.logicalWidth || sy > state.logicalHeight) continue;
+      if (tile === 1) {
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.fillRect(sx + 3, sy + 19, 18, 3);
+        ctx.fillStyle = "rgba(15, 28, 14, 0.10)";
+        ctx.fillRect(sx + 4, sy + 4, 16, 16);
+      } else if (tile === 4) {
         ctx.fillStyle = "rgba(0,0,0,0.16)";
-        ctx.fillRect(sx + 4, sy + 18, 16, 3);
+        ctx.fillRect(sx + 2, sy + 18, 20, 3);
+      } else if (tile === 9) {
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.fillRect(sx + 2, sy + 18, 20, 3);
+        ctx.fillStyle = "rgba(255,255,255,0.04)";
+        ctx.fillRect(sx + 4, sy + 4, 16, 2);
       }
     }
   }
+}
 
-  function drawInteractables() {
+function drawInteractables() {
     const area = currentArea();
     for (const item of area.interactables) {
       if (item.visible === false) continue;
@@ -2141,14 +2264,28 @@ function burst(x, y, palette) {
       const sy = item.y - state.camera.y;
       if (sx > state.logicalWidth + 40 || sy > state.logicalHeight + 40 || sx + item.w < -40 || sy + item.h < -40) continue;
 
-      if (item.type === "sign") {
-        ctx.fillStyle = "#8b5c31";
-        ctx.fillRect(sx + 10, sy + 10, 4, 10);
-        ctx.fillStyle = "#dcb97a";
-        ctx.fillRect(sx + 6, sy + 3, 12, 9);
-        ctx.fillStyle = "#6e4b2a";
-        ctx.fillRect(sx + 8, sy + 5, 8, 2);
-      } else if (item.type === "shrine") {
+if (item.type === "sign") {
+  ctx.fillStyle = "#8b5c31";
+  ctx.fillRect(sx + 10, sy + 10, 4, 10);
+  ctx.fillStyle = "#dcb97a";
+  ctx.fillRect(sx + 6, sy + 3, 12, 9);
+  ctx.fillStyle = "#6e4b2a";
+  ctx.fillRect(sx + 8, sy + 5, 8, 2);
+} else if (item.type === "loreTablet") {
+  const pulse = 0.5 + Math.sin(performance.now() / 260) * 0.16;
+  ctx.fillStyle = "#6e6558";
+  ctx.fillRect(sx + 6, sy + 8, 36, 26);
+  ctx.fillStyle = "#968a75";
+  ctx.fillRect(sx + 10, sy + 10, 28, 20);
+  ctx.fillStyle = "rgba(214, 191, 130, 0.16)";
+  ctx.fillRect(sx + 12, sy + 12, 24, 16);
+  ctx.fillStyle = "#cfbb84";
+  ctx.fillRect(sx + 16, sy + 15, 16, 2);
+  ctx.fillRect(sx + 15, sy + 20, 18, 2);
+  ctx.fillRect(sx + 17, sy + 25, 14, 2);
+  ctx.fillStyle = `rgba(246, 216, 111, ${0.08 + pulse * 0.1})`;
+  ctx.fillRect(sx + 10, sy + 10, 28, 20);
+} else if (item.type === "shrine") {
         const glow = allDungeonsCleared() && state.overworld.fieldCleared || item.active;
         const pulse = 0.55 + Math.sin(performance.now() / 220) * 0.25;
         ctx.fillStyle = glow ? "#93b9ff" : "#7f857f";
@@ -2243,57 +2380,63 @@ function burst(x, y, palette) {
     }
   }
 
-  function drawEnemies() {
-    const area = currentArea();
-    for (const enemy of area.enemies) {
-      if (enemy.dead) continue;
-      const sx = enemy.x - state.camera.x;
-      const sy = enemy.y - state.camera.y;
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      ctx.fillRect(sx - 7, sy + 8, 14, 3);
+function drawEnemies() {
+  const area = currentArea();
+  for (const enemy of area.enemies) {
+    if (enemy.dead) continue;
+    const sx = enemy.x - state.camera.x;
+    const sy = enemy.y - state.camera.y;
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.fillRect(sx - 8, sy + 9, 16, 3);
 
-      if (enemy.type === "knight") {
-        const hurtFlash = enemy.hurt > 0 ? "#ffffff" : enemy.tint === "embersteel" ? "#9f4f31" : enemy.tint === "vine" ? "#557f4b" : "#7684a8";
-        ctx.fillStyle = hurtFlash;
-        ctx.fillRect(sx - 9, sy - 8, 18, 18);
-        ctx.fillStyle = enemy.tint === "embersteel" ? "#e3ad73" : enemy.tint === "vine" ? "#b4df9a" : "#c8d3ef";
-        ctx.fillRect(sx - 6, sy - 5, 12, 8);
-        ctx.fillStyle = enemy.tint === "embersteel" ? "#5e2916" : enemy.tint === "vine" ? "#254220" : "#2a3152";
-        ctx.fillRect(sx - 7, sy + 3, 14, 7);
-        ctx.fillStyle = "#f0d987";
-        ctx.fillRect(sx - 2, sy - 12, 4, 4);
-        ctx.fillStyle = "#161616";
-        ctx.fillRect(sx - 4, sy - 3, 2, 2);
-        ctx.fillRect(sx + 2, sy - 3, 2, 2);
-        ctx.fillStyle = enemy.tint === "embersteel" ? "#ffbf6c" : enemy.tint === "vine" ? "#d6f4b8" : "#d7e8ff";
-        ctx.fillRect(sx + 8, sy - 5, 3, 14);
-      } else {
-        const main = enemy.tint === "moss" ? "#67c364" : enemy.tint === "stone" ? "#a59f93" : "#df8a49";
-        const alt = enemy.tint === "moss" ? "#b3f29d" : enemy.tint === "stone" ? "#d8d0c1" : "#ffd8a2";
-        const hurtFlash = enemy.hurt > 0 ? "#ffffff" : main;
-        ctx.fillStyle = hurtFlash;
-        ctx.fillRect(sx - 8, sy - 6, 16, 14);
-        ctx.fillStyle = alt;
-        ctx.fillRect(sx - 5, sy - 3, 10, 7);
-        ctx.fillStyle = "#161616";
-        ctx.fillRect(sx - 4, sy - 1, 2, 2);
-        ctx.fillRect(sx + 2, sy - 1, 2, 2);
-        ctx.fillRect(sx - 6, sy + 4, 2, 3);
-        ctx.fillRect(sx + 4, sy + 4, 2, 3);
-      }
+    if (enemy.type === "knight") {
+      const armor = enemy.hurt > 0 ? "#ffffff" : enemy.tint === "embersteel" ? "#8f4a31" : enemy.tint === "vine" ? "#4f7143" : "#6e7c9f";
+      const trim = enemy.tint === "embersteel" ? "#dca46b" : enemy.tint === "vine" ? "#b7df9a" : "#d7e4ff";
+      const cape = enemy.tint === "embersteel" ? "#592818" : enemy.tint === "vine" ? "#264120" : "#293455";
+      ctx.fillStyle = armor;
+      ctx.fillRect(sx - 9, sy - 9, 18, 18);
+      ctx.fillStyle = trim;
+      ctx.fillRect(sx - 6, sy - 6, 12, 8);
+      ctx.fillStyle = cape;
+      ctx.fillRect(sx - 8, sy + 3, 16, 8);
+      ctx.fillStyle = "#f0d987";
+      ctx.fillRect(sx - 2, sy - 13, 4, 4);
+      ctx.fillStyle = "#161616";
+      ctx.fillRect(sx - 4, sy - 3, 2, 2);
+      ctx.fillRect(sx + 2, sy - 3, 2, 2);
+      ctx.fillStyle = trim;
+      ctx.fillRect(sx + 8, sy - 5, 3, 14);
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(sx - 6, sy - 6, 3, 2);
+    } else {
+      const main = enemy.tint === "moss" ? "#67c364" : enemy.tint === "stone" ? "#a59f93" : "#df8a49";
+      const alt = enemy.tint === "moss" ? "#b3f29d" : enemy.tint === "stone" ? "#d8d0c1" : "#ffd8a2";
+      const hurtFlash = enemy.hurt > 0 ? "#ffffff" : main;
+      ctx.fillStyle = hurtFlash;
+      ctx.fillRect(sx - 8, sy - 6, 16, 14);
+      ctx.fillStyle = alt;
+      ctx.fillRect(sx - 5, sy - 3, 10, 7);
+      ctx.fillStyle = "#161616";
+      ctx.fillRect(sx - 4, sy - 1, 2, 2);
+      ctx.fillRect(sx + 2, sy - 1, 2, 2);
+      ctx.fillRect(sx - 6, sy + 4, 2, 3);
+      ctx.fillRect(sx + 4, sy + 4, 2, 3);
+      ctx.fillStyle = "rgba(255,255,255,0.10)";
+      ctx.fillRect(sx - 3, sy - 4, 4, 1);
+    }
 
-      if (enemy.health > 1) {
-        const ratio = clamp(enemy.health / Math.max(1, enemy.maxHealth), 0, 1);
-        const width = enemy.isBoss ? 26 : enemy.type === "knight" ? 14 : 8;
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
-        ctx.fillRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 18 : 13), width, 4);
-        ctx.fillStyle = enemy.isBoss ? "#ffb25f" : "#fff6c2";
-        ctx.fillRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 18 : 13), Math.max(1, Math.floor(width * ratio)), 4);
-      }
+    if (enemy.health > 1) {
+      const ratio = clamp(enemy.health / Math.max(1, enemy.maxHealth), 0, 1);
+      const width = enemy.isBoss ? 28 : enemy.type === "knight" ? 16 : 10;
+      ctx.fillStyle = "rgba(0,0,0,0.40)";
+      ctx.fillRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 19 : 13), width, 4);
+      ctx.fillStyle = enemy.isBoss ? "#ffb25f" : "#fff6c2";
+      ctx.fillRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 19 : 13), Math.max(1, Math.floor(width * ratio)), 4);
     }
   }
+}
 
-  function drawPlayer() {
+function drawPlayer() {
     const p = state.player;
     const sx = p.x - state.camera.x;
     const sy = p.y - state.camera.y;
@@ -2359,40 +2502,42 @@ function burst(x, y, palette) {
     ctx.restore();
   }
 
-  function drawEffects() {
-    for (const projectile of state.projectiles) {
-      const sx = projectile.x - state.camera.x;
-      const sy = projectile.y - state.camera.y;
-      ctx.fillStyle = projectile.color;
-      ctx.fillRect(sx - projectile.r, sy - projectile.r, projectile.r * 2, projectile.r * 2);
-      ctx.fillStyle = "#fff6d1";
-      ctx.fillRect(sx - 1, sy - 1, 2, 2);
-    }
-
-    for (const dust of state.strikeDust) {
-      const sx = dust.x - state.camera.x;
-      const sy = dust.y - state.camera.y;
-      ctx.save();
-      ctx.globalAlpha = dust.life / dust.maxLife;
-      ctx.fillStyle = dust.weaponId === "spear" ? "#d8e8ff" : "#fff8df";
-      ctx.fillRect(sx - 4, sy - 4, 8, 8);
-      ctx.fillStyle = "#f6d86f";
-      ctx.fillRect(sx - 2, sy - 2, 4, 4);
-      ctx.restore();
-    }
-
-    for (const particle of state.particles) {
-      const sx = particle.x - state.camera.x;
-      const sy = particle.y - state.camera.y;
-      ctx.save();
-      ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
-      ctx.fillStyle = particle.color || "white";
-      ctx.fillRect(sx, sy, 3, 3);
-      ctx.restore();
-    }
+function drawEffects() {
+  for (const projectile of state.projectiles) {
+    const sx = projectile.x - state.camera.x;
+    const sy = projectile.y - state.camera.y;
+    ctx.fillStyle = "rgba(0,0,0,0.14)";
+    ctx.fillRect(sx - projectile.r, sy + projectile.r + 1, projectile.r * 2, 2);
+    ctx.fillStyle = projectile.color;
+    ctx.fillRect(sx - projectile.r, sy - projectile.r, projectile.r * 2, projectile.r * 2);
+    ctx.fillStyle = "#fff6d1";
+    ctx.fillRect(sx - 1, sy - 1, 2, 2);
   }
 
-  function drawDebug() {
+  for (const dust of state.strikeDust) {
+    const sx = dust.x - state.camera.x;
+    const sy = dust.y - state.camera.y;
+    ctx.save();
+    ctx.globalAlpha = dust.life / dust.maxLife;
+    ctx.fillStyle = dust.weaponId === "spear" ? "#d8e8ff" : "#fff8df";
+    ctx.fillRect(sx - 5, sy - 5, 10, 10);
+    ctx.fillStyle = "#f6d86f";
+    ctx.fillRect(sx - 2, sy - 2, 4, 4);
+    ctx.restore();
+  }
+
+  for (const particle of state.particles) {
+    const sx = particle.x - state.camera.x;
+    const sy = particle.y - state.camera.y;
+    ctx.save();
+    ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
+    ctx.fillStyle = particle.color || "white";
+    ctx.fillRect(sx, sy, 3, 3);
+    ctx.restore();
+  }
+}
+
+function drawDebug() {
     if (!state.debug.hitboxes || !state.player) return;
     const area = currentArea();
     ctx.save();
