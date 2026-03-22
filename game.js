@@ -42,7 +42,7 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.7.0";
+  const GAME_VERSION = "v2.7.1";
   const BUILD_DATE = "2026-03-22";
   const BUILD_NAME = "Save & Progress Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
@@ -748,6 +748,7 @@
   }
 
   function resetGame(options = {}) {
+    const { autosave = true } = options;
     state.running = true;
     state.victory = false;
     state.gameOver = false;

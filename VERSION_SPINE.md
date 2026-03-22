@@ -1,4 +1,4 @@
-# Elderfield — Planned Version Spine (updated through v2.7.0)
+# Elderfield — Planned Version Spine (updated through v2.7.1)
 
 ## Current Build
 - **v2.6.0 — Lore & Structure Pass**
@@ -7,7 +7,7 @@
   - seeds the broader epic story in playable text
 
 ## Near Term Queue
-- **v2.7.0 — Save & Progress Pass**
+- **v2.7.1 — Save & Progress Pass**
 - **v2.8.0 — Town & NPC Foundations**
 - **v2.9.0 — Puzzle & Secret Pass**
 - **v3.0.0 — Vertical Slice**

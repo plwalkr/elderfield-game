@@ -1,8 +1,8 @@
-# Elderfield — v2.7.0 Save & Progress Pass
+# Elderfield — v2.7.1 Save & Progress Pass
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v2.7.0
+## New in v2.7.1
 - browser save/load using local storage
 - Continue Adventure, New Journey, and Delete Save actions on the start card
 - autosave while traveling, plus shrine and dungeon progress saves
@@ -51,7 +51,7 @@ Upload the files to your repo root and enable GitHub Pages from the main branch 
 
 ## Verify the update worked
 Look for:
-- on-screen build badge: `v2.7.0 • Save & Progress Pass`
+- on-screen build badge: `v2.7.1 • Save & Progress Pass`
 - the build badge now living in the **top-right**
 - start card buttons for **Continue Adventure / New Journey / Delete Save**
 - debug report including a **Save** section
