@@ -14,6 +14,13 @@
   const touchInteract = document.getElementById("touchInteract");
   const debugPanel = document.getElementById("debugPanel");
   const debugContent = document.getElementById("debugContent");
+  const copyDebugButton = document.getElementById("copyDebugButton");
+  const versionValue = document.getElementById("versionValue");
+  const debugBuildValue = document.getElementById("debugBuildValue");
+  const buildWatermark = document.getElementById("buildWatermark");
+  const statusPill = document.getElementById("statusPill");
+  const statusValue = document.getElementById("statusValue");
+  const debugStatusBadge = document.getElementById("debugStatusBadge");
 
   const TILE = 24;
   const WORLD_W = 84;
@@ -22,7 +29,9 @@
   const ATTACK_COOLDOWN = 0.25;
   const ATTACK_TIME = 0.13;
   const ENEMY_TOUCH_DAMAGE = 1;
-  const GAME_VERSION = "v1.1.0";
+  const GAME_VERSION = "v2.0.0";
+  const BUILD_DATE = "2026-03-22";
+  const BUILD_NAME = "Diagnostics Pass";
 
   const keys = Object.create(null);
   const touchState = { up: false, down: false, left: false, right: false };
@@ -52,7 +61,12 @@
       fps: 0,
       fpsFrames: 0,
       fpsTime: 0,
+      status: "good",
+      statusText: "GOOD",
+      issues: [],
       lastAction: "boot",
+      copyResult: "idle",
+      errors: [],
     },
   };
 
@@ -66,18 +80,216 @@
     state.debug.lastAction = text;
   }
 
+  function syncBuildStamp() {
+    versionValue.textContent = GAME_VERSION;
+    debugBuildValue.textContent = GAME_VERSION;
+    buildWatermark.textContent = `${GAME_VERSION} • ${BUILD_NAME}`;
+  }
+
+  function updateStatusUi() {
+    statusPill.dataset.state = state.debug.status;
+    debugStatusBadge.dataset.state = state.debug.status;
+    statusValue.textContent = state.debug.statusText;
+    debugStatusBadge.textContent = state.debug.statusText;
+  }
+
+  function recordRuntimeError(kind, value) {
+    const safeValue = String(value || "unknown error").slice(0, 180);
+    const entry = `${kind}: ${safeValue}`;
+    if (!state.debug.errors.includes(entry)) {
+      state.debug.errors.unshift(entry);
+      state.debug.errors = state.debug.errors.slice(0, 6);
+    }
+    setDebugAction(`error-${kind}`);
+  }
+
+  function computeStatus() {
+    const issues = [];
+    let status = "good";
+
+    if (canvas.width <= 0 || canvas.height <= 0) {
+      status = "issue";
+      issues.push("canvas size invalid");
+    }
+
+    if (state.debug.errors.length > 0) {
+      status = "issue";
+      issues.push("runtime error captured");
+    }
+
+    if (state.running && state.debug.fps > 0) {
+      if (state.debug.fps < 38) {
+        status = "issue";
+        issues.push(`fps low (${state.debug.fps})`);
+      } else if (state.debug.fps < 55 && status !== "issue") {
+        status = "warn";
+        issues.push(`fps dipped (${state.debug.fps})`);
+      }
+    }
+
+    if (state.player) {
+      if (state.player.health <= 1 && status !== "issue") {
+        status = "warn";
+        issues.push("player health critical");
+      }
+      if (state.gameOver) {
+        status = "issue";
+        issues.push("player defeated");
+      }
+    }
+
+    if (state.debug.copyResult === "failed" && status !== "issue") {
+      status = "warn";
+      issues.push("clipboard copy fallback needed");
+    }
+
+    if (issues.length === 0) {
+      issues.push("all systems stable");
+    }
+
+    state.debug.status = status;
+    state.debug.statusText = status === "good" ? "GOOD" : status === "warn" ? "WARN" : "ISSUE";
+    state.debug.issues = issues;
+    updateStatusUi();
+  }
+
+  function buildDebugReport() {
+    const player = state.player || { x: 0, y: 0, health: 0, maxHealth: 0, attackTimer: 0, invuln: 0, lastDir: { x: 0, y: 0 } };
+    const enemyCount = state.enemies.filter((enemy) => !enemy.dead).length;
+    const pointerText = `${Math.round(pointerState.x)}, ${Math.round(pointerState.y)} ${pointerState.active ? "(active)" : "(idle)"}`;
+    return [
+      `Elderfield Debug Report`,
+      `Version: ${GAME_VERSION} • ${BUILD_DATE} • ${BUILD_NAME}`,
+      `Status: ${state.debug.statusText} • Issues: ${state.debug.issues.join("; ")}`,
+      ``,
+      `Session`,
+      `- Running=${state.running}`,
+      `- Victory=${state.victory}`,
+      `- GameOver=${state.gameOver}`,
+      ``,
+      `Viewport`,
+      `- LogicalSize=${state.logicalWidth}x${state.logicalHeight}`,
+      `- CanvasBacking=${canvas.width}x${canvas.height}`,
+      `- Camera=${state.camera.x.toFixed(1)}, ${state.camera.y.toFixed(1)}`,
+      ``,
+      `Player`,
+      `- Pos=${player.x.toFixed(1)}, ${player.y.toFixed(1)}`,
+      `- Health=${player.health}/${player.maxHealth}`,
+      `- Facing=${player.lastDir.x.toFixed(2)}, ${player.lastDir.y.toFixed(2)}`,
+      `- AttackTimer=${player.attackTimer.toFixed(3)}`,
+      `- Invuln=${player.invuln.toFixed(3)}`,
+      ``,
+      `World`,
+      `- EnemiesAlive=${enemyCount}`,
+      `- Particles=${state.particles.length}`,
+      `- StrikeDust=${state.strikeDust.length}`,
+      ``,
+      `Input`,
+      `- Pointer=${pointerText}`,
+      `- Touch=${JSON.stringify(touchState)}`,
+      `- DebugEnabled=${state.debug.enabled}`,
+      `- Hitboxes=${state.debug.hitboxes}`,
+      `- FPS=${state.debug.fps}`,
+      `- LastAction=${state.debug.lastAction}`,
+      `- CopyResult=${state.debug.copyResult}`,
+      ``,
+      `Errors`,
+      ...(state.debug.errors.length ? state.debug.errors.map((error) => `- ${error}`) : [`- none`]),
+    ].join("\n");
+  }
+
+  function refreshDebugPanel() {
+    debugContent.textContent = buildDebugReport();
+  }
+
+  function fallbackCopyText(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return ok;
+  }
+
+  async function copyDebugReport() {
+    const report = buildDebugReport();
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(report);
+      } else {
+        const ok = fallbackCopyText(report);
+        if (!ok) throw new Error("execCommand copy failed");
+      }
+      state.debug.copyResult = "copied";
+      setDebugAction("copy-debug-report");
+      setMessage("Debug report copied.", 1.6);
+    } catch (error) {
+      state.debug.copyResult = "failed";
+      recordRuntimeError("copy", error && error.message ? error.message : error);
+      setMessage("Copy failed. Open debug and copy manually.", 2.2);
+    }
+    computeStatus();
+    refreshDebugPanel();
+  }
+
   function toggleDebug() {
     state.debug.enabled = !state.debug.enabled;
     debugPanel.hidden = !state.debug.enabled;
     setDebugAction(state.debug.enabled ? "debug-open" : "debug-closed");
+    refreshDebugPanel();
     setMessage(state.debug.enabled ? "Dev overlay opened." : "Dev overlay hidden.", 1.4);
-    if (state.debug.enabled) updateDebugPanel(0);
   }
 
   function toggleHitboxes() {
     state.debug.hitboxes = !state.debug.hitboxes;
     setDebugAction(state.debug.hitboxes ? "hitboxes-on" : "hitboxes-off");
-    setMessage(state.debug.hitboxes ? "Hitboxes visible." : "Hitboxes hidden.", 1.4);
+    setMessage(state.debug.hitboxes ? "Hitboxes enabled." : "Hitboxes hidden.", 1.4);
+    refreshDebugPanel();
+  }
+
+  function clearAllEnemies() {
+    let changed = false;
+    for (const enemy of state.enemies) {
+      if (enemy.dead) continue;
+      enemy.dead = true;
+      burst(enemy.x, enemy.y, enemy.tint === "moss" ? ["#98f58d", "#d7ffd0"] : ["#ffb25e", "#fff0c2"]);
+      changed = true;
+    }
+    if (changed) {
+      updateHud();
+      setDebugAction("clear-enemies");
+      setMessage("All field enemies cleared for testing.", 2.2);
+      refreshDebugPanel();
+    }
+  }
+
+  function healPlayer() {
+    if (!state.player) return;
+    state.player.health = state.player.maxHealth;
+    updateHud();
+    setDebugAction("heal-player");
+    setMessage("Hearts restored.", 1.6);
+    refreshDebugPanel();
+  }
+
+  function updateDiagnostics(dt) {
+    state.debug.fpsFrames += 1;
+    state.debug.fpsTime += dt;
+    if (state.debug.fpsTime >= 0.4) {
+      state.debug.fps = Math.round(state.debug.fpsFrames / state.debug.fpsTime);
+      state.debug.fpsFrames = 0;
+      state.debug.fpsTime = 0;
+    }
+    computeStatus();
+    if (state.debug.enabled) {
+      refreshDebugPanel();
+    }
   }
 
   function resizeCanvas() {
@@ -301,6 +513,7 @@
   function updateHud() {
     heartsValue.textContent = `${state.player.health}/${state.player.maxHealth}`;
     enemiesValue.textContent = state.enemies.filter((e) => !e.dead).length;
+    computeStatus();
   }
 
   function getTile(tx, ty) {
@@ -398,29 +611,6 @@
       w: 30 + Math.abs(p.attackDir.y) * 8,
       h: 30 + Math.abs(p.attackDir.x) * 8,
     };
-  }
-
-  function clearAllEnemies() {
-    let changed = false;
-    for (const enemy of state.enemies) {
-      if (enemy.dead) continue;
-      enemy.dead = true;
-      burst(enemy.x, enemy.y, enemy.tint === "moss" ? ["#98f58d", "#d7ffd0"] : ["#ffb25e", "#fff0c2"]);
-      changed = true;
-    }
-    if (changed) {
-      updateHud();
-      setDebugAction("clear-enemies");
-      setMessage("All field enemies cleared for testing.", 2.2);
-    }
-  }
-
-  function healPlayer() {
-    if (!state.player) return;
-    state.player.health = state.player.maxHealth;
-    updateHud();
-    setDebugAction("heal-player");
-    setMessage("Hearts restored.", 1.6);
   }
 
   function interact() {
@@ -861,91 +1051,50 @@
     }
   }
 
-  function drawDebugHitbox(entity, color = "#7cf0ff") {
-    const sx = entity.x - entity.w / 2 - state.camera.x;
-    const sy = entity.y - entity.h / 2 - state.camera.y;
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(Math.round(sx) + 0.5, Math.round(sy) + 0.5, entity.w, entity.h);
-    ctx.restore();
-  }
-
-  function drawDebugWorldMarker(x, y, size, color) {
-    const sx = x - state.camera.x;
-    const sy = y - state.camera.y;
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(sx - size, sy);
-    ctx.lineTo(sx + size, sy);
-    ctx.moveTo(sx, sy - size);
-    ctx.lineTo(sx, sy + size);
-    ctx.stroke();
-    ctx.restore();
-  }
-
   function drawDebug() {
     if (!state.debug.hitboxes || !state.player) return;
-    drawDebugHitbox(state.player, "#8be8ff");
+
+    ctx.save();
+    ctx.lineWidth = 1;
+
+    const p = state.player;
+    ctx.strokeStyle = "#67e67f";
+    ctx.strokeRect(
+      Math.round(p.x - p.w / 2 - state.camera.x) + 0.5,
+      Math.round(p.y - p.h / 2 - state.camera.y) + 0.5,
+      p.w,
+      p.h,
+    );
+
+    const slash = currentSlashBox();
+    if (slash) {
+      ctx.strokeStyle = "#f4cf68";
+      ctx.strokeRect(
+        Math.round(slash.x - slash.w / 2 - state.camera.x) + 0.5,
+        Math.round(slash.y - slash.h / 2 - state.camera.y) + 0.5,
+        slash.w,
+        slash.h,
+      );
+    }
 
     for (const enemy of state.enemies) {
       if (enemy.dead) continue;
-      drawDebugHitbox(enemy, "#ff9d7b");
-      ctx.save();
-      ctx.strokeStyle = "rgba(255, 208, 122, 0.35)";
+      const ex = enemy.x - state.camera.x;
+      const ey = enemy.y - state.camera.y;
+      ctx.strokeStyle = "#f57b7b";
+      ctx.strokeRect(
+        Math.round(ex - enemy.w / 2) + 0.5,
+        Math.round(ey - enemy.h / 2) + 0.5,
+        enemy.w,
+        enemy.h,
+      );
+      ctx.strokeStyle = "rgba(245, 207, 104, 0.35)";
       ctx.beginPath();
-      ctx.arc(enemy.x - state.camera.x, enemy.y - state.camera.y, enemy.chaseRadius, 0, Math.PI * 2);
+      ctx.arc(ex, ey, enemy.chaseRadius, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.restore();
     }
 
-    for (const item of state.interactables) {
-      drawDebugHitbox({
-        x: item.x + item.w / 2,
-        y: item.y + item.h / 2,
-        w: item.w,
-        h: item.h,
-      }, item.type === "shrine" ? "#c9b3ff" : "#ffe087");
-    }
-
-    const slash = currentSlashBox();
-    if (slash) drawDebugHitbox(slash, "#f7f0b5");
-    if (pointerState.active) drawDebugWorldMarker(pointerState.x, pointerState.y, 8, "#ffffff");
-  }
-
-  function updateDebugPanel(dt) {
-    state.debug.fpsFrames += 1;
-    state.debug.fpsTime += dt;
-    if (state.debug.fpsTime >= 0.25) {
-      state.debug.fps = Math.round(state.debug.fpsFrames / state.debug.fpsTime);
-      state.debug.fpsFrames = 0;
-      state.debug.fpsTime = 0;
-    }
-
-    if (!state.debug.enabled || !state.player) return;
-
-    const p = state.player;
-    const alive = state.enemies.filter((enemy) => !enemy.dead).length;
-    const attack = currentSlashBox();
-    const pointerText = pointerState.active
-      ? `${pointerState.x.toFixed(1)}, ${pointerState.y.toFixed(1)}`
-      : "inactive";
-
-    debugContent.textContent = [
-      `build     ${GAME_VERSION}`,
-      `fps       ${state.debug.fps}`,
-      `running   ${state.running} | victory ${state.victory} | gameOver ${state.gameOver}`,
-      `player    ${p.x.toFixed(1)}, ${p.y.toFixed(1)} | dir ${p.lastDir.x.toFixed(0)},${p.lastDir.y.toFixed(0)}`,
-      `hearts    ${p.health}/${p.maxHealth} | invuln ${p.invuln.toFixed(2)} | attack ${p.attackTimer.toFixed(2)}`,
-      `camera    ${state.camera.x.toFixed(1)}, ${state.camera.y.toFixed(1)} | canvas ${state.logicalWidth}x${state.logicalHeight}`,
-      `pointer   ${pointerText}`,
-      `enemies   alive ${alive}/${state.enemies.length} | particles ${state.particles.length} | strikeDust ${state.strikeDust.length}`,
-      `slash     ${attack ? `${attack.x.toFixed(1)}, ${attack.y.toFixed(1)} ${attack.w}x${attack.h}` : "inactive"}`,
-      `touch     U:${touchState.up ? 1 : 0} D:${touchState.down ? 1 : 0} L:${touchState.left ? 1 : 0} R:${touchState.right ? 1 : 0}`,
-      `debug     hitboxes ${state.debug.hitboxes} | last ${state.debug.lastAction}`,
-    ].join("\n");
+    ctx.restore();
   }
 
   function drawVignette() {
@@ -985,7 +1134,7 @@
       updateParticles(dt);
     }
 
-    updateDebugPanel(dt);
+    updateDiagnostics(dt);
     draw();
     requestAnimationFrame(loop);
   }
@@ -999,27 +1148,36 @@
     state.camera.y = 0;
     state.particles.length = 0;
     state.strikeDust.length = 0;
-    state.debug.lastAction = "reset-game";
+    state.debug.errors.length = 0;
+    state.debug.copyResult = "idle";
+    setDebugAction("reset-game");
     buildWorld();
     startCard.hidden = true;
     startButton.hidden = false;
     restartButton.hidden = true;
     setMessage("Clear the field, then approach the shrine and press Enter.", 4);
+    refreshDebugPanel();
   }
 
   function init() {
+    syncBuildStamp();
     resizeCanvas();
     buildWorld();
-    setMessage("Press Start, move with WASD, click or tap to slash. F3 opens dev overlay.", 999);
+    setMessage("Press Start, move with WASD, click or tap to slash.", 999);
+    computeStatus();
+    refreshDebugPanel();
     requestAnimationFrame(loop);
   }
 
-  window.addEventListener("resize", resizeCanvas);
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+    computeStatus();
+    refreshDebugPanel();
+  });
 
   window.addEventListener("keydown", (event) => {
-    keys[event.code] = true;
-
-    if (["F3", "F4", "F6", "F8", "Backquote", "KeyH", "Enter"].includes(event.code)) {
+    const debugKeys = ["F3", "Backquote", "F4", "F6", "KeyH", "F8"];
+    if (debugKeys.includes(event.code)) {
       event.preventDefault();
     }
 
@@ -1045,10 +1203,13 @@
 
     if (event.code === "F8") {
       resetGame();
+      setMessage("Field reset.", 1.5);
       return;
     }
 
+    keys[event.code] = true;
     if (event.code === "Enter") {
+      event.preventDefault();
       if (!state.running && (state.victory || state.gameOver)) {
         resetGame();
       } else if (!state.running) {
@@ -1076,17 +1237,32 @@
 
   canvas.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    if (!state.running) return;
     const worldPoint = screenToWorld(event.clientX, event.clientY);
     pointerState.x = worldPoint.x;
     pointerState.y = worldPoint.y;
     pointerState.active = true;
-    if (!state.running) return;
     doAttack({ x: worldPoint.x - state.player.x, y: worldPoint.y - state.player.y });
-    setDebugAction("pointer-attack");
   });
 
   startButton.addEventListener("click", resetGame);
   restartButton.addEventListener("click", resetGame);
+  copyDebugButton.addEventListener("click", () => {
+    copyDebugReport();
+  });
+
+  window.addEventListener("error", (event) => {
+    recordRuntimeError("window", event.message || event.error || "unknown");
+    computeStatus();
+    refreshDebugPanel();
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason && event.reason.message ? event.reason.message : event.reason;
+    recordRuntimeError("promise", reason || "unhandled rejection");
+    computeStatus();
+    refreshDebugPanel();
+  });
 
   function bindTouchDirection(button, key) {
     const press = (event) => {
@@ -1110,12 +1286,10 @@
   touchAttack.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     doAttack(state.player.lastDir);
-    setDebugAction("touch-attack");
   });
 
   touchInteract.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    setDebugAction("touch-interact");
     if (!state.running) {
       resetGame();
       return;

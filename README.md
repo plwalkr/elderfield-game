@@ -36,23 +36,23 @@ Open `index.html` directly in a browser, or serve the folder with any simple loc
 - Save points and multi-map zones
 
 
-## Upgrade pass v1.1.0
+## Upgrade pass v2.0.0
 
-Added a hidden developer overlay for faster testing and future expansion.
+This build turns the old hidden overlay into a real diagnostics layer so you can verify GitHub uploads and copy a clean debug report fast.
+
+### New in v2.0.0
+- always-visible on-screen build/version badge
+- live status pill with traffic-light states:
+  - `GOOD` = green
+  - `WARN` = yellow
+  - `ISSUE` = red
+- copyable debug report button inside the overlay
+- runtime error capture for window errors and rejected promises
+- hitbox and aggro-circle rendering when debug draw is enabled
 
 ### Debug shortcuts
 - `F3` or `` ` ``: toggle debug overlay
 - `F4`: toggle hitboxes and aggro circles
-- `F6`: clear all enemies for testing
-- `H`: refill player hearts
-- `F8`: reset the current field
-
-### What the overlay shows
-- version and FPS
-- player position and facing direction
-- attack timer and invulnerability time
-- camera position and canvas size
-- pointer world position
-- living enemy count and particle count
-- touch input state
-- last debug action
+- `F6`: clear all enemies
+- `H`: heal player
+- `F8`: reset the field
