@@ -1,8 +1,8 @@
-# Elderfield — v2.3.0 World & HUD Pass
+# Elderfield — v2.4.0 World & HUD Pass
 
 This build expands the prototype into a bigger overworld with three distinct dungeon routes and a lighter, more icon-driven HUD.
 
-## New in v2.3.0
+## New in v2.4.0
 - Smaller corner HUD with icons instead of a long top text bar
 - Bigger overworld with multiple regions:
   - South Meadow
@@ -44,7 +44,14 @@ Upload these files to the root of your GitHub repo:
 
 Then refresh the Pages site. The on-screen build badge should read:
 
-`v2.3.0 • World & HUD Pass`
+`v2.4.0 • World & HUD Pass`
 
 ## Notes
 This is still an original fantasy prototype inspired by classic top-down adventures, not a direct Zelda recreation.
+
+
+## New in v2.4.0
+- Boss health bar and stronger dungeon boss patterns
+- Sprint with Shift or Ctrl while moving
+- Hold click/tap for rapid attacks with advanced weapons
+- Larger desktop viewport and richer terrain detailing

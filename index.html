@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Elderfield — World & HUD Pass</title>
+  <title>Elderfield — Boss & Arsenal Pass</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -14,12 +14,13 @@
         <h1>Elderfield</h1>
         <p class="subtitle">
           A growing top-down fantasy action game with a larger overworld, three dungeon paths,
-          unlockable weapons, a camera-follow field map, mobile controls, and a built-in diagnostics overlay.
+          unlockable weapons, dungeon bosses, sprinting, rapid advanced attacks, a camera-follow field map, mobile controls, and a built-in diagnostics overlay.
         </p>
       </div>
       <div class="legend">
         <span><strong>Move</strong> WASD / Arrows</span>
-        <span><strong>Attack</strong> Click / Tap</span>
+        <span><strong>Attack</strong> Click / Tap • Hold for advanced rapid fire</span>
+        <span><strong>Run</strong> Shift / Ctrl while moving</span>
         <span><strong>Interact</strong> Enter</span>
         <span><strong>Switch Weapon</strong> Q / E or 1-3</span>
         <span><strong>Debug</strong> F3 / ~ • Hitboxes F4</span>
@@ -44,11 +45,18 @@
           </div>
         </div>
 
+        <div class="boss-hud" id="bossHud" hidden>
+          <div class="boss-overline">Dungeon Boss</div>
+          <div class="boss-name" id="bossNameValue">Knight of Elderfield</div>
+          <div class="boss-bar"><div class="boss-fill" id="bossFill"></div></div>
+          <div class="boss-health" id="bossHealthValue">0 / 0</div>
+        </div>
+
         <div class="hud-cluster hud-right">
           <div class="hud-strip" id="weaponHud" aria-label="Weapons"></div>
           <div class="hud-strip" id="dungeonHud" aria-label="Dungeon progress"></div>
           <div class="hud-meta">
-            <div class="build-watermark" id="buildWatermark">v2.3.0 • World &amp; HUD Pass</div>
+            <div class="build-watermark" id="buildWatermark">v2.4.0 • Boss &amp; Arsenal Pass</div>
             <div class="status-pill" id="statusPill" data-state="good">
               <span class="status-dot"></span>
               <span id="statusValue">GOOD</span>
@@ -67,12 +75,12 @@
           <div class="debug-header">
             <div class="debug-header-copy">
               <strong>Dev Overlay</strong>
-              <span class="debug-shortcuts">F3 / ~ toggle • F4 hitboxes • F6 clear foes • H heal • F8 reset</span>
+              <span class="debug-shortcuts">F3 / ~ toggle • F4 hitboxes • F6 clear foes • H heal • F8 reset • Shift/Ctrl sprint</span>
             </div>
             <button class="debug-copy-btn" id="copyDebugButton" type="button">Copy Debug Report</button>
           </div>
           <div class="debug-status-row">
-            <span class="mini-badge">Build <strong id="debugBuildValue">v2.3.0</strong></span>
+            <span class="mini-badge">Build <strong id="debugBuildValue">v2.4.0</strong></span>
             <span class="mini-badge mini-status" id="debugStatusBadge" data-state="good">GOOD</span>
             <span class="mini-badge mini-zone"><strong id="zoneValue">South Meadow</strong></span>
             <span class="mini-badge mini-objective"><span id="objectiveValue">Find a dungeon.</span></span>
@@ -83,8 +91,8 @@
         <div class="start-card" id="startCard">
           <h2>Elderfield</h2>
           <p>
-            South Meadow is no longer alone. Three dungeons now wait across the land, and new weapons
-            sleep behind their knights.
+            South Meadow is no longer alone. Three dungeons now wait across the land, and their knights hit harder.
+            Sprint, rapid-fire advanced weapons, and claim every relic.
           </p>
           <div class="start-controls">
             <button id="startButton" class="primary-btn">Start Adventure</button>

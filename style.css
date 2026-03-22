@@ -95,7 +95,7 @@ h1 {
 .canvas-wrap {
   position: relative;
   width: 100%;
-  min-height: 88vh;
+  min-height: 90vh;
   border-radius: 22px;
   overflow: hidden;
   background: #061009;
@@ -563,4 +563,64 @@ canvas {
   }
   .slot { width: 31px; height: 31px; }
   .hud-chip { min-height: 32px; padding: 5px 9px; }
+}
+
+
+.boss-hud {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  min-width: min(420px, calc(100% - 180px));
+  max-width: 560px;
+  padding: 8px 12px 10px;
+  border-radius: 18px;
+  background: rgba(9, 14, 10, 0.84);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+  backdrop-filter: blur(6px);
+  text-align: center;
+  pointer-events: none;
+}
+.boss-overline {
+  color: #f6d86f;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  margin-bottom: 4px;
+}
+.boss-name {
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 7px;
+}
+.boss-bar {
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.boss-fill {
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f6d86f, #ff8a61);
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.2);
+}
+.boss-health {
+  margin-top: 6px;
+  font-size: 0.74rem;
+  color: #e7efd2;
+  letter-spacing: 0.08em;
+}
+@media (max-width: 900px) {
+  .boss-hud {
+    min-width: min(320px, calc(100% - 120px));
+    top: 10px;
+    padding: 7px 10px 8px;
+  }
+  .boss-name { font-size: 0.86rem; }
+  .boss-health { font-size: 0.68rem; }
 }

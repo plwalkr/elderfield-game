@@ -31,14 +31,18 @@
   const statusPill = document.getElementById("statusPill");
   const statusValue = document.getElementById("statusValue");
   const debugStatusBadge = document.getElementById("debugStatusBadge");
+  const bossHud = document.getElementById("bossHud");
+  const bossNameValue = document.getElementById("bossNameValue");
+  const bossFill = document.getElementById("bossFill");
+  const bossHealthValue = document.getElementById("bossHealthValue");
 
   const TILE = 24;
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.3.0";
+  const GAME_VERSION = "v2.4.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "World & HUD Pass";
+  const BUILD_NAME = "Boss & Arsenal Pass";
   const START_ZONE = "South Meadow";
 
   const DUNGEONS = {
@@ -78,21 +82,21 @@
   };
 
   const WEAPONS = {
-    sword: { id: "sword", name: "Sword", iconClass: "weapon-sword", damage: 1, reach: 30, cooldown: 0.26, attackTime: 0.13, narrow: false },
-    spear: { id: "spear", name: "Wind Spear", iconClass: "weapon-spear", damage: 2, reach: 46, cooldown: 0.34, attackTime: 0.15, narrow: true },
-    wand: { id: "wand", name: "Ember Wand", iconClass: "weapon-wand", damage: 1, reach: 0, cooldown: 0.36, attackTime: 0.05, projectile: true },
+    sword: { id: "sword", name: "Sword", iconClass: "weapon-sword", damage: 1, reach: 30, cooldown: 0.24, attackTime: 0.13, narrow: false },
+    spear: { id: "spear", name: "Wind Spear", iconClass: "weapon-spear", damage: 2, reach: 48, cooldown: 0.17, attackTime: 0.09, narrow: true, rapid: true },
+    wand: { id: "wand", name: "Ember Wand", iconClass: "weapon-wand", damage: 1, reach: 0, cooldown: 0.15, attackTime: 0.04, projectile: true, rapid: true, projectileSpeed: 330, projectileLife: 1.05 },
   };
 
   const keys = Object.create(null);
-  const touchState = { up: false, down: false, left: false, right: false };
-  const pointerState = { x: 0, y: 0, active: false };
+  const touchState = { up: false, down: false, left: false, right: false, attack: false };
+  const pointerState = { x: 0, y: 0, active: false, attackHeld: false };
 
   const state = {
     running: false,
     victory: false,
     gameOver: false,
-    logicalWidth: 896,
-    logicalHeight: 504,
+    logicalWidth: 960,
+    logicalHeight: 540,
     camera: { x: 0, y: 0 },
     cameraShake: { power: 0, time: 0 },
     transition: { active: false, alpha: 0, stage: "idle", targetAreaId: null, targetSpawn: null, targetMessage: "" },
@@ -184,6 +188,29 @@
 
   function activeWeaponData() {
     return WEAPONS[state.player?.activeWeapon || "sword"];
+  }
+
+  function currentAttackWeaponData() {
+    return WEAPONS[state.player?.attackWeaponId || state.player?.activeWeapon || "sword"];
+  }
+
+  function currentBoss() {
+    const area = currentArea();
+    if (!area) return null;
+    return area.enemies.find((enemy) => enemy.isBoss && !enemy.dead) || null;
+  }
+
+  function updateBossHud() {
+    const boss = currentBoss();
+    if (!boss) {
+      bossHud.hidden = true;
+      return;
+    }
+    bossHud.hidden = false;
+    bossNameValue.textContent = boss.bossName || "Dungeon Boss";
+    const ratio = clamp(boss.health / Math.max(1, boss.maxHealth), 0, 1);
+    bossFill.style.width = `${Math.round(ratio * 100)}%`;
+    bossHealthValue.textContent = `${Math.max(0, boss.health)} / ${boss.maxHealth}`;
   }
 
   function renderWeaponHud() {
@@ -333,6 +360,8 @@
       `- SwordLevel=${player.swordLevel}`,
       `- ActiveWeapon=${player.activeWeapon}`,
       `- WeaponsOwned=${player.weaponsOwned.join(", ")}`,
+      `- Sprinting=${!!player.isRunning}`,
+      `- RunHeld=${!!player.runHeld}`,
       `- Rupees=${state.rupees}`,
       `- Facing=${player.lastDir.x.toFixed(2)}, ${player.lastDir.y.toFixed(2)}`,
       `- AttackTimer=${player.attackTimer.toFixed(3)}`,
@@ -349,6 +378,7 @@
       `- Particles=${state.particles.length}`,
       `- StrikeDust=${state.strikeDust.length}`,
       `- Projectiles=${state.projectiles.length}`,
+      `- Boss=${currentBoss() ? `${currentBoss().bossName || "boss"} ${currentBoss().health}/${currentBoss().maxHealth}` : "none"}`,
       ``,
       `Progress`,
       `- FieldCleared=${state.overworld.fieldCleared}`,
@@ -518,10 +548,10 @@
     canvas.style.height = `${Math.floor(drawHeight)}px`;
     canvas.style.margin = `${Math.max(0, (cssHeight - drawHeight) / 2)}px auto`;
 
-    let base = 896;
-    if (window.innerWidth <= 1500) base = 832;
-    if (window.innerWidth <= 1180) base = 768;
-    if (window.innerWidth <= 900) base = 672;
+    let base = 960;
+    if (window.innerWidth <= 1500) base = 896;
+    if (window.innerWidth <= 1180) base = 800;
+    if (window.innerWidth <= 900) base = 688;
     if (window.innerWidth <= 700) base = 560;
     if (window.innerWidth <= 560) base = 448;
     state.logicalWidth = base;
@@ -652,6 +682,10 @@
       type: data.type || "slime",
       damage: data.damage || 1,
       touchPush: data.touchPush || 18,
+      isBoss: !!data.isBoss,
+      bossName: data.bossName || null,
+      dashCooldown: data.dashCooldown || 1.8 + Math.random() * 0.6,
+      fireCooldown: data.fireCooldown || 1.4 + Math.random() * 0.6,
     });
   }
 
@@ -1003,13 +1037,17 @@
       y: 13.5 * TILE,
       w: 22,
       h: 22,
-      speed: dungeonId === "ember" ? 76 : 70,
+      speed: dungeonId === "ember" ? 78 : dungeonId === "rootwood" ? 72 : 70,
       chaseRadius: 250,
       health: dungeonId === "ruins" ? 8 : dungeonId === "rootwood" ? 9 : 10,
       tint: DUNGEONS[dungeonId].bossTint,
       type: "knight",
+      isBoss: true,
+      bossName: dungeonId === "ruins" ? "Stone Warden" : dungeonId === "rootwood" ? "Rootbound Knight" : "Ashen Knight",
       damage: dungeonId === "ember" ? 3 : 2,
       touchPush: 28,
+      dashCooldown: dungeonId === "ruins" ? 1.4 : 1.9,
+      fireCooldown: dungeonId === "ruins" ? 99 : dungeonId === "rootwood" ? 1.9 : 1.5,
     });
 
     return area;
@@ -1039,11 +1077,16 @@
       w: 18,
       h: 18,
       speed: 130,
+      runMultiplier: 1.62,
       lastDir: { x: 0, y: 1 },
       attackCooldown: 0,
       attackTimer: 0,
       attackDir: { x: 0, y: 1 },
       slashHitIds: new Set(),
+      attackWeaponId: "sword",
+      isRunning: false,
+      runHeld: false,
+      runFx: 0,
       health: 5,
       maxHealth: 5,
       invuln: 0,
@@ -1144,6 +1187,7 @@
     rewardsValue.textContent = formatRewards();
     renderWeaponHud();
     renderDungeonHud();
+    updateBossHud();
     computeStatus();
   }
 
@@ -1251,17 +1295,42 @@
     setActiveWeapon(next);
   }
 
+  function rotateVector(dir, radians) {
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+    return { x: dir.x * c - dir.y * s, y: dir.x * s + dir.y * c };
+  }
+
+  function spawnEnemyProjectile(enemy, direction, kind = "ember") {
+    const dir = normalize(direction.x, direction.y);
+    const thorn = kind === "thorn";
+    state.projectiles.push({
+      owner: "enemy",
+      kind,
+      x: enemy.x + dir.x * 18,
+      y: enemy.y + dir.y * 18,
+      vx: dir.x * (thorn ? 220 : 250),
+      vy: dir.y * (thorn ? 220 : 250),
+      life: thorn ? 1.3 : 1.0,
+      damage: thorn ? 1 : 2,
+      r: thorn ? 4 : 5,
+      color: thorn ? "#b9f091" : "#ff9e62",
+      hitIds: new Set(),
+    });
+  }
+
   function spawnPlayerProjectile(direction, weaponId) {
     const dir = normalize(direction.x, direction.y);
+    const weapon = WEAPONS[weaponId] || WEAPONS.wand;
     state.projectiles.push({
       owner: "player",
       weaponId,
       x: state.player.x + dir.x * 18,
       y: state.player.y + dir.y * 18,
-      vx: dir.x * 280,
-      vy: dir.y * 280,
-      life: 0.9,
-      damage: 1,
+      vx: dir.x * (weapon.projectileSpeed || 280),
+      vy: dir.y * (weapon.projectileSpeed || 280),
+      life: weapon.projectileLife || 0.9,
+      damage: weapon.damage || 1,
       r: 5,
       color: weaponId === "wand" ? "#ffb45c" : "#d8e8ff",
       hitIds: new Set(),
@@ -1277,18 +1346,19 @@
     const weapon = activeWeaponData();
     player.attackDir = dir;
     player.lastDir = dir;
+    player.attackWeaponId = weapon.id;
     player.attackTimer = weapon.attackTime;
     player.attackCooldown = weapon.cooldown;
     player.slashHitIds.clear();
 
     if (weapon.projectile) {
       spawnPlayerProjectile(dir, weapon.id);
-      addCameraShake(1.6, 0.06);
-      for (let i = 0; i < 3; i += 1) spawnSpark(player.x + dir.x * 16, player.y + dir.y * 16, i % 2 ? "#ffd67a" : "#ff9d49");
+      addCameraShake(1.8, 0.06);
+      for (let i = 0; i < 4; i += 1) spawnSpark(player.x + dir.x * 16, player.y + dir.y * 16, i % 2 ? "#ffd67a" : "#ff9d49");
       return;
     }
 
-    addCameraShake(weapon.id === "spear" ? 3.1 : 2.5, 0.08);
+    addCameraShake(weapon.id === "spear" ? 3.4 : 2.6, 0.08);
     for (let i = 0; i < 3; i += 1) {
       state.strikeDust.push({
         x: player.x + dir.x * (16 + i * 5),
@@ -1303,7 +1373,7 @@
 
   function currentSlashBox() {
     const p = state.player;
-    const weapon = activeWeaponData();
+    const weapon = currentAttackWeaponData();
     if (p.attackTimer <= 0 || weapon.projectile) return null;
     const reach = weapon.reach;
     return {
@@ -1316,38 +1386,33 @@
     };
   }
 
-  function damageEnemy(area, enemy, attack, source) {
-    const damage = attack.damage || 1;
-    enemy.health -= damage;
-    enemy.hurt = 0.18;
-    enemy.stun = enemy.type === "knight" ? 0.08 : 0.14;
-    const knock = normalize(enemy.x - source.x, enemy.y - source.y);
-    const push = attack.weaponId === "spear" ? 132 : enemy.type === "knight" ? 88 : 122;
-    enemy.kbX = knock.x * push;
-    enemy.kbY = knock.y * push;
-    addCameraShake(enemy.health <= 0 ? 5 : 3.6, enemy.health <= 0 ? 0.2 : 0.12);
 
-    for (let i = 0; i < 4; i += 1) {
-      spawnSpark(enemy.x + (Math.random() - 0.5) * 8, enemy.y + (Math.random() - 0.5) * 8,
-        enemy.type === "knight" ? "#d7e8ff" : enemy.tint === "ember" || enemy.tint === "embersteel" ? "#ffb05a" : enemy.tint === "stone" ? "#d7cab3" : "#9df58e");
+function damageEnemy(area, enemy, attack, source) {
+  const damage = attack.damage || 1;
+  enemy.health -= damage;
+  enemy.hurt = 0.18;
+  enemy.stun = enemy.type === "knight" ? 0.08 : 0.14;
+  const knock = normalize(enemy.x - source.x, enemy.y - source.y);
+  const push = attack.weaponId === "spear" ? 132 : attack.weaponId === "wand" ? 88 : 102;
+  enemy.kbX += knock.x * push;
+  enemy.kbY += knock.y * push;
+  addCameraShake(enemy.isBoss ? 4.8 : 2.4, enemy.isBoss ? 0.12 : 0.08);
+  burst(enemy.x, enemy.y, enemy.isBoss ? ["#fff1b0", "#ffd278", "#ffffff"] : attack.weaponId === "wand" ? ["#ffb45c", "#ffe5a8"] : ["#fff6d1", "#f6d86f"]);
+  if (enemy.health <= 0) {
+    enemy.dead = true;
+    enemy.health = 0;
+    burst(enemy.x, enemy.y, enemy.isBoss ? ["#fff0c4", "#ffb078", "#f6d86f"] : ["#fff0c4", "#ff8d68"]);
+    if (!enemy.isBoss) spawnRupeeDrop(area, enemy.x, enemy.y);
+    else {
+      for (let i = 0; i < 4; i += 1) spawnRupeeDrop(area, enemy.x + (Math.random() - 0.5) * 18, enemy.y + (Math.random() - 0.5) * 18);
+      showAreaBanner(`${enemy.bossName || "Knight"} fallen`, DUNGEONS[area.dungeonId]?.name || area.name, 2.2);
     }
-
-    if (enemy.health <= 0) {
-      enemy.dead = true;
-      spawnRupeeDrop(area, enemy.x, enemy.y);
-      if (enemy.type === "knight") {
-        burst(enemy.x, enemy.y, ["#d7e8ff", "#ffffff", "#f6d86f"]);
-      } else {
-        burst(enemy.x, enemy.y,
-          enemy.tint === "ember" || enemy.tint === "embersteel" ? ["#ffb25e", "#fff0c2", "#ffe1aa"] :
-          enemy.tint === "stone" ? ["#cfc3ae", "#f4ead9", "#fff6c2"] :
-          ["#98f58d", "#d7ffd0", "#fff6c2"]);
-      }
-      onAreaEnemiesCleared(area);
-    }
+    onAreaEnemiesCleared(area);
   }
+  updateBossHud();
+}
 
-  function onAreaEnemiesCleared(area) {
+function onAreaEnemiesCleared(area) {
     if (area.enemies.some((enemy) => !enemy.dead)) return;
 
     if (area.id === "overworld" && !state.overworld.fieldCleared) {
@@ -1541,162 +1606,218 @@
     setMessage("Nothing here answers you.", 1.4);
   }
 
-  function updatePlayer(dt) {
-    const p = state.player;
-    const area = currentArea();
 
-    p.attackCooldown = Math.max(0, p.attackCooldown - dt);
-    p.attackTimer = Math.max(0, p.attackTimer - dt);
-    p.invuln = Math.max(0, p.invuln - dt);
+function damagePlayer(amount, source, push = 18, burstPalette = ["#ff8a8a", "#ffe3e3"], cause = "hit") {
+  const p = state.player;
+  if (!p || p.invuln > 0 || state.gameOver) return;
+  p.health -= amount;
+  p.invuln = INVULN_TIME;
+  const shove = normalize(p.x - source.x, p.y - source.y);
+  moveWithCollision(p, shove.x * push, shove.y * push);
+  addCameraShake(amount >= 2 ? 5.2 : 4.1, 0.16);
+  burst(p.x, p.y, burstPalette);
+  setDebugAction(`player-${cause}`);
+  if (p.health <= 0) {
+    p.health = 0;
+    state.gameOver = true;
+    state.running = false;
+    startCard.hidden = false;
+    startButton.hidden = true;
+    restartButton.hidden = false;
+    startTitle.textContent = "Felled in Elderfield";
+    startText.textContent = `You reached ${state.zoneName} and gathered ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}. The knights still wait below.`;
+    setMessage("You were overwhelmed. Reset and take a cleaner line.", 4);
+  }
+  updateHud();
+}
 
-    let mx = 0;
-    let my = 0;
-    if (keys.KeyA || keys.ArrowLeft || touchState.left) mx -= 1;
-    if (keys.KeyD || keys.ArrowRight || touchState.right) mx += 1;
-    if (keys.KeyW || keys.ArrowUp || touchState.up) my -= 1;
-    if (keys.KeyS || keys.ArrowDown || touchState.down) my += 1;
 
-    if (mx !== 0 || my !== 0) {
-      const dir = normalize(mx, my);
-      p.lastDir = dir;
-      const speed = p.attackTimer > 0 ? p.speed * 0.62 : p.speed;
-      moveWithCollision(p, dir.x * speed * dt, dir.y * speed * dt);
+function updatePlayer(dt) {
+  const p = state.player;
+  const area = currentArea();
+
+  p.attackCooldown = Math.max(0, p.attackCooldown - dt);
+  p.attackTimer = Math.max(0, p.attackTimer - dt);
+  p.invuln = Math.max(0, p.invuln - dt);
+  p.runFx = Math.max(0, p.runFx - dt);
+
+  let mx = 0;
+  let my = 0;
+  if (keys.KeyA || keys.ArrowLeft || touchState.left) mx -= 1;
+  if (keys.KeyD || keys.ArrowRight || touchState.right) mx += 1;
+  if (keys.KeyW || keys.ArrowUp || touchState.up) my -= 1;
+  if (keys.KeyS || keys.ArrowDown || touchState.down) my += 1;
+
+  p.runHeld = !!(keys.ShiftLeft || keys.ShiftRight || keys.ControlLeft || keys.ControlRight);
+  p.isRunning = p.runHeld && (mx !== 0 || my !== 0) && p.attackTimer <= 0;
+
+  if (mx !== 0 || my !== 0) {
+    const dir = normalize(mx, my);
+    p.lastDir = dir;
+    const speed = p.speed * (p.isRunning ? p.runMultiplier : 1) * (p.attackTimer > 0 ? 0.72 : 1);
+    moveWithCollision(p, dir.x * speed * dt, dir.y * speed * dt);
+    if (p.isRunning && p.runFx <= 0) {
+      p.runFx = 0.04;
+      state.particles.push({
+        x: p.x - dir.x * 8 + (Math.random() - 0.5) * 4,
+        y: p.y - dir.y * 8 + 6,
+        vx: -dir.x * 24 + (Math.random() - 0.5) * 10,
+        vy: -dir.y * 24 + (Math.random() - 0.5) * 10,
+        life: 0.16,
+        maxLife: 0.16,
+        color: "rgba(240, 235, 186, 0.85)",
+      });
     }
+  } else {
+    p.isRunning = false;
+  }
 
-    if (area.id === "overworld") {
-      const nextZone = zoneForOverworldPosition(area, p.x, p.y);
-      if (nextZone !== state.zoneName) {
-        state.zoneName = nextZone;
-        showAreaBanner(nextZone, "Region entered", 1.8);
-      }
-    }
+  if ((pointerState.attackHeld || touchState.attack) && activeWeaponData().rapid && p.attackCooldown <= 0 && p.attackTimer <= 0 && state.running && !state.transition.active) {
+    const aim = pointerState.active ? { x: pointerState.x - p.x, y: pointerState.y - p.y } : p.lastDir;
+    doAttack(aim);
+  }
 
-    const slash = currentSlashBox();
-    if (slash) {
-      for (const enemy of area.enemies) {
-        if (enemy.dead || p.slashHitIds.has(enemy.id)) continue;
-        if (rectsOverlap({ ...slash }, enemy)) {
-          p.slashHitIds.add(enemy.id);
-          damageEnemy(area, enemy, slash, p);
-        }
-      }
-    }
-
-    for (let i = area.pickups.length - 1; i >= 0; i -= 1) {
-      const pickup = area.pickups[i];
-      if (pickup.collectDelay > 0) continue;
-      if (!rectsOverlap(p, pickup)) continue;
-
-      if (pickup.kind === "rupeeGreen" || pickup.kind === "rupeeBlue") {
-        state.rupees += pickup.value;
-        burst(pickup.x, pickup.y, pickup.kind === "rupeeBlue" ? ["#7ac8ff", "#d8f1ff"] : ["#7de46e", "#eaffd8"]);
-        setDebugAction(`pickup-${pickup.kind}`);
-      }
-
-      area.pickups.splice(i, 1);
-      addCameraShake(1.2, 0.06);
-      updateHud();
-    }
-
-    for (const enemy of area.enemies) {
-      if (enemy.dead) continue;
-      if (rectsOverlap(p, enemy) && p.invuln <= 0) {
-        p.health -= enemy.damage || 1;
-        p.invuln = INVULN_TIME;
-        const shove = normalize(p.x - enemy.x, p.y - enemy.y);
-        moveWithCollision(p, shove.x * (enemy.touchPush || 18), shove.y * (enemy.touchPush || 18));
-        addCameraShake(enemy.type === "knight" ? 5 : 4.2, 0.16);
-        burst(p.x, p.y, enemy.type === "knight" ? ["#ffe1aa", "#ffe3e3"] : ["#ff8a8a", "#ffe3e3"]);
-        if (p.health <= 0) {
-          p.health = 0;
-          state.gameOver = true;
-          state.running = false;
-          startCard.hidden = false;
-          startButton.hidden = true;
-          restartButton.hidden = false;
-          startTitle.textContent = "Felled in Elderfield";
-          startText.textContent = `You reached ${state.zoneName} and gathered ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}. The knights still wait below.`;
-          setMessage("You were overwhelmed. Reset and take a cleaner line.", 4);
-        }
-        updateHud();
-      }
-    }
-  }  function updateEnemies(dt) {
-    const area = currentArea();
-    const p = state.player;
-    for (const enemy of area.enemies) {
-      if (enemy.dead) continue;
-      enemy.hurt = Math.max(0, enemy.hurt - dt);
-      enemy.changeTimer -= dt;
-      enemy.stun = Math.max(0, enemy.stun - dt);
-
-      if (Math.abs(enemy.kbX) > 1 || Math.abs(enemy.kbY) > 1) {
-        moveWithCollision(enemy, enemy.kbX * dt, enemy.kbY * dt);
-        enemy.kbX *= 0.82;
-        enemy.kbY *= 0.82;
-      }
-
-      if (enemy.stun > 0) continue;
-
-      const dx = p.x - enemy.x;
-      const dy = p.y - enemy.y;
-      const dist = Math.hypot(dx, dy);
-      let dir = enemy.dir;
-      let speed = enemy.speed;
-
-      if (enemy.type === "knight") {
-        if (dist < enemy.chaseRadius) {
-          if (dist > 48) {
-            dir = normalize(dx, dy);
-          } else {
-            dir = normalize(-dy, dx);
-          }
-          speed *= dist < 120 ? 1.18 : 0.96;
-        } else if (enemy.changeTimer <= 0) {
-          enemy.dir = randomDir();
-          enemy.changeTimer = 0.75 + Math.random() * 1.1;
-          dir = enemy.dir;
-        }
-      } else if (dist < enemy.chaseRadius) {
-        dir = normalize(dx, dy);
-        speed *= 1.25;
-      } else if (enemy.changeTimer <= 0) {
-        enemy.dir = randomDir();
-        enemy.changeTimer = 0.65 + Math.random() * 1.25;
-        dir = enemy.dir;
-      }
-
-      moveWithCollision(enemy, dir.x * speed * dt, dir.y * speed * dt);
-      if (collides(enemy)) enemy.dir = randomDir();
+  if (area.id === "overworld") {
+    const nextZone = zoneForOverworldPosition(area, p.x, p.y);
+    if (nextZone !== state.zoneName) {
+      state.zoneName = nextZone;
+      showAreaBanner(nextZone, "Region entered", 1.8);
     }
   }
 
-  function updatePickupsAndParticles(dt) {
-    for (const bucket of [state.particles, state.strikeDust]) {
-      for (let i = bucket.length - 1; i >= 0; i -= 1) {
-        const p = bucket[i];
-        p.life -= dt;
-        if (p.dir) {
-          p.x += p.dir.x * 48 * dt;
-          p.y += p.dir.y * 48 * dt;
-        }
-        if (p.vx) p.x += p.vx * dt;
-        if (p.vy) p.y += p.vy * dt;
-        if (p.life <= 0) bucket.splice(i, 1);
+  const slash = currentSlashBox();
+  if (slash) {
+    for (const enemy of area.enemies) {
+      if (enemy.dead || p.slashHitIds.has(enemy.id)) continue;
+      if (rectsOverlap({ ...slash }, enemy)) {
+        p.slashHitIds.add(enemy.id);
+        damageEnemy(area, enemy, slash, p);
       }
     }
+  }
 
-    for (let i = state.projectiles.length - 1; i >= 0; i -= 1) {
-      const projectile = state.projectiles[i];
-      projectile.life -= dt;
-      projectile.x += projectile.vx * dt;
-      projectile.y += projectile.vy * dt;
-      if (projectile.life <= 0 || isSolidAtPixel(projectile.x, projectile.y)) {
-        burst(projectile.x, projectile.y, ["#ffbf6b", "#fff0c2"]);
-        state.projectiles.splice(i, 1);
-        continue;
+  for (let i = area.pickups.length - 1; i >= 0; i -= 1) {
+    const pickup = area.pickups[i];
+    if (pickup.collectDelay > 0) continue;
+    if (!rectsOverlap(p, pickup)) continue;
+
+    if (pickup.kind === "rupeeGreen" || pickup.kind === "rupeeBlue") {
+      state.rupees += pickup.value;
+      burst(pickup.x, pickup.y, pickup.kind === "rupeeBlue" ? ["#7ac8ff", "#d8f1ff"] : ["#7de46e", "#eaffd8"]);
+      setDebugAction(`pickup-${pickup.kind}`);
+    }
+
+    area.pickups.splice(i, 1);
+    addCameraShake(1.2, 0.06);
+    updateHud();
+  }
+
+  for (const enemy of area.enemies) {
+    if (enemy.dead) continue;
+    if (rectsOverlap(p, enemy) && p.invuln <= 0) {
+      damagePlayer(enemy.damage || 1, enemy, enemy.touchPush || 18, enemy.type === "knight" ? ["#ffe1aa", "#ffe3e3"] : ["#ff8a8a", "#ffe3e3"], enemy.type === "knight" ? "knight-touch" : "enemy-touch");
+    }
+  }
+}
+
+function updateEnemies(dt) {
+  const area = currentArea();
+  const p = state.player;
+  for (const enemy of area.enemies) {
+    if (enemy.dead) continue;
+    enemy.hurt = Math.max(0, enemy.hurt - dt);
+    enemy.changeTimer -= dt;
+    enemy.stun = Math.max(0, enemy.stun - dt);
+    enemy.dashCooldown = Math.max(0, enemy.dashCooldown - dt);
+    enemy.fireCooldown = Math.max(0, enemy.fireCooldown - dt);
+
+    if (Math.abs(enemy.kbX) > 1 || Math.abs(enemy.kbY) > 1) {
+      moveWithCollision(enemy, enemy.kbX * dt, enemy.kbY * dt);
+      enemy.kbX *= 0.82;
+      enemy.kbY *= 0.82;
+    }
+
+    if (enemy.stun > 0) continue;
+
+    const dx = p.x - enemy.x;
+    const dy = p.y - enemy.y;
+    const dist = Math.hypot(dx, dy);
+    let dir = enemy.dir;
+    let speed = enemy.speed;
+
+    if (enemy.type === "knight") {
+      if (enemy.isBoss && dist < enemy.chaseRadius) {
+        if (enemy.tint === "stone" && enemy.dashCooldown <= 0) {
+          const rush = normalize(dx, dy);
+          enemy.kbX += rush.x * 250;
+          enemy.kbY += rush.y * 250;
+          enemy.dashCooldown = 2.35;
+          enemy.stun = 0.12;
+          burst(enemy.x, enemy.y, ["#d6dbe1", "#f6d86f"]);
+        } else if (enemy.tint === "vine" && enemy.fireCooldown <= 0) {
+          const base = normalize(dx, dy);
+          for (const angle of [-0.3, 0, 0.3]) spawnEnemyProjectile(enemy, rotateVector(base, angle), "thorn");
+          enemy.fireCooldown = 2.15;
+          burst(enemy.x, enemy.y, ["#9fe17a", "#e4ffd0"]);
+        } else if (enemy.tint === "embersteel" && enemy.fireCooldown <= 0) {
+          const base = normalize(dx, dy);
+          for (const angle of [-0.22, 0, 0.22]) spawnEnemyProjectile(enemy, rotateVector(base, angle), "ember");
+          enemy.fireCooldown = 1.55;
+          burst(enemy.x, enemy.y, ["#ff9d49", "#ffe3a8"]);
+        }
       }
-      const area = currentArea();
+
+      if (dist < enemy.chaseRadius) {
+        if (dist > 54) dir = normalize(dx, dy);
+        else dir = normalize(-dy, dx);
+        speed *= enemy.isBoss ? (dist < 130 ? 1.22 : 1.02) : (dist < 120 ? 1.18 : 0.96);
+        if (enemy.isBoss && enemy.health <= Math.ceil(enemy.maxHealth * 0.45)) speed *= 1.08;
+      } else if (enemy.changeTimer <= 0) {
+        enemy.dir = randomDir();
+        enemy.changeTimer = 0.75 + Math.random() * 1.1;
+        dir = enemy.dir;
+      }
+    } else if (dist < enemy.chaseRadius) {
+      dir = normalize(dx, dy);
+      speed *= 1.25;
+    } else if (enemy.changeTimer <= 0) {
+      enemy.dir = randomDir();
+      enemy.changeTimer = 0.65 + Math.random() * 1.25;
+      dir = enemy.dir;
+    }
+
+    moveWithCollision(enemy, dir.x * speed * dt, dir.y * speed * dt);
+    if (collides(enemy)) enemy.dir = randomDir();
+  }
+}
+
+function updatePickupsAndParticles(dt) {
+  for (const bucket of [state.particles, state.strikeDust]) {
+    for (let i = bucket.length - 1; i >= 0; i -= 1) {
+      const p = bucket[i];
+      p.life -= dt;
+      if (p.dir) {
+        p.x += p.dir.x * 48 * dt;
+        p.y += p.dir.y * 48 * dt;
+      }
+      if (p.vx) p.x += p.vx * dt;
+      if (p.vy) p.y += p.vy * dt;
+      if (p.life <= 0) bucket.splice(i, 1);
+    }
+  }
+
+  for (let i = state.projectiles.length - 1; i >= 0; i -= 1) {
+    const projectile = state.projectiles[i];
+    projectile.life -= dt;
+    projectile.x += projectile.vx * dt;
+    projectile.y += projectile.vy * dt;
+    if (projectile.life <= 0 || isSolidAtPixel(projectile.x, projectile.y)) {
+      burst(projectile.x, projectile.y, projectile.owner === "enemy" ? ["#ffd3a6", "#fff0c2"] : ["#ffbf6b", "#fff0c2"]);
+      state.projectiles.splice(i, 1);
+      continue;
+    }
+    const area = currentArea();
+    if (projectile.owner === "player") {
       for (const enemy of area.enemies) {
         if (enemy.dead || projectile.hitIds.has(enemy.id)) continue;
         if (rectsOverlap({ x: projectile.x, y: projectile.y, w: projectile.r * 2, h: projectile.r * 2 }, enemy)) {
@@ -1707,24 +1828,31 @@
           break;
         }
       }
-    }
-
-    const area = currentArea();
-    for (let i = area.pickups.length - 1; i >= 0; i -= 1) {
-      const pickup = area.pickups[i];
-      pickup.life -= dt;
-      pickup.collectDelay = Math.max(0, pickup.collectDelay - dt);
-      pickup.bob += dt * 5;
-      pickup.vx *= 0.92;
-      pickup.vy += 40 * dt;
-      pickup.vy *= 0.92;
-      pickup.x += pickup.vx * dt;
-      pickup.y += pickup.vy * dt;
-      if (pickup.life <= 0) area.pickups.splice(i, 1);
+    } else if (state.player && state.player.invuln <= 0) {
+      if (rectsOverlap({ x: projectile.x, y: projectile.y, w: projectile.r * 2, h: projectile.r * 2 }, state.player)) {
+        damagePlayer(projectile.damage || 1, { x: projectile.x, y: projectile.y }, 22, projectile.kind === "thorn" ? ["#bdf09f", "#f0ffd8"] : ["#ffb07a", "#fff0d2"], projectile.kind === "thorn" ? "thorn-shot" : "ember-shot");
+        burst(projectile.x, projectile.y, projectile.kind === "thorn" ? ["#b9f091", "#efffd9"] : ["#ff9e62", "#fff0c2"]);
+        state.projectiles.splice(i, 1);
+      }
     }
   }
 
-  function burst(x, y, palette) {
+  const area = currentArea();
+  for (let i = area.pickups.length - 1; i >= 0; i -= 1) {
+    const pickup = area.pickups[i];
+    pickup.life -= dt;
+    pickup.collectDelay = Math.max(0, pickup.collectDelay - dt);
+    pickup.bob += dt * 5;
+    pickup.vx *= 0.92;
+    pickup.vy += 40 * dt;
+    pickup.vy *= 0.92;
+    pickup.x += pickup.vx * dt;
+    pickup.y += pickup.vy * dt;
+    if (pickup.life <= 0) area.pickups.splice(i, 1);
+  }
+}
+
+function burst(x, y, palette) {
     for (let i = 0; i < 8; i += 1) {
       const angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.35;
       const speed = 26 + Math.random() * 42;
@@ -1788,6 +1916,7 @@
       state.debug.fpsTime = 0;
     }
     computeStatus();
+    updateBossHud();
     if (state.debug.enabled) refreshDebugPanel();
   }
 
@@ -1829,10 +1958,14 @@
         const b = theme === "field" && seededNoise(x * 3, y * 5) > 0.78 ? "#7fbe63" : a;
         ctx.fillStyle = b;
         ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = (x + y) % 3 === 0 ? "rgba(122, 180, 90, 0.20)" : "rgba(25, 64, 25, 0.10)";
+        ctx.fillRect(sx + 2, sy + 2, 5, 2);
+        ctx.fillRect(sx + 14, sy + 5, 4, 2);
         ctx.fillStyle = "#3f7e35";
         ctx.fillRect(sx + 3, sy + 18, 4, 2);
         ctx.fillRect(sx + 11, sy + 14, 3, 2);
         ctx.fillRect(sx + 17, sy + 9, 2, 3);
+        ctx.fillRect(sx + 7, sy + 11, 2, 4);
         break;
       }
       case 1:
@@ -1900,6 +2033,9 @@
         ctx.fillStyle = theme === "ember" ? "#ac7d5f" : "#928369";
         ctx.fillRect(sx + 6, sy + 6, 3, 3);
         ctx.fillRect(sx + 14, sy + 13, 3, 3);
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(sx + 4, sy + 4, 2, 1);
+        ctx.fillRect(sx + 16, sy + 8, 2, 1);
         break;
       case 9:
         ctx.fillStyle = theme === "rootwood" ? "#2b3d28" : theme === "ember" ? "#3d2b27" : "#272831";
@@ -1931,6 +2067,8 @@
       case 13:
         ctx.fillStyle = (x + y) % 2 === 0 ? "#47693e" : "#537645";
         ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "rgba(184, 227, 146, 0.12)";
+        ctx.fillRect(sx + 3, sy + 3, 6, 2);
         ctx.fillStyle = "#2d4d2b";
         ctx.fillRect(sx + 5, sy + 6, 2, 10);
         ctx.fillRect(sx + 12, sy + 10, 2, 7);
@@ -1939,6 +2077,8 @@
       case 14:
         ctx.fillStyle = (x + y) % 2 === 0 ? "#7b7566" : "#8a8373";
         ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "rgba(54,46,35,0.18)";
+        ctx.fillRect(sx + 2, sy + 12, 8, 1);
         ctx.fillStyle = "#c7bda2";
         ctx.fillRect(sx + 4, sy + 4, 4, 2);
         ctx.fillRect(sx + 12, sy + 12, 5, 2);
@@ -1946,6 +2086,8 @@
       case 15:
         ctx.fillStyle = (x + y) % 2 === 0 ? "#764732" : "#8a5234";
         ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "rgba(255, 165, 88, 0.12)";
+        ctx.fillRect(sx + 2, sy + 3, 5, 2);
         ctx.fillStyle = "#d28b4a";
         ctx.fillRect(sx + 6, sy + 5, 2, 2);
         ctx.fillRect(sx + 13, sy + 11, 3, 2);
@@ -1955,6 +2097,8 @@
       case 16:
         ctx.fillStyle = (x + y) % 2 === 0 ? "#492920" : "#592f23";
         ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "rgba(255, 118, 56, 0.18)";
+        ctx.fillRect(sx + 3, sy + 14, 6, 2);
         ctx.fillStyle = "#b55c2e";
         ctx.fillRect(sx + 8, sy + 7, 3, 3);
         ctx.fillRect(sx + 15, sy + 13, 2, 2);
@@ -2139,9 +2283,12 @@
       }
 
       if (enemy.health > 1) {
-        ctx.fillStyle = "#fff6c2";
-        const width = enemy.type === "knight" ? 14 : 4;
-        ctx.fillRect(sx - Math.floor(width / 2), sy - 13, width, 3);
+        const ratio = clamp(enemy.health / Math.max(1, enemy.maxHealth), 0, 1);
+        const width = enemy.isBoss ? 26 : enemy.type === "knight" ? 14 : 8;
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.fillRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 18 : 13), width, 4);
+        ctx.fillStyle = enemy.isBoss ? "#ffb25f" : "#fff6c2";
+        ctx.fillRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 18 : 13), Math.max(1, Math.floor(width * ratio)), 4);
       }
     }
   }
@@ -2170,6 +2317,10 @@
       ctx.fillRect(sx + 2, sy - 2, 2, 2);
 
       const weapon = activeWeaponData();
+      if (p.isRunning) {
+        ctx.fillStyle = "rgba(255, 248, 202, 0.35)";
+        ctx.fillRect(sx - 9, sy + 2, 18, 3);
+      }
       ctx.fillStyle = weapon.id === "wand" ? "#ffbf6c" : "#d7e8ff";
       if (Math.abs(p.lastDir.x) > Math.abs(p.lastDir.y)) {
         ctx.fillRect(sx + (p.lastDir.x > 0 ? 7 : -10), sy - 1, weapon.id === "spear" ? 10 : 7, 3);
@@ -2178,12 +2329,12 @@
       }
     }
 
-    if (p.attackTimer > 0) drawSlashEffect(sx, sy, p.attackDir, p.attackTimer / activeWeaponData().attackTime);
+    if (p.attackTimer > 0) drawSlashEffect(sx, sy, p.attackDir, p.attackTimer / currentAttackWeaponData().attackTime);
   }
 
   function drawSlashEffect(sx, sy, dir, t) {
     const alpha = clamp(t, 0, 1);
-    const weapon = activeWeaponData();
+    const weapon = currentAttackWeaponData();
     if (weapon.projectile) return;
     const reach = weapon.id === "spear" ? 22 : 16;
     const px = sx + dir.x * reach;
@@ -2424,6 +2575,7 @@
 
   canvas.addEventListener("pointerleave", () => {
     pointerState.active = false;
+    pointerState.attackHeld = false;
   });
 
   canvas.addEventListener("pointerdown", (event) => {
@@ -2433,7 +2585,16 @@
     pointerState.x = worldPoint.x;
     pointerState.y = worldPoint.y;
     pointerState.active = true;
+    pointerState.attackHeld = true;
     doAttack({ x: worldPoint.x - state.player.x, y: worldPoint.y - state.player.y });
+  });
+
+  canvas.addEventListener("pointerup", () => {
+    pointerState.attackHeld = false;
+  });
+
+  canvas.addEventListener("pointercancel", () => {
+    pointerState.attackHeld = false;
   });
 
   startButton.addEventListener("click", resetGame);
@@ -2466,8 +2627,13 @@
 
   touchAttack.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    touchState.attack = true;
     doAttack(state.player.lastDir);
   });
+  const releaseTouchAttack = (event) => { event.preventDefault(); touchState.attack = false; };
+  touchAttack.addEventListener("pointerup", releaseTouchAttack);
+  touchAttack.addEventListener("pointercancel", releaseTouchAttack);
+  touchAttack.addEventListener("pointerleave", releaseTouchAttack);
 
   touchInteract.addEventListener("pointerdown", (event) => {
     event.preventDefault();
