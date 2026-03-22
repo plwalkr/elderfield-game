@@ -1,38 +1,50 @@
-# Elderfield — v2.2.0 Dungeon Pass
+# Elderfield — v2.3.0 World & HUD Pass
 
-A browser-playable retro adventure prototype built for GitHub Pages.
+This build expands the prototype into a bigger overworld with three distinct dungeon routes and a lighter, more icon-driven HUD.
 
-## New in v2.2.0
-- Bigger playable screen on desktop
-- Triune Gate in the overworld
-- 3-room dungeon flow
-- Dungeon key pedestal
-- Locked seal into the knight chamber
-- Knight mini-boss
-- Random relic reward chest
-- Return portal back to the meadow
-- Version badge still visible on screen
-- Debug overlay still available
+## New in v2.3.0
+- Smaller corner HUD with icons instead of a long top text bar
+- Bigger overworld with multiple regions:
+  - South Meadow
+  - North Ruins
+  - East Woods
+  - Ashen Reach
+- Three dungeon entrances in different places
+- Three separate 3-room dungeon chains:
+  - Ancient Ruins
+  - Rootwood Cavern
+  - Ember Vault
+- Unlockable weapons:
+  - Sword (start)
+  - Wind Spear
+  - Ember Wand
+- Weapon switching with `Q / E` or `1 / 2 / 3`
+- Improved field and dungeon tile art pass
+- Existing debug overlay preserved and expanded
 
 ## Controls
-- **WASD / Arrow Keys** — Move
-- **Click / Tap** — Slash toward the pointer
-- **Enter** — Interact
-- **F3** or **~** — Toggle debug overlay
-- **F4** — Toggle hitboxes
-- **F6** — Clear current room enemies
-- **H** — Heal player
-- **F8** — Full reset
+- Move: `WASD` or Arrow Keys
+- Attack: Mouse click / tap
+- Interact: `Enter`
+- Switch weapon: `Q / E` or `1 / 2 / 3`
+
+## Debug
+- Toggle debug: `F3` or `` ` ``
+- Toggle hitboxes: `F4`
+- Clear enemies: `F6`
+- Heal: `H`
+- Reset game: `F8`
 
 ## GitHub Pages
-Upload these files to the root of your repo:
+Upload these files to the root of your GitHub repo:
 - `index.html`
 - `style.css`
 - `game.js`
 - `README.md`
 
-If the live site looks unchanged after upload, do a hard refresh to clear cached files.
+Then refresh the Pages site. The on-screen build badge should read:
+
+`v2.3.0 • World & HUD Pass`
 
 ## Notes
-- Designed to be Zelda-inspired in feel, but with original names, code, and art direction.
-- Built to scale into more dungeons, rewards, and overworld zones later.
+This is still an original fantasy prototype inspired by classic top-down adventures, not a direct Zelda recreation.

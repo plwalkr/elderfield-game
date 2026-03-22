@@ -7,11 +7,12 @@
   const canvasWrap = document.getElementById("canvasWrap");
   const messageBox = document.getElementById("messageBox");
   const heartsValue = document.getElementById("heartsValue");
-  const enemiesValue = document.getElementById("enemiesValue");
   const rupeesValue = document.getElementById("rupeesValue");
   const zoneValue = document.getElementById("zoneValue");
   const objectiveValue = document.getElementById("objectiveValue");
   const rewardsValue = document.getElementById("rewardsValue");
+  const weaponHud = document.getElementById("weaponHud");
+  const dungeonHud = document.getElementById("dungeonHud");
   const areaBanner = document.getElementById("areaBanner");
   const areaBannerTitle = document.getElementById("areaBannerTitle");
   const areaBannerOverline = document.getElementById("areaBannerOverline");
@@ -25,7 +26,6 @@
   const debugPanel = document.getElementById("debugPanel");
   const debugContent = document.getElementById("debugContent");
   const copyDebugButton = document.getElementById("copyDebugButton");
-  const versionValue = document.getElementById("versionValue");
   const debugBuildValue = document.getElementById("debugBuildValue");
   const buildWatermark = document.getElementById("buildWatermark");
   const statusPill = document.getElementById("statusPill");
@@ -34,12 +34,54 @@
 
   const TILE = 24;
   const INVULN_TIME = 0.7;
-  const ATTACK_COOLDOWN = 0.26;
-  const ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.2.0";
+  const BASE_ATTACK_COOLDOWN = 0.26;
+  const BASE_ATTACK_TIME = 0.13;
+  const GAME_VERSION = "v2.3.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Dungeon Pass";
+  const BUILD_NAME = "World & HUD Pass";
   const START_ZONE = "South Meadow";
+
+  const DUNGEONS = {
+    ruins: {
+      id: "ruins",
+      name: "Ancient Ruins",
+      overline: "North Ruins",
+      reward: "Blade Crest",
+      rewardType: "sword",
+      entranceText: "The old arch answers with cold blue fire.",
+      names: ["Threshold of Kings", "Archivist Walk", "Crown Sepulcher"],
+      theme: "ruins",
+      bossTint: "stone",
+    },
+    rootwood: {
+      id: "rootwood",
+      name: "Rootwood Cavern",
+      overline: "East Woods",
+      reward: "Wind Spear",
+      rewardType: "spear",
+      entranceText: "The cave breathes sap-scent and root-song.",
+      names: ["Hollow Root", "Spore Hall", "Verdant Keep"],
+      theme: "rootwood",
+      bossTint: "vine",
+    },
+    ember: {
+      id: "ember",
+      name: "Ember Vault",
+      overline: "Ashen Reach",
+      reward: "Ember Wand",
+      rewardType: "wand",
+      entranceText: "Heat shivers through the hatch below.",
+      names: ["Ashen Mouth", "Forge Gallery", "Molten Reliquary"],
+      theme: "ember",
+      bossTint: "embersteel",
+    },
+  };
+
+  const WEAPONS = {
+    sword: { id: "sword", name: "Sword", iconClass: "weapon-sword", damage: 1, reach: 30, cooldown: 0.26, attackTime: 0.13, narrow: false },
+    spear: { id: "spear", name: "Wind Spear", iconClass: "weapon-spear", damage: 2, reach: 46, cooldown: 0.34, attackTime: 0.15, narrow: true },
+    wand: { id: "wand", name: "Ember Wand", iconClass: "weapon-wand", damage: 1, reach: 0, cooldown: 0.36, attackTime: 0.05, projectile: true },
+  };
 
   const keys = Object.create(null);
   const touchState = { up: false, down: false, left: false, right: false };
@@ -49,8 +91,8 @@
     running: false,
     victory: false,
     gameOver: false,
-    logicalWidth: 768,
-    logicalHeight: 432,
+    logicalWidth: 896,
+    logicalHeight: 504,
     camera: { x: 0, y: 0 },
     cameraShake: { power: 0, time: 0 },
     transition: { active: false, alpha: 0, stage: "idle", targetAreaId: null, targetSpawn: null, targetMessage: "" },
@@ -59,23 +101,16 @@
     player: null,
     rupees: 0,
     zoneName: START_ZONE,
-    objectiveText: "Clear the field or brave the Triune Gate.",
+    objectiveText: "Find the three dungeon paths across Elderfield.",
     areaBannerTimer: 0,
     message: "",
     messageTimer: 0,
     particles: [],
     strikeDust: [],
+    projectiles: [],
     rewardsOwned: [],
-    dungeon: {
-      started: false,
-      cleared: false,
-      keyOwned: false,
-      sealUnlocked: false,
-      rewardGranted: false,
-      currentReward: null,
-      roomClears: {},
-      fieldCleared: false,
-    },
+    overworld: { fieldCleared: false },
+    dungeons: {},
     lastTime: 0,
     debug: {
       enabled: false,
@@ -123,7 +158,56 @@
   }
 
   function formatRewards() {
-    return state.rewardsOwned.length ? state.rewardsOwned.length : 0;
+    return `${state.rewardsOwned.length}/3`;
+  }
+
+  function currentDungeonId() {
+    const area = currentArea();
+    return area && area.dungeonId ? area.dungeonId : null;
+  }
+
+  function dungeonProgress(dungeonId = currentDungeonId()) {
+    return dungeonId ? state.dungeons[dungeonId] : null;
+  }
+
+  function totalDungeonsCleared() {
+    return Object.values(state.dungeons).filter((d) => d.cleared).length;
+  }
+
+  function allDungeonsCleared() {
+    return totalDungeonsCleared() === Object.keys(DUNGEONS).length;
+  }
+
+  function getWeaponOrder() {
+    return ["sword", "spear", "wand"];
+  }
+
+  function activeWeaponData() {
+    return WEAPONS[state.player?.activeWeapon || "sword"];
+  }
+
+  function renderWeaponHud() {
+    if (!state.player) return;
+    weaponHud.innerHTML = "";
+    for (const id of getWeaponOrder()) {
+      const slot = document.createElement("span");
+      const owned = state.player.weaponsOwned.includes(id);
+      slot.className = `slot ${WEAPONS[id].iconClass} ${owned ? "" : "locked"} ${state.player.activeWeapon === id ? "active" : ""}`.trim();
+      slot.title = owned ? WEAPONS[id].name : `${WEAPONS[id].name} locked`;
+      weaponHud.appendChild(slot);
+    }
+  }
+
+  function renderDungeonHud() {
+    dungeonHud.innerHTML = "";
+    for (const id of ["ruins", "rootwood", "ember"]) {
+      const progress = state.dungeons[id];
+      const slot = document.createElement("span");
+      slot.className = `slot dungeon-slot dungeon-${id} ${progress.cleared ? "cleared" : ""}`;
+      if (!progress.started && !progress.cleared) slot.classList.add("locked");
+      slot.title = `${DUNGEONS[id].name} — ${progress.cleared ? "cleared" : progress.started ? "in progress" : "waiting"}`;
+      dungeonHud.appendChild(slot);
+    }
   }
 
   function renderHearts(current, max) {
@@ -138,7 +222,6 @@
   }
 
   function syncBuildStamp() {
-    versionValue.textContent = GAME_VERSION;
     debugBuildValue.textContent = GAME_VERSION;
     buildWatermark.textContent = `${GAME_VERSION} • ${BUILD_NAME}`;
   }
@@ -213,10 +296,17 @@
   }
 
   function buildDebugReport() {
-    const player = state.player || { x: 0, y: 0, health: 0, maxHealth: 0, attackTimer: 0, invuln: 0, lastDir: { x: 0, y: 0 } };
-    const area = currentArea() || { width: 0, height: 0, enemies: [], pickups: [], name: "none" };
+    const player = state.player || {
+      x: 0, y: 0, health: 0, maxHealth: 0, attackTimer: 0, invuln: 0, lastDir: { x: 0, y: 0 },
+      swordLevel: 1, activeWeapon: "sword", weaponsOwned: ["sword"],
+    };
+    const area = currentArea() || { width: 0, height: 0, enemies: [], pickups: [], interactables: [], name: "none" };
     const alive = area.enemies.filter((enemy) => !enemy.dead).length;
     const pointerText = `${Math.round(pointerState.x)}, ${Math.round(pointerState.y)} ${pointerState.active ? "(active)" : "(idle)"}`;
+    const dungeonLines = Object.keys(DUNGEONS).map((id) => {
+      const p = state.dungeons[id] || {};
+      return `- ${id}: started=${!!p.started}, cleared=${!!p.cleared}, key=${!!p.keyOwned}, seal=${!!p.sealUnlocked}, reward=${p.currentReward || "none"}`;
+    });
     return [
       `Elderfield Debug Report`,
       `Version: ${GAME_VERSION} • ${BUILD_DATE} • ${BUILD_NAME}`,
@@ -241,7 +331,8 @@
       `- Pos=${player.x.toFixed(1)}, ${player.y.toFixed(1)}`,
       `- Health=${player.health}/${player.maxHealth}`,
       `- SwordLevel=${player.swordLevel}`,
-      `- SwordDamage=${player.damage}`,
+      `- ActiveWeapon=${player.activeWeapon}`,
+      `- WeaponsOwned=${player.weaponsOwned.join(", ")}`,
       `- Rupees=${state.rupees}`,
       `- Facing=${player.lastDir.x.toFixed(2)}, ${player.lastDir.y.toFixed(2)}`,
       `- AttackTimer=${player.attackTimer.toFixed(3)}`,
@@ -249,22 +340,21 @@
       ``,
       `Area`,
       `- Name=${area.name}`,
+      `- Theme=${area.theme || "none"}`,
+      `- DungeonId=${area.dungeonId || "none"}`,
       `- Size=${area.width}x${area.height}`,
       `- EnemiesAlive=${alive}`,
       `- Pickups=${area.pickups.length}`,
       `- Interactables=${area.interactables.length}`,
       `- Particles=${state.particles.length}`,
       `- StrikeDust=${state.strikeDust.length}`,
+      `- Projectiles=${state.projectiles.length}`,
       ``,
       `Progress`,
-      `- FieldCleared=${state.dungeon.fieldCleared}`,
-      `- DungeonStarted=${state.dungeon.started}`,
-      `- DungeonCleared=${state.dungeon.cleared}`,
-      `- DungeonKey=${state.dungeon.keyOwned}`,
-      `- SealUnlocked=${state.dungeon.sealUnlocked}`,
-      `- RewardGranted=${state.dungeon.rewardGranted}`,
-      `- CurrentReward=${state.dungeon.currentReward || "none"}`,
+      `- FieldCleared=${state.overworld.fieldCleared}`,
+      `- DungeonsCleared=${totalDungeonsCleared()}/${Object.keys(DUNGEONS).length}`,
       `- RewardsOwned=${state.rewardsOwned.join(", ") || "none"}`,
+      ...dungeonLines,
       ``,
       `Input`,
       `- Pointer=${pointerText}`,
@@ -360,6 +450,18 @@
     }
   }
 
+  function emptyDungeonProgress() {
+    return {
+      started: false,
+      cleared: false,
+      keyOwned: false,
+      sealUnlocked: false,
+      rewardGranted: false,
+      currentReward: null,
+      roomClears: {},
+    };
+  }
+
   function resetGame() {
     state.running = true;
     state.victory = false;
@@ -372,33 +474,30 @@
     state.transition = { active: false, alpha: 0, stage: "idle", targetAreaId: null, targetSpawn: null, targetMessage: "" };
     state.particles.length = 0;
     state.strikeDust.length = 0;
+    state.projectiles.length = 0;
     state.debug.errors.length = 0;
     state.debug.copyResult = "idle";
     state.rewardsOwned = [];
-    state.dungeon = {
-      started: false,
-      cleared: false,
-      keyOwned: false,
-      sealUnlocked: false,
-      rewardGranted: false,
-      currentReward: null,
-      roomClears: {},
-      fieldCleared: false,
+    state.overworld = { fieldCleared: false };
+    state.dungeons = {
+      ruins: emptyDungeonProgress(),
+      rootwood: emptyDungeonProgress(),
+      ember: emptyDungeonProgress(),
     };
     state.rupees = 0;
     state.player = makePlayer();
     state.areas = buildAreas();
     setArea("overworld", "start", true);
-    state.objectiveText = "Triune Gate found. Clear the field or dive into the dungeon.";
+    state.objectiveText = "Travel the field. Find the three dungeon paths and claim their relics.";
     startCard.hidden = true;
     startButton.hidden = false;
     restartButton.hidden = true;
     startTitle.textContent = "Elderfield";
-    startText.textContent = "The Triune Gate has opened. Defeat the field creatures, dive through the mixed gate, and take a relic from the knight below.";
+    startText.textContent = "Three dungeon roads now cut across the land. Claim every relic, unlock new weapons, and return to the shrine.";
     setDebugAction("reset-game");
     updateHud();
     refreshDebugPanel();
-    setMessage("Explore the field. Press Enter at signs, gates, doors, and the shrine.", 4);
+    setMessage("Explore the larger field. Press Enter near signs, gates, and the shrine.", 4);
     showAreaBanner(state.zoneName, "Region entered", 2.8);
   }
 
@@ -419,11 +518,12 @@
     canvas.style.height = `${Math.floor(drawHeight)}px`;
     canvas.style.margin = `${Math.max(0, (cssHeight - drawHeight) / 2)}px auto`;
 
-    let base = 768;
-    if (window.innerWidth <= 1400) base = 704;
-    if (window.innerWidth <= 980) base = 608;
-    if (window.innerWidth <= 700) base = 512;
-    if (window.innerWidth <= 640) base = 432;
+    let base = 896;
+    if (window.innerWidth <= 1500) base = 832;
+    if (window.innerWidth <= 1180) base = 768;
+    if (window.innerWidth <= 900) base = 672;
+    if (window.innerWidth <= 700) base = 560;
+    if (window.innerWidth <= 560) base = 448;
     state.logicalWidth = base;
     state.logicalHeight = Math.floor(base / targetAspect);
 
@@ -441,7 +541,7 @@
     return n - Math.floor(n);
   }
 
-  function makeArea(id, name, width, height, defaultFloor = 0) {
+  function makeArea(id, name, width, height, defaultFloor = 0, theme = "field", dungeonId = null, roomIndex = 0) {
     return {
       id,
       name,
@@ -453,7 +553,10 @@
       enemies: [],
       pickups: [],
       spawns: {},
-      theme: id.startsWith("dungeon") ? "dungeon" : "field",
+      theme,
+      dungeonId,
+      roomIndex,
+      regions: [],
     };
   }
 
@@ -552,8 +655,33 @@
     });
   }
 
+  function zoneForOverworldPosition(area, x, y) {
+    const tx = x / TILE;
+    const ty = y / TILE;
+    for (const region of area.regions || []) {
+      if (tx >= region.x && tx <= region.x + region.w && ty >= region.y && ty <= region.y + region.h) return region.name;
+    }
+    return area.name;
+  }
+
+  function paintGround(area, x, y, w, h, tile) {
+    for (let iy = y; iy < y + h; iy += 1) {
+      for (let ix = x; ix < x + w; ix += 1) {
+        if (ix < 1 || iy < 1 || ix >= area.width - 1 || iy >= area.height - 1) continue;
+        if (area.solids[iy][ix]) continue;
+        area.world[iy][ix] = tile;
+      }
+    }
+  }
+
   function buildOverworld() {
-    const area = makeArea("overworld", "South Meadow", 100, 60, 0);
+    const area = makeArea("overworld", "South Meadow", 160, 96, 0, "field");
+    area.regions = [
+      { name: "South Meadow", x: 40, y: 58, w: 80, h: 32 },
+      { name: "North Ruins", x: 54, y: 8, w: 48, h: 28 },
+      { name: "East Woods", x: 114, y: 20, w: 34, h: 34 },
+      { name: "Ashen Reach", x: 10, y: 22, w: 36, h: 34 },
+    ];
 
     for (let y = 0; y < area.height; y += 1) {
       for (let x = 0; x < area.width; x += 1) {
@@ -564,40 +692,44 @@
           continue;
         }
         const n = seededNoise(x, y);
-        if (n > 0.95) area.world[y][x] = 5;
-        else if (n < 0.035) area.world[y][x] = 6;
+        if (n > 0.968) area.world[y][x] = 5;
+        else if (n < 0.025) area.world[y][x] = 6;
       }
     }
 
-    fillRect(area, 30, 7, 12, 8, 2, true);
-    fillRect(area, 66, 34, 10, 7, 2, true);
-    fillRect(area, 12, 38, 9, 6, 2, true);
+    paintGround(area, 54, 8, 48, 28, 14);
+    paintGround(area, 114, 20, 34, 34, 13);
+    paintGround(area, 10, 22, 36, 34, 15);
 
-    ring(area, 29, 6, 14, 10, 1, true);
-    ring(area, 65, 33, 12, 9, 1, true);
-    ring(area, 11, 37, 11, 8, 1, true);
+    fillRect(area, 70, 66, 14, 9, 2, true);
+    fillRect(area, 118, 62, 12, 8, 2, true);
+    ring(area, 69, 65, 16, 11, 1, true);
+    ring(area, 117, 61, 14, 10, 1, true);
 
-    placeForestPatch(area, 72, 8, 14, 11);
-    placeForestPatch(area, 44, 38, 16, 12);
-    placeForestPatch(area, 6, 8, 10, 13);
-    placeForestPatch(area, 86, 40, 7, 10);
+    placeForestPatch(area, 120, 22, 22, 24);
+    placeForestPatch(area, 132, 18, 12, 12);
+    placeForestPatch(area, 14, 66, 16, 10);
+    placeForestPatch(area, 44, 18, 8, 10);
 
-    scatterStones(area, 18, 18, 18, 8, 10);
-    scatterStones(area, 50, 18, 14, 9, 10);
-    scatterStones(area, 78, 24, 11, 10, 8);
+    scatterStones(area, 60, 12, 36, 20, 28);
+    scatterStones(area, 14, 26, 20, 22, 18);
+    scatterStones(area, 100, 34, 16, 16, 12);
 
-    carvePath(area, 6, 28, 92, 28, 3);
-    carvePath(area, 18, 10, 18, 48, 3);
-    carvePath(area, 53, 10, 53, 45, 3);
-    carvePath(area, 74, 12, 74, 36, 3);
+    carvePath(area, 18, 48, 142, 48, 3);
+    carvePath(area, 78, 10, 78, 88, 3);
+    carvePath(area, 128, 33, 128, 49, 3);
+    carvePath(area, 26, 33, 26, 49, 3);
 
-    clearRect(area, 48, 23, 5, 5, 0);
-    clearRect(area, 71, 11, 7, 7, 0);
+    clearRect(area, 75, 78, 7, 6, 0);
+    clearRect(area, 75, 46, 7, 5, 3);
+    clearRect(area, 124, 30, 7, 6, 13);
+    clearRect(area, 23, 30, 7, 6, 15);
+    clearRect(area, 72, 14, 11, 8, 14);
 
     area.interactables.push({
       type: "shrine",
-      x: 50 * TILE,
-      y: 25 * TILE,
+      x: 78 * TILE,
+      y: 80 * TILE,
       w: TILE * 2,
       h: TILE * 2,
       active: false,
@@ -605,29 +737,60 @@
 
     area.interactables.push({
       type: "sign",
-      x: 16 * TILE,
-      y: 25 * TILE,
+      x: 76 * TILE,
+      y: 53 * TILE,
       w: TILE,
       h: TILE,
-      text: "Three doors, one depth. The cave, the arch, and the hatch all fall into the same ancient heart below.",
+      text: "North lies old stone, east lies root and shadow, west lies ash and fire. Bring every relic home.",
     });
 
     area.interactables.push({
-      type: "triuneGate",
-      x: 72 * TILE,
-      y: 12 * TILE,
+      type: "dungeonEntrance",
+      dungeonId: "ruins",
+      entranceStyle: "arch",
+      x: 74 * TILE,
+      y: 14 * TILE,
       w: TILE * 4,
       h: TILE * 3,
-      targetAreaId: "dungeon1",
+      targetAreaId: "ruins_1",
       targetSpawn: "entry",
-      text: "The Triune Gate hums with old power.",
+      text: DUNGEONS.ruins.entranceText,
     });
 
-    area.spawns.start = { x: 8.5 * TILE, y: 28.5 * TILE };
-    area.spawns.fromDungeon = { x: 77.5 * TILE, y: 16.5 * TILE };
+    area.interactables.push({
+      type: "dungeonEntrance",
+      dungeonId: "rootwood",
+      entranceStyle: "cave",
+      x: 124 * TILE,
+      y: 30 * TILE,
+      w: TILE * 4,
+      h: TILE * 3,
+      targetAreaId: "rootwood_1",
+      targetSpawn: "entry",
+      text: DUNGEONS.rootwood.entranceText,
+    });
+
+    area.interactables.push({
+      type: "dungeonEntrance",
+      dungeonId: "ember",
+      entranceStyle: "hatch",
+      x: 22 * TILE,
+      y: 30 * TILE,
+      w: TILE * 4,
+      h: TILE * 3,
+      targetAreaId: "ember_1",
+      targetSpawn: "entry",
+      text: DUNGEONS.ember.entranceText,
+    });
+
+    area.spawns.start = { x: 80.5 * TILE, y: 88.5 * TILE };
+    area.spawns.fromRuins = { x: 78.5 * TILE, y: 18.5 * TILE };
+    area.spawns.fromRootwood = { x: 128.5 * TILE, y: 35.5 * TILE };
+    area.spawns.fromEmber = { x: 26.5 * TILE, y: 35.5 * TILE };
 
     const enemySpots = [
-      [23, 18], [31, 20], [44, 12], [58, 18], [67, 24], [49, 34], [26, 39], [15, 16], [70, 14], [21, 47], [83, 29], [88, 18]
+      [42, 65], [54, 58], [62, 74], [95, 63], [107, 79], [117, 42], [131, 26], [134, 47],
+      [22, 39], [34, 31], [20, 51], [68, 20], [88, 26], [100, 18], [143, 48], [122, 69], [53, 44], [85, 48]
     ];
     enemySpots.forEach((spot, index) => {
       spawnEnemy(area, {
@@ -635,26 +798,32 @@
         y: (spot[1] + 0.5) * TILE,
         speed: 54 + (index % 3) * 11,
         chaseRadius: 132 + Math.random() * 64,
-        health: index % 4 === 0 ? 2 : 1,
-        tint: index % 2 === 0 ? "moss" : "ember",
+        health: index % 5 === 0 ? 2 : 1,
+        tint: index % 4 === 0 ? "stone" : index % 2 === 0 ? "moss" : "ember",
       });
     });
 
     return area;
   }
 
-  function buildDungeonRoom1() {
-    const area = makeArea("dungeon1", "Triune Descent", 34, 20, 7);
+  function applyDungeonSkin(area, dungeonId) {
+    const meta = DUNGEONS[dungeonId];
+    area.theme = meta.theme;
+  }
+
+  function buildDungeonRoom1(dungeonId) {
+    const meta = DUNGEONS[dungeonId];
+    const area = makeArea(`${dungeonId}_1`, meta.names[0], 34, 20, dungeonId === "ember" ? 16 : 7, meta.theme, dungeonId, 1);
     area.spawns.entry = { x: 4.5 * TILE, y: 16.5 * TILE };
     area.spawns.back = { x: 4.5 * TILE, y: 16.5 * TILE };
 
     ring(area, 0, 0, area.width, area.height, 9, true);
-    clearRect(area, 1, 1, area.width - 2, area.height - 2, 7);
+    clearRect(area, 1, 1, area.width - 2, area.height - 2, dungeonId === "rootwood" ? 13 : dungeonId === "ember" ? 16 : 7);
 
-    fillRect(area, 4, 4, 7, 5, 8, false);
-    fillRect(area, 13, 3, 7, 6, 7, false);
-    fillRect(area, 22, 4, 8, 5, 8, false);
-    fillRect(area, 8, 11, 18, 6, 7, false);
+    fillRect(area, 4, 4, 7, 5, dungeonId === "rootwood" ? 13 : 8, false);
+    fillRect(area, 13, 3, 7, 6, dungeonId === "ember" ? 16 : 7, false);
+    fillRect(area, 22, 4, 8, 5, dungeonId === "ruins" ? 14 : 8, false);
+    fillRect(area, 8, 11, 18, 6, dungeonId === "ember" ? 16 : 7, false);
 
     fillRect(area, 14, 0, 6, 2, 10, false);
     area.solids[0][16] = false;
@@ -668,30 +837,33 @@
 
     area.interactables.push({
       type: "returnSigil",
+      dungeonId,
       x: 2 * TILE,
       y: 15 * TILE,
       w: TILE * 2,
       h: TILE * 2,
       targetAreaId: "overworld",
-      targetSpawn: "fromDungeon",
-      title: "Return to the meadow",
+      targetSpawn: dungeonId === "ruins" ? "fromRuins" : dungeonId === "rootwood" ? "fromRootwood" : "fromEmber",
+      title: "Return to the field",
     });
     area.interactables.push({
       type: "roomGate",
+      dungeonId,
       x: 15 * TILE,
       y: 0,
       w: TILE * 3,
       h: TILE * 2,
-      targetAreaId: "dungeon2",
+      targetAreaId: `${dungeonId}_2`,
       targetSpawn: "entry",
       requireClear: true,
       requireKey: true,
-      title: "Runed lift",
-      closedText: "The lift is sealed. Clear the room and claim the key.",
-      openText: "The runed lift groans awake.",
+      title: "Depth gate",
+      closedText: "The first chamber must be cleared and the key claimed.",
+      openText: "The first gate wakes and opens.",
     });
     area.interactables.push({
       type: "dungeonKeyPedestal",
+      dungeonId,
       x: 16 * TILE,
       y: 9 * TILE,
       w: TILE * 2,
@@ -700,30 +872,29 @@
       taken: false,
     });
 
-    [
-      [11, 6], [20, 6], [9, 14], [24, 14], [17, 12]
-    ].forEach((spot, idx) => {
+    [[11, 6], [20, 6], [9, 14], [24, 14], [17, 12]].forEach((spot, idx) => {
       spawnEnemy(area, {
         x: (spot[0] + 0.5) * TILE,
         y: (spot[1] + 0.5) * TILE,
         speed: 58 + (idx % 2) * 10,
         chaseRadius: 150,
         health: idx === 4 ? 2 : 1,
-        tint: idx % 2 === 0 ? "moss" : "ember",
+        tint: dungeonId === "ruins" ? "stone" : dungeonId === "rootwood" ? "moss" : "ember",
       });
     });
 
     return area;
   }
 
-  function buildDungeonRoom2() {
-    const area = makeArea("dungeon2", "Broken Reliquary", 36, 20, 8);
+  function buildDungeonRoom2(dungeonId) {
+    const meta = DUNGEONS[dungeonId];
+    const area = makeArea(`${dungeonId}_2`, meta.names[1], 36, 20, dungeonId === "ember" ? 16 : 8, meta.theme, dungeonId, 2);
     area.spawns.entry = { x: 4.5 * TILE, y: 16.5 * TILE };
     area.spawns.back = { x: 4.5 * TILE, y: 16.5 * TILE };
 
     ring(area, 0, 0, area.width, area.height, 9, true);
-    clearRect(area, 1, 1, area.width - 2, area.height - 2, 8);
-    fillRect(area, 1, 8, area.width - 2, 4, 7, false);
+    clearRect(area, 1, 1, area.width - 2, area.height - 2, dungeonId === "rootwood" ? 13 : dungeonId === "ember" ? 16 : 8);
+    fillRect(area, 1, 8, area.width - 2, 4, dungeonId === "rootwood" ? 13 : 7, false);
     fillRect(area, 13, 4, 10, 12, 12, false);
     fillRect(area, 8, 3, 3, 5, 9, true);
     fillRect(area, 25, 3, 3, 5, 9, true);
@@ -733,55 +904,55 @@
     fillRect(area, 15, 0, 6, 2, 10, false);
     area.solids[0][17] = false;
     area.solids[1][17] = false;
-
     clearRect(area, 1, 15, 4, 3, 10);
 
     area.interactables.push({
       type: "roomGate",
+      dungeonId,
       x: 2 * TILE,
       y: 15 * TILE,
       w: TILE * 2,
       h: TILE * 2,
-      targetAreaId: "dungeon1",
+      targetAreaId: `${dungeonId}_1`,
       targetSpawn: "back",
-      title: "Descent return",
-      openText: "You step back toward the triune descent.",
+      title: "Return stair",
+      openText: "You step back toward the entry chamber.",
     });
     area.interactables.push({
       type: "lockedSeal",
+      dungeonId,
       x: 16 * TILE,
       y: 0,
       w: TILE * 3,
       h: TILE * 2,
-      targetAreaId: "dungeon3",
+      targetAreaId: `${dungeonId}_3`,
       targetSpawn: "entry",
       title: "Knight seal",
-      text: "The seal wants a key and a quiet room.",
+      text: "The deeper seal wants a key and a quiet room.",
     });
 
-    [
-      [7, 6], [13, 9], [21, 9], [28, 6], [10, 14], [25, 14]
-    ].forEach((spot, idx) => {
+    [[7, 6], [13, 9], [21, 9], [28, 6], [10, 14], [25, 14]].forEach((spot, idx) => {
       spawnEnemy(area, {
         x: (spot[0] + 0.5) * TILE,
         y: (spot[1] + 0.5) * TILE,
         speed: 60 + (idx % 3) * 8,
         chaseRadius: 160,
         health: idx % 3 === 0 ? 2 : 1,
-        tint: idx % 2 === 0 ? "ember" : "moss",
+        tint: dungeonId === "ruins" ? "stone" : dungeonId === "rootwood" ? "moss" : "ember",
       });
     });
 
     return area;
   }
 
-  function buildDungeonRoom3() {
-    const area = makeArea("dungeon3", "Knight's Reliquary", 38, 22, 7);
+  function buildDungeonRoom3(dungeonId) {
+    const meta = DUNGEONS[dungeonId];
+    const area = makeArea(`${dungeonId}_3`, meta.names[2], 38, 22, dungeonId === "ember" ? 16 : 7, meta.theme, dungeonId, 3);
     area.spawns.entry = { x: 5.5 * TILE, y: 18.5 * TILE };
 
     ring(area, 0, 0, area.width, area.height, 9, true);
-    clearRect(area, 1, 1, area.width - 2, area.height - 2, 7);
-    fillRect(area, 8, 4, 22, 13, 8, false);
+    clearRect(area, 1, 1, area.width - 2, area.height - 2, dungeonId === "rootwood" ? 13 : dungeonId === "ember" ? 16 : 7);
+    fillRect(area, 8, 4, 22, 13, dungeonId === "ruins" ? 14 : 8, false);
     fillRect(area, 15, 7, 8, 7, 12, false);
     fillRect(area, 16, 0, 6, 2, 10, false);
     area.solids[0][18] = false;
@@ -794,17 +965,19 @@
 
     area.interactables.push({
       type: "roomGate",
+      dungeonId,
       x: 2 * TILE,
       y: 17 * TILE,
       w: TILE * 2,
       h: TILE * 2,
-      targetAreaId: "dungeon2",
+      targetAreaId: `${dungeonId}_2`,
       targetSpawn: "back",
-      title: "Sealed stairs",
+      title: "Return stair",
       openText: "You retreat through the opened seal.",
     });
     area.interactables.push({
       type: "rewardChest",
+      dungeonId,
       x: 18 * TILE,
       y: 5 * TILE,
       w: TILE * 2,
@@ -814,12 +987,13 @@
     });
     area.interactables.push({
       type: "exitPortal",
+      dungeonId,
       x: 17 * TILE,
       y: 0,
       w: TILE * 3,
       h: TILE * 2,
       targetAreaId: "overworld",
-      targetSpawn: "fromDungeon",
+      targetSpawn: dungeonId === "ruins" ? "fromRuins" : dungeonId === "rootwood" ? "fromRootwood" : "fromEmber",
       visible: false,
       title: "Relic ascent",
     });
@@ -829,12 +1003,12 @@
       y: 13.5 * TILE,
       w: 22,
       h: 22,
-      speed: 70,
+      speed: dungeonId === "ember" ? 76 : 70,
       chaseRadius: 250,
-      health: 8,
-      tint: "steel",
+      health: dungeonId === "ruins" ? 8 : dungeonId === "rootwood" ? 9 : 10,
+      tint: DUNGEONS[dungeonId].bossTint,
       type: "knight",
-      damage: 2,
+      damage: dungeonId === "ember" ? 3 : 2,
       touchPush: 28,
     });
 
@@ -848,13 +1022,17 @@
   function buildAreas() {
     return {
       overworld: buildOverworld(),
-      dungeon1: buildDungeonRoom1(),
-      dungeon2: buildDungeonRoom2(),
-      dungeon3: buildDungeonRoom3(),
+      ruins_1: buildDungeonRoom1("ruins"),
+      ruins_2: buildDungeonRoom2("ruins"),
+      ruins_3: buildDungeonRoom3("ruins"),
+      rootwood_1: buildDungeonRoom1("rootwood"),
+      rootwood_2: buildDungeonRoom2("rootwood"),
+      rootwood_3: buildDungeonRoom3("rootwood"),
+      ember_1: buildDungeonRoom1("ember"),
+      ember_2: buildDungeonRoom2("ember"),
+      ember_3: buildDungeonRoom3("ember"),
     };
-  }
-
-  function makePlayer() {
+  }  function makePlayer() {
     return {
       x: 0,
       y: 0,
@@ -870,20 +1048,25 @@
       maxHealth: 5,
       invuln: 0,
       swordLevel: 1,
-      damage: 1,
+      activeWeapon: "sword",
+      weaponsOwned: ["sword"],
     };
   }
 
   function setArea(areaId, spawnKey = "start", snapCamera = false) {
     state.currentAreaId = areaId;
     const area = currentArea();
-    state.zoneName = area.name;
     const spawn = area.spawns[spawnKey] || area.spawns.entry || area.spawns.start || { x: 5 * TILE, y: 5 * TILE };
     state.player.x = spawn.x;
     state.player.y = spawn.y;
     state.player.attackTimer = 0;
     state.player.attackCooldown = 0;
     state.player.slashHitIds.clear();
+    if (area.id === "overworld") {
+      state.zoneName = zoneForOverworldPosition(area, state.player.x, state.player.y);
+    } else {
+      state.zoneName = area.name;
+    }
     updateObjective();
     updateHud();
     if (snapCamera) {
@@ -912,7 +1095,7 @@
       if (state.transition.alpha >= 1) {
         setArea(state.transition.targetAreaId, state.transition.targetSpawn, true);
         if (state.transition.targetMessage) setMessage(state.transition.targetMessage, 2.2);
-        showAreaBanner(state.zoneName, state.currentAreaId.startsWith("dungeon") ? "Depth entered" : "Region entered", 2.3);
+        showAreaBanner(state.zoneName, currentArea().dungeonId ? `${DUNGEONS[currentArea().dungeonId].name}` : "Region entered", 2.3);
         state.transition.stage = "in";
       }
     } else if (state.transition.stage === "in") {
@@ -925,19 +1108,26 @@
   }
 
   function updateObjective() {
+    const area = currentArea();
+    const dungeonId = currentDungeonId();
+    const progress = dungeonProgress(dungeonId);
+
     if (state.victory) {
-      state.objectiveText = "Shrine rekindled. More dungeons can rise later.";
+      state.objectiveText = "Shrine rekindled. Elderfield is awake.";
       return;
     }
-    if (!state.dungeon.started) {
-      state.objectiveText = "Find the Triune Gate and enter if you dare.";
-    } else if (!state.dungeon.cleared) {
-      if (state.currentAreaId === "dungeon1") state.objectiveText = state.dungeon.keyOwned ? "Take the runed lift upward." : "Clear the room and take the dungeon key.";
-      else if (state.currentAreaId === "dungeon2") state.objectiveText = state.dungeon.sealUnlocked ? "Push deeper toward the knight." : "Quiet this chamber and open the Knight Seal.";
-      else if (state.currentAreaId === "dungeon3") state.objectiveText = state.dungeon.rewardGranted ? "Take the relic ascent back to the shrine." : "Defeat the knight and claim a relic.";
-      else state.objectiveText = "Return to the Triune Gate or finish clearing the field.";
-    } else if (!state.dungeon.fieldCleared) {
-      state.objectiveText = "The relic is yours. Clear the remaining field foes.";
+
+    if (dungeonId && progress) {
+      if (area.roomIndex === 1) state.objectiveText = progress.keyOwned ? "Take the depth gate upward." : "Clear the chamber and claim the dungeon key.";
+      else if (area.roomIndex === 2) state.objectiveText = progress.sealUnlocked ? "Push deeper toward the knight." : "Quiet this hall and open the Knight Seal.";
+      else if (area.roomIndex === 3) state.objectiveText = progress.rewardGranted ? "Take the ascent and return to the field." : "Defeat the knight and claim the relic chest.";
+      return;
+    }
+
+    if (!allDungeonsCleared()) {
+      state.objectiveText = `Relics ${state.rewardsOwned.length}/3 — seek the remaining dungeon paths.`;
+    } else if (!state.overworld.fieldCleared) {
+      state.objectiveText = "All relics claimed. Clear the field and return to the shrine.";
     } else {
       state.objectiveText = "Return to the shrine and press Enter.";
     }
@@ -945,12 +1135,15 @@
 
   function updateHud() {
     renderHearts(state.player.health, state.player.maxHealth);
-    const area = currentArea();
-    enemiesValue.textContent = area ? area.enemies.filter((e) => !e.dead).length : 0;
     rupeesValue.textContent = formatRupees(state.rupees);
+    if (currentArea().id === "overworld") {
+      state.zoneName = zoneForOverworldPosition(currentArea(), state.player.x, state.player.y);
+    }
     zoneValue.textContent = state.zoneName;
     objectiveValue.textContent = state.objectiveText;
     rewardsValue.textContent = formatRewards();
+    renderWeaponHud();
+    renderDungeonHud();
     computeStatus();
   }
 
@@ -1042,19 +1235,60 @@
     spawnPickup(area, x, y, blue ? "rupeeBlue" : "rupeeGreen", blue ? 5 : 1);
   }
 
+  function setActiveWeapon(id) {
+    if (!state.player || !state.player.weaponsOwned.includes(id) || state.player.activeWeapon === id) return;
+    state.player.activeWeapon = id;
+    setDebugAction(`weapon-${id}`);
+    setMessage(`${WEAPONS[id].name} equipped.`, 1.5);
+    updateHud();
+  }
+
+  function cycleWeapon(step = 1) {
+    const owned = getWeaponOrder().filter((id) => state.player.weaponsOwned.includes(id));
+    const current = owned.indexOf(state.player.activeWeapon);
+    if (current === -1 || owned.length <= 1) return;
+    const next = owned[(current + step + owned.length) % owned.length];
+    setActiveWeapon(next);
+  }
+
+  function spawnPlayerProjectile(direction, weaponId) {
+    const dir = normalize(direction.x, direction.y);
+    state.projectiles.push({
+      owner: "player",
+      weaponId,
+      x: state.player.x + dir.x * 18,
+      y: state.player.y + dir.y * 18,
+      vx: dir.x * 280,
+      vy: dir.y * 280,
+      life: 0.9,
+      damage: 1,
+      r: 5,
+      color: weaponId === "wand" ? "#ffb45c" : "#d8e8ff",
+      hitIds: new Set(),
+    });
+  }
+
   function doAttack(direction) {
     const player = state.player;
     if (!state.running || state.victory || state.gameOver || state.transition.active) return;
     if (player.attackCooldown > 0 || player.attackTimer > 0) return;
 
     const dir = normalize(direction.x, direction.y);
+    const weapon = activeWeaponData();
     player.attackDir = dir;
     player.lastDir = dir;
-    player.attackTimer = ATTACK_TIME;
-    player.attackCooldown = ATTACK_COOLDOWN;
+    player.attackTimer = weapon.attackTime;
+    player.attackCooldown = weapon.cooldown;
     player.slashHitIds.clear();
 
-    addCameraShake(2.5, 0.08);
+    if (weapon.projectile) {
+      spawnPlayerProjectile(dir, weapon.id);
+      addCameraShake(1.6, 0.06);
+      for (let i = 0; i < 3; i += 1) spawnSpark(player.x + dir.x * 16, player.y + dir.y * 16, i % 2 ? "#ffd67a" : "#ff9d49");
+      return;
+    }
+
+    addCameraShake(weapon.id === "spear" ? 3.1 : 2.5, 0.08);
     for (let i = 0; i < 3; i += 1) {
       state.strikeDust.push({
         x: player.x + dir.x * (16 + i * 5),
@@ -1062,34 +1296,40 @@
         life: 0.16 + i * 0.02,
         maxLife: 0.2,
         dir,
+        weaponId: weapon.id,
       });
     }
   }
 
   function currentSlashBox() {
     const p = state.player;
-    if (p.attackTimer <= 0) return null;
-    const reach = 30;
+    const weapon = activeWeaponData();
+    if (p.attackTimer <= 0 || weapon.projectile) return null;
+    const reach = weapon.reach;
     return {
       x: p.x + p.attackDir.x * reach,
       y: p.y + p.attackDir.y * reach,
-      w: 30 + Math.abs(p.attackDir.y) * 10,
-      h: 30 + Math.abs(p.attackDir.x) * 10,
+      w: weapon.narrow ? 20 + Math.abs(p.attackDir.y) * 12 : 30 + Math.abs(p.attackDir.y) * 10,
+      h: weapon.narrow ? 20 + Math.abs(p.attackDir.x) * 12 : 30 + Math.abs(p.attackDir.x) * 10,
+      damage: weapon.damage + (weapon.id === "sword" ? state.player.swordLevel - 1 : 0),
+      weaponId: weapon.id,
     };
   }
 
-  function damageEnemy(area, enemy, player) {
-    enemy.health -= player.damage;
+  function damageEnemy(area, enemy, attack, source) {
+    const damage = attack.damage || 1;
+    enemy.health -= damage;
     enemy.hurt = 0.18;
     enemy.stun = enemy.type === "knight" ? 0.08 : 0.14;
-    const knock = normalize(enemy.x - player.x, enemy.y - player.y);
-    const push = enemy.type === "knight" ? 88 : 122;
+    const knock = normalize(enemy.x - source.x, enemy.y - source.y);
+    const push = attack.weaponId === "spear" ? 132 : enemy.type === "knight" ? 88 : 122;
     enemy.kbX = knock.x * push;
     enemy.kbY = knock.y * push;
     addCameraShake(enemy.health <= 0 ? 5 : 3.6, enemy.health <= 0 ? 0.2 : 0.12);
 
     for (let i = 0; i < 4; i += 1) {
-      spawnSpark(enemy.x + (Math.random() - 0.5) * 8, enemy.y + (Math.random() - 0.5) * 8, enemy.type === "knight" ? "#d7e8ff" : enemy.tint === "ember" ? "#ffb05a" : "#9df58e");
+      spawnSpark(enemy.x + (Math.random() - 0.5) * 8, enemy.y + (Math.random() - 0.5) * 8,
+        enemy.type === "knight" ? "#d7e8ff" : enemy.tint === "ember" || enemy.tint === "embersteel" ? "#ffb05a" : enemy.tint === "stone" ? "#d7cab3" : "#9df58e");
     }
 
     if (enemy.health <= 0) {
@@ -1098,7 +1338,10 @@
       if (enemy.type === "knight") {
         burst(enemy.x, enemy.y, ["#d7e8ff", "#ffffff", "#f6d86f"]);
       } else {
-        burst(enemy.x, enemy.y, enemy.tint === "ember" ? ["#ffb25e", "#fff0c2", "#ffe1aa"] : ["#98f58d", "#d7ffd0", "#fff6c2"]);
+        burst(enemy.x, enemy.y,
+          enemy.tint === "ember" || enemy.tint === "embersteel" ? ["#ffb25e", "#fff0c2", "#ffe1aa"] :
+          enemy.tint === "stone" ? ["#cfc3ae", "#f4ead9", "#fff6c2"] :
+          ["#98f58d", "#d7ffd0", "#fff6c2"]);
       }
       onAreaEnemiesCleared(area);
     }
@@ -1107,56 +1350,60 @@
   function onAreaEnemiesCleared(area) {
     if (area.enemies.some((enemy) => !enemy.dead)) return;
 
-    if (area.id === "overworld" && !state.dungeon.fieldCleared) {
-      state.dungeon.fieldCleared = true;
-      showAreaBanner("Field Cleared", "South Meadow", 2.8);
-      setMessage(state.dungeon.cleared ? "The meadow is quiet. Return to the shrine." : "The meadow is quiet. The shrine still waits for a relic from below.", 4);
+    if (area.id === "overworld" && !state.overworld.fieldCleared) {
+      state.overworld.fieldCleared = true;
+      showAreaBanner("Field Cleared", "Elderfield", 2.8);
+      setMessage(allDungeonsCleared() ? "The field is quiet. Return to the shrine." : "The field is quiet. Three relic paths still remain.", 4);
       addCameraShake(4, 0.24);
     }
 
-    if (area.id === "dungeon1" && !state.dungeon.roomClears.dungeon1) {
-      state.dungeon.roomClears.dungeon1 = true;
-      const pedestal = area.interactables.find((i) => i.type === "dungeonKeyPedestal");
-      if (pedestal) pedestal.visible = true;
-      showAreaBanner("Room Cleared", "Triune Descent", 2.2);
-      setMessage("A key rises from the pedestal. Claim it.", 3.2);
-    }
+    if (area.dungeonId) {
+      const progress = dungeonProgress(area.dungeonId);
+      if (area.roomIndex === 1 && !progress.roomClears.r1) {
+        progress.roomClears.r1 = true;
+        const pedestal = area.interactables.find((i) => i.type === "dungeonKeyPedestal");
+        if (pedestal) pedestal.visible = true;
+        showAreaBanner("Room Cleared", area.name, 2.2);
+        setMessage("A key rises from the pedestal. Claim it.", 3.2);
+      }
 
-    if (area.id === "dungeon2" && !state.dungeon.roomClears.dungeon2) {
-      state.dungeon.roomClears.dungeon2 = true;
-      showAreaBanner("Reliquary Quieted", "Broken Reliquary", 2.2);
-      setMessage("The Knight Seal can now be opened with your key.", 3.2);
-    }
+      if (area.roomIndex === 2 && !progress.roomClears.r2) {
+        progress.roomClears.r2 = true;
+        showAreaBanner("Hall Quieted", area.name, 2.2);
+        setMessage("The Knight Seal can now be opened with your key.", 3.2);
+      }
 
-    if (area.id === "dungeon3" && !state.dungeon.roomClears.dungeon3) {
-      state.dungeon.roomClears.dungeon3 = true;
-      const chest = area.interactables.find((i) => i.type === "rewardChest");
-      if (chest) chest.visible = true;
-      showAreaBanner("Knight Fallen", "Knight's Reliquary", 2.6);
-      setMessage("The chest has unsealed. Claim your relic.", 3.4);
+      if (area.roomIndex === 3 && !progress.roomClears.r3) {
+        progress.roomClears.r3 = true;
+        const chest = area.interactables.find((i) => i.type === "rewardChest");
+        if (chest) chest.visible = true;
+        showAreaBanner("Knight Fallen", area.name, 2.6);
+        setMessage("The relic chest has unsealed. Claim your reward.", 3.4);
+      }
     }
 
     updateObjective();
     updateHud();
   }
 
-  function grantReward() {
-    const rewardPool = ["Heart Vessel", "Blade Crest", "Ancient Gem"];
-    const choices = rewardPool.filter((reward) => !state.rewardsOwned.includes(reward));
-    const reward = choices[Math.floor(Math.random() * choices.length)] || rewardPool[Math.floor(Math.random() * rewardPool.length)];
-    state.rewardsOwned.push(reward);
-    state.dungeon.currentReward = reward;
-    state.dungeon.rewardGranted = true;
-    state.dungeon.cleared = true;
+  function grantReward(dungeonId) {
+    const progress = dungeonProgress(dungeonId);
+    const meta = DUNGEONS[dungeonId];
+    const reward = meta.reward;
+    if (!state.rewardsOwned.includes(reward)) state.rewardsOwned.push(reward);
+    progress.currentReward = reward;
+    progress.rewardGranted = true;
+    progress.cleared = true;
 
-    if (reward === "Heart Vessel") {
-      state.player.maxHealth += 1;
-      state.player.health = state.player.maxHealth;
-    } else if (reward === "Blade Crest") {
+    if (meta.rewardType === "sword") {
       state.player.swordLevel += 1;
-      state.player.damage += 1;
-    } else if (reward === "Ancient Gem") {
-      state.rupees += 25;
+    } else if (meta.rewardType === "spear") {
+      if (!state.player.weaponsOwned.includes("spear")) state.player.weaponsOwned.push("spear");
+      setActiveWeapon("spear");
+    } else if (meta.rewardType === "wand") {
+      if (!state.player.weaponsOwned.includes("wand")) state.player.weaponsOwned.push("wand");
+      setActiveWeapon("wand");
+      state.rupees += 15;
     }
 
     const exitPortal = currentArea().interactables.find((i) => i.type === "exitPortal");
@@ -1179,16 +1426,16 @@
       if (!rectsOverlap(p, box)) continue;
 
       if (item.type === "sign") {
-        setMessage(item.text, 3.5);
+        setMessage(item.text, 3.8);
         return;
       }
 
       if (item.type === "shrine") {
-        if (!state.dungeon.cleared) {
-          setMessage("The shrine feels a missing relic. Something below still calls.", 3);
+        if (!allDungeonsCleared()) {
+          setMessage(`The shrine is still missing ${3 - state.rewardsOwned.length} relic${3 - state.rewardsOwned.length === 1 ? "" : "s"}.`, 3);
           return;
         }
-        if (!state.dungeon.fieldCleared) {
+        if (!state.overworld.fieldCleared) {
           const alive = area.enemies.filter((e) => !e.dead).length;
           setMessage(`The shrine still hears ${alive} field foe${alive === 1 ? "" : "s"}.`, 3);
           return;
@@ -1203,76 +1450,81 @@
         startButton.hidden = true;
         restartButton.hidden = false;
         startTitle.textContent = "Elderfield Rekindled";
-        startText.textContent = `You cut down the meadow's threats, broke through the Triune Gate, defeated the knight below, and claimed ${state.dungeon.currentReward || "a relic"}.`;
-        setMessage(`Victory. Relic: ${state.dungeon.currentReward || "unknown"} • Rupees: ${state.rupees}.`, 4.4);
+        startText.textContent = `You reclaimed all three relics — ${state.rewardsOwned.join(", ")} — and brought them home.`;
+        setMessage(`Victory. Relics: ${state.rewardsOwned.join(", ")} • Rupees: ${state.rupees}.`, 4.4);
         updateObjective();
         updateHud();
         return;
       }
 
-      if (item.type === "triuneGate") {
-        state.dungeon.started = true;
+      if (item.type === "dungeonEntrance") {
+        const progress = dungeonProgress(item.dungeonId);
+        progress.started = true;
         updateObjective();
-        beginTransition(item.targetAreaId, item.targetSpawn, "The mixed gate folds into a single ancient descent.");
+        beginTransition(item.targetAreaId, item.targetSpawn, item.text || "The dungeon answers.");
         return;
       }
 
       if (item.type === "returnSigil") {
-        beginTransition(item.targetAreaId, item.targetSpawn, "The sigil breathes you back into the meadow.");
+        beginTransition(item.targetAreaId, item.targetSpawn, "The sigil breathes you back into the field.");
         return;
       }
 
       if (item.type === "roomGate") {
+        const progress = dungeonProgress(item.dungeonId);
         if (item.requireClear && area.enemies.some((enemy) => !enemy.dead)) {
           setMessage(item.closedText || "The way forward is still barred.", 2.6);
           return;
         }
-        if (item.requireKey && !state.dungeon.keyOwned) {
+        if (item.requireKey && !progress.keyOwned) {
           setMessage("The gate wants the dungeon key.", 2.4);
           return;
         }
-        beginTransition(item.targetAreaId, item.targetSpawn, item.openText || "You push deeper into the ruins.");
+        beginTransition(item.targetAreaId, item.targetSpawn, item.openText || "You push deeper into the dungeon.");
         return;
       }
 
       if (item.type === "lockedSeal") {
+        const progress = dungeonProgress(item.dungeonId);
         if (area.enemies.some((enemy) => !enemy.dead)) {
           setMessage("The room is too loud. The seal refuses to answer.", 2.6);
           return;
         }
-        if (!state.dungeon.keyOwned && !state.dungeon.sealUnlocked) {
+        if (!progress.keyOwned && !progress.sealUnlocked) {
           setMessage("The Knight Seal needs the dungeon key.", 2.6);
           return;
         }
-        state.dungeon.sealUnlocked = true;
-        beginTransition(item.targetAreaId, item.targetSpawn, "The seal parts. Cold steel waits ahead.");
+        progress.sealUnlocked = true;
+        beginTransition(item.targetAreaId, item.targetSpawn, "The seal parts. A knight waits ahead.");
         return;
       }
 
       if (item.type === "dungeonKeyPedestal") {
+        const progress = dungeonProgress(item.dungeonId);
         if (!item.visible || item.taken) return;
         item.taken = true;
         item.visible = false;
-        state.dungeon.keyOwned = true;
+        progress.keyOwned = true;
         burst(item.x + item.w / 2, item.y + item.h / 2, ["#f6d86f", "#ffffff"]);
-        showAreaBanner("Dungeon Key", "Triune Descent", 2.2);
-        setMessage("Dungeon Key obtained. The runed lift can now answer you.", 3.2);
+        showAreaBanner("Dungeon Key", area.name, 2.2);
+        setMessage("Dungeon Key obtained. The depth gate can now answer you.", 3.2);
         updateObjective();
         updateHud();
         return;
       }
 
       if (item.type === "rewardChest") {
+        const progress = dungeonProgress(item.dungeonId);
         if (!item.visible) {
           setMessage("The chest is sealed by the knight's presence.", 2.4);
           return;
         }
         if (item.opened) {
-          setMessage(`The chest stands open. ${state.dungeon.currentReward || "The relic"} is already yours.`, 2.4);
+          setMessage(`The chest stands open. ${progress.currentReward || "The relic"} is already yours.`, 2.4);
           return;
         }
         item.opened = true;
-        grantReward();
+        grantReward(item.dungeonId);
         return;
       }
 
@@ -1281,7 +1533,7 @@
           setMessage("The ascent is still asleep.", 2.4);
           return;
         }
-        beginTransition(item.targetAreaId, item.targetSpawn, "Relic in hand, you rise back to the field.");
+        beginTransition(item.targetAreaId, item.targetSpawn, "Relic in hand, you rise back into Elderfield.");
         return;
       }
     }
@@ -1311,13 +1563,21 @@
       moveWithCollision(p, dir.x * speed * dt, dir.y * speed * dt);
     }
 
+    if (area.id === "overworld") {
+      const nextZone = zoneForOverworldPosition(area, p.x, p.y);
+      if (nextZone !== state.zoneName) {
+        state.zoneName = nextZone;
+        showAreaBanner(nextZone, "Region entered", 1.8);
+      }
+    }
+
     const slash = currentSlashBox();
     if (slash) {
       for (const enemy of area.enemies) {
         if (enemy.dead || p.slashHitIds.has(enemy.id)) continue;
         if (rectsOverlap({ ...slash }, enemy)) {
           p.slashHitIds.add(enemy.id);
-          damageEnemy(area, enemy, p);
+          damageEnemy(area, enemy, slash, p);
         }
       }
     }
@@ -1355,15 +1615,13 @@
           startButton.hidden = true;
           restartButton.hidden = false;
           startTitle.textContent = "Felled in Elderfield";
-          startText.textContent = `You reached ${state.zoneName} and gathered ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}. The knight will still be waiting.`;
+          startText.textContent = `You reached ${state.zoneName} and gathered ${state.rupees} rupee${state.rupees === 1 ? "" : "s"}. The knights still wait below.`;
           setMessage("You were overwhelmed. Reset and take a cleaner line.", 4);
         }
         updateHud();
       }
     }
-  }
-
-  function updateEnemies(dt) {
+  }  function updateEnemies(dt) {
     const area = currentArea();
     const p = state.player;
     for (const enemy of area.enemies) {
@@ -1425,6 +1683,29 @@
         if (p.vx) p.x += p.vx * dt;
         if (p.vy) p.y += p.vy * dt;
         if (p.life <= 0) bucket.splice(i, 1);
+      }
+    }
+
+    for (let i = state.projectiles.length - 1; i >= 0; i -= 1) {
+      const projectile = state.projectiles[i];
+      projectile.life -= dt;
+      projectile.x += projectile.vx * dt;
+      projectile.y += projectile.vy * dt;
+      if (projectile.life <= 0 || isSolidAtPixel(projectile.x, projectile.y)) {
+        burst(projectile.x, projectile.y, ["#ffbf6b", "#fff0c2"]);
+        state.projectiles.splice(i, 1);
+        continue;
+      }
+      const area = currentArea();
+      for (const enemy of area.enemies) {
+        if (enemy.dead || projectile.hitIds.has(enemy.id)) continue;
+        if (rectsOverlap({ x: projectile.x, y: projectile.y, w: projectile.r * 2, h: projectile.r * 2 }, enemy)) {
+          projectile.hitIds.add(enemy.id);
+          damageEnemy(area, enemy, { damage: projectile.damage, weaponId: projectile.weaponId }, { x: projectile.x, y: projectile.y });
+          burst(projectile.x, projectile.y, ["#ffbf6b", "#ffe7b8"]);
+          state.projectiles.splice(i, 1);
+          break;
+        }
       }
     }
 
@@ -1543,41 +1824,48 @@
 
   function drawTile(tile, sx, sy, x, y, theme) {
     switch (tile) {
-      case 0:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#5f9b49" : "#6aa952";
+      case 0: {
+        const a = (x + y) % 2 === 0 ? "#5e9948" : "#69a851";
+        const b = theme === "field" && seededNoise(x * 3, y * 5) > 0.78 ? "#7fbe63" : a;
+        ctx.fillStyle = b;
         ctx.fillRect(sx, sy, TILE, TILE);
-        if (seededNoise(x * 4, y * 3) > 0.72) {
-          ctx.fillStyle = "#80c661";
-          ctx.fillRect(sx + 4, sy + 6, 2, 4);
-          ctx.fillRect(sx + 10, sy + 9, 2, 5);
-          ctx.fillRect(sx + 16, sy + 5, 2, 4);
-        }
+        ctx.fillStyle = "#3f7e35";
+        ctx.fillRect(sx + 3, sy + 18, 4, 2);
+        ctx.fillRect(sx + 11, sy + 14, 3, 2);
+        ctx.fillRect(sx + 17, sy + 9, 2, 3);
         break;
+      }
       case 1:
-        ctx.fillStyle = "#2f6a35";
+        ctx.fillStyle = "#25552e";
         ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#1f4f29";
+        ctx.fillStyle = "#1a3e23";
         ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
         ctx.fillStyle = "#7b4d28";
         ctx.fillRect(sx + 10, sy + 14, 4, 8);
         ctx.fillStyle = "#4ea451";
-        ctx.fillRect(sx + 5, sy + 4, 14, 10);
-        ctx.fillRect(sx + 3, sy + 8, 18, 6);
+        ctx.fillRect(sx + 4, sy + 4, 16, 7);
+        ctx.fillRect(sx + 2, sy + 8, 20, 6);
+        ctx.fillStyle = "#85d670";
+        ctx.fillRect(sx + 6, sy + 6, 4, 2);
         break;
       case 2:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#2e7fa4" : "#286f93";
+        ctx.fillStyle = (x + y) % 2 === 0 ? "#2d7ca0" : "#276d90";
         ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#74bedb";
+        ctx.fillStyle = "#7cd1ef";
         ctx.fillRect(sx + 2, sy + 5, 8, 2);
         ctx.fillRect(sx + 12, sy + 11, 7, 2);
         ctx.fillRect(sx + 7, sy + 16, 10, 2);
+        ctx.fillStyle = "rgba(200,240,255,0.18)";
+        ctx.fillRect(sx + 4, sy + 3, 5, 1);
         break;
       case 3:
         ctx.fillStyle = (x + y) % 2 === 0 ? "#c5a86b" : "#b79558";
         ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(105, 67, 32, 0.18)";
+        ctx.fillStyle = "rgba(105, 67, 32, 0.16)";
         ctx.fillRect(sx + 6, sy, 2, TILE);
         ctx.fillRect(sx + 14, sy, 2, TILE);
+        ctx.fillStyle = "rgba(255, 237, 184, 0.18)";
+        ctx.fillRect(sx + 2, sy + 4, 4, 1);
         break;
       case 4:
         ctx.fillStyle = "#5d666f";
@@ -1600,23 +1888,23 @@
         drawFlower(sx + 15, sy + 13, "#ffd2ea");
         break;
       case 7:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#4e4a42" : "#585248";
+        ctx.fillStyle = theme === "ember" ? "#54443a" : "#4e4a42";
         ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "rgba(255,255,255,0.04)";
+        ctx.fillStyle = "rgba(255,255,255,0.05)";
         ctx.fillRect(sx + 3, sy + 4, 5, 1);
         ctx.fillRect(sx + 12, sy + 10, 6, 1);
         break;
       case 8:
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#61574a" : "#6b6154";
+        ctx.fillStyle = theme === "ruins" ? "#6e6658" : theme === "rootwood" ? "#4e5642" : "#6b6154";
         ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = "#928369";
+        ctx.fillStyle = theme === "ember" ? "#ac7d5f" : "#928369";
         ctx.fillRect(sx + 6, sy + 6, 3, 3);
         ctx.fillRect(sx + 14, sy + 13, 3, 3);
         break;
       case 9:
-        ctx.fillStyle = theme === "dungeon" ? "#272831" : "#314239";
+        ctx.fillStyle = theme === "rootwood" ? "#2b3d28" : theme === "ember" ? "#3d2b27" : "#272831";
         ctx.fillRect(sx, sy, TILE, TILE);
-        ctx.fillStyle = theme === "dungeon" ? "#3a3c47" : "#455a4d";
+        ctx.fillStyle = theme === "rootwood" ? "#3e5a3a" : theme === "ember" ? "#614033" : "#3a3c47";
         ctx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
         ctx.fillStyle = "rgba(255,255,255,0.08)";
         ctx.fillRect(sx + 5, sy + 5, 4, 2);
@@ -1639,6 +1927,37 @@
         ctx.lineTo(sx + 11, sy + 13);
         ctx.lineTo(sx + 16, sy + 9);
         ctx.stroke();
+        break;
+      case 13:
+        ctx.fillStyle = (x + y) % 2 === 0 ? "#47693e" : "#537645";
+        ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "#2d4d2b";
+        ctx.fillRect(sx + 5, sy + 6, 2, 10);
+        ctx.fillRect(sx + 12, sy + 10, 2, 7);
+        ctx.fillRect(sx + 16, sy + 5, 2, 8);
+        break;
+      case 14:
+        ctx.fillStyle = (x + y) % 2 === 0 ? "#7b7566" : "#8a8373";
+        ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "#c7bda2";
+        ctx.fillRect(sx + 4, sy + 4, 4, 2);
+        ctx.fillRect(sx + 12, sy + 12, 5, 2);
+        break;
+      case 15:
+        ctx.fillStyle = (x + y) % 2 === 0 ? "#764732" : "#8a5234";
+        ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "#d28b4a";
+        ctx.fillRect(sx + 6, sy + 5, 2, 2);
+        ctx.fillRect(sx + 13, sy + 11, 3, 2);
+        ctx.fillStyle = "#341d14";
+        ctx.fillRect(sx + 17, sy + 16, 3, 2);
+        break;
+      case 16:
+        ctx.fillStyle = (x + y) % 2 === 0 ? "#492920" : "#592f23";
+        ctx.fillRect(sx, sy, TILE, TILE);
+        ctx.fillStyle = "#b55c2e";
+        ctx.fillRect(sx + 8, sy + 7, 3, 3);
+        ctx.fillRect(sx + 15, sy + 13, 2, 2);
         break;
       default:
         ctx.fillStyle = "magenta";
@@ -1686,7 +2005,7 @@
         ctx.fillStyle = "#6e4b2a";
         ctx.fillRect(sx + 8, sy + 5, 8, 2);
       } else if (item.type === "shrine") {
-        const glow = state.dungeon.cleared && state.dungeon.fieldCleared || item.active;
+        const glow = allDungeonsCleared() && state.overworld.fieldCleared || item.active;
         const pulse = 0.55 + Math.sin(performance.now() / 220) * 0.25;
         ctx.fillStyle = glow ? "#93b9ff" : "#7f857f";
         ctx.fillRect(sx + 6, sy + 6, 36, 8);
@@ -1699,20 +2018,32 @@
           ctx.fillStyle = `rgba(255, 243, 176, ${0.08 + pulse * 0.12})`;
           ctx.fillRect(sx + 8, sy + 8, 32, 32);
         }
-      } else if (item.type === "triuneGate") {
+      } else if (item.type === "dungeonEntrance") {
         const pulse = 0.55 + Math.sin(performance.now() / 180) * 0.2;
-        ctx.fillStyle = "#19140f";
-        ctx.fillRect(sx + 2, sy + 16, 24, 16);
-        ctx.fillStyle = "#3d3b37";
-        ctx.fillRect(sx + 30, sy + 8, 18, 24);
-        ctx.fillStyle = "#726a5c";
-        ctx.fillRect(sx + 33, sy + 12, 12, 16);
-        ctx.fillStyle = "#26374e";
-        ctx.fillRect(sx + 56, sy + 16, 20, 14);
-        ctx.fillStyle = "#5ca6e1";
-        ctx.fillRect(sx + 60, sy + 18, 12, 10);
-        ctx.fillStyle = `rgba(110, 190, 255, ${0.14 + pulse * 0.2})`;
-        ctx.fillRect(sx + 26, sy + 8, 28, 24);
+        if (item.entranceStyle === "arch") {
+          ctx.fillStyle = "#6c6557";
+          ctx.fillRect(sx + 8, sy + 8, 56, 24);
+          ctx.fillStyle = "#31354a";
+          ctx.fillRect(sx + 16, sy + 12, 40, 18);
+          ctx.fillStyle = `rgba(110,190,255,${0.12 + pulse * 0.2})`;
+          ctx.fillRect(sx + 20, sy + 16, 32, 10);
+        } else if (item.entranceStyle === "cave") {
+          ctx.fillStyle = "#34251d";
+          ctx.fillRect(sx + 6, sy + 14, 56, 18);
+          ctx.fillStyle = "#0b0d0d";
+          ctx.fillRect(sx + 18, sy + 10, 34, 18);
+          ctx.fillStyle = `rgba(91, 181, 112, ${0.1 + pulse * 0.16})`;
+          ctx.fillRect(sx + 22, sy + 14, 26, 10);
+        } else {
+          ctx.fillStyle = "#645d50";
+          ctx.fillRect(sx + 10, sy + 16, 40, 10);
+          ctx.fillStyle = "#2b1d18";
+          ctx.fillRect(sx + 16, sy + 12, 28, 14);
+          ctx.fillStyle = "#b45b31";
+          ctx.fillRect(sx + 20, sy + 16, 20, 6);
+          ctx.fillStyle = `rgba(255,160,80,${0.12 + pulse * 0.16})`;
+          ctx.fillRect(sx + 18, sy + 12, 24, 10);
+        }
       } else if (item.type === "returnSigil" || item.type === "exitPortal") {
         const pulse = 0.4 + Math.sin(performance.now() / 200) * 0.2;
         ctx.fillStyle = "#18212f";
@@ -1720,9 +2051,10 @@
         ctx.fillStyle = `rgba(120, 180, 255, ${0.2 + pulse * 0.25})`;
         ctx.fillRect(sx + 7, sy + 7, item.w - 14, item.h - 14);
       } else if (item.type === "roomGate" || item.type === "lockedSeal") {
+        const progress = dungeonProgress(item.dungeonId);
         const isOpen = item.type === "roomGate"
           ? !item.requireClear || !area.enemies.some((enemy) => !enemy.dead)
-          : state.dungeon.sealUnlocked || (state.dungeon.keyOwned && !area.enemies.some((enemy) => !enemy.dead));
+          : progress.sealUnlocked || (progress.keyOwned && !area.enemies.some((enemy) => !enemy.dead));
         ctx.fillStyle = isOpen ? "#7ab7ff" : "#4f4d63";
         ctx.fillRect(sx + 4, sy + 4, item.w - 8, item.h - 4);
         ctx.fillStyle = isOpen ? "#d4e9ff" : "#8a8896";
@@ -1734,7 +2066,7 @@
         ctx.fillRect(sx + 20, sy + 2, 8, 12);
         ctx.fillRect(sx + 28, sy + 6, 8, 4);
       } else if (item.type === "rewardChest") {
-        ctx.fillStyle = "#5a3520";
+        ctx.fillStyle = item.dungeonId === "ember" ? "#72381d" : item.dungeonId === "rootwood" ? "#4f3920" : "#5a3520";
         ctx.fillRect(sx + 6, sy + 10, 36, 16);
         ctx.fillStyle = "#d6b66f";
         ctx.fillRect(sx + 10, sy + 14, 28, 8);
@@ -1777,23 +2109,23 @@
       ctx.fillRect(sx - 7, sy + 8, 14, 3);
 
       if (enemy.type === "knight") {
-        const hurtFlash = enemy.hurt > 0 ? "#ffffff" : "#7684a8";
+        const hurtFlash = enemy.hurt > 0 ? "#ffffff" : enemy.tint === "embersteel" ? "#9f4f31" : enemy.tint === "vine" ? "#557f4b" : "#7684a8";
         ctx.fillStyle = hurtFlash;
         ctx.fillRect(sx - 9, sy - 8, 18, 18);
-        ctx.fillStyle = "#c8d3ef";
+        ctx.fillStyle = enemy.tint === "embersteel" ? "#e3ad73" : enemy.tint === "vine" ? "#b4df9a" : "#c8d3ef";
         ctx.fillRect(sx - 6, sy - 5, 12, 8);
-        ctx.fillStyle = "#2a3152";
+        ctx.fillStyle = enemy.tint === "embersteel" ? "#5e2916" : enemy.tint === "vine" ? "#254220" : "#2a3152";
         ctx.fillRect(sx - 7, sy + 3, 14, 7);
         ctx.fillStyle = "#f0d987";
         ctx.fillRect(sx - 2, sy - 12, 4, 4);
         ctx.fillStyle = "#161616";
         ctx.fillRect(sx - 4, sy - 3, 2, 2);
         ctx.fillRect(sx + 2, sy - 3, 2, 2);
-        ctx.fillStyle = "#d7e8ff";
+        ctx.fillStyle = enemy.tint === "embersteel" ? "#ffbf6c" : enemy.tint === "vine" ? "#d6f4b8" : "#d7e8ff";
         ctx.fillRect(sx + 8, sy - 5, 3, 14);
       } else {
-        const main = enemy.tint === "moss" ? "#67c364" : "#df8a49";
-        const alt = enemy.tint === "moss" ? "#b3f29d" : "#ffd8a2";
+        const main = enemy.tint === "moss" ? "#67c364" : enemy.tint === "stone" ? "#a59f93" : "#df8a49";
+        const alt = enemy.tint === "moss" ? "#b3f29d" : enemy.tint === "stone" ? "#d8d0c1" : "#ffd8a2";
         const hurtFlash = enemy.hurt > 0 ? "#ffffff" : main;
         ctx.fillStyle = hurtFlash;
         ctx.fillRect(sx - 8, sy - 6, 16, 14);
@@ -1836,43 +2168,62 @@
       ctx.fillStyle = "#523625";
       ctx.fillRect(sx - 4, sy - 2, 2, 2);
       ctx.fillRect(sx + 2, sy - 2, 2, 2);
+
+      const weapon = activeWeaponData();
+      ctx.fillStyle = weapon.id === "wand" ? "#ffbf6c" : "#d7e8ff";
+      if (Math.abs(p.lastDir.x) > Math.abs(p.lastDir.y)) {
+        ctx.fillRect(sx + (p.lastDir.x > 0 ? 7 : -10), sy - 1, weapon.id === "spear" ? 10 : 7, 3);
+      } else {
+        ctx.fillRect(sx - 1, sy + (p.lastDir.y > 0 ? 8 : -12), 3, weapon.id === "spear" ? 12 : 8);
+      }
     }
 
-    if (p.attackTimer > 0) drawSlashEffect(sx, sy, p.attackDir, p.attackTimer / ATTACK_TIME);
+    if (p.attackTimer > 0) drawSlashEffect(sx, sy, p.attackDir, p.attackTimer / activeWeaponData().attackTime);
   }
 
   function drawSlashEffect(sx, sy, dir, t) {
     const alpha = clamp(t, 0, 1);
-    const reach = 16;
+    const weapon = activeWeaponData();
+    if (weapon.projectile) return;
+    const reach = weapon.id === "spear" ? 22 : 16;
     const px = sx + dir.x * reach;
     const py = sy + dir.y * reach;
     ctx.save();
     ctx.globalAlpha = alpha;
     if (Math.abs(dir.x) > Math.abs(dir.y)) {
-      ctx.fillStyle = "#fff4ce";
-      ctx.fillRect(px + (dir.x > 0 ? 0 : -20), py - 4, 20, 8);
-      ctx.fillStyle = "#f6d86f";
-      ctx.fillRect(px + (dir.x > 0 ? 2 : -18), py - 2, 16, 4);
+      ctx.fillStyle = weapon.id === "spear" ? "#d8e8ff" : "#fff4ce";
+      ctx.fillRect(px + (dir.x > 0 ? 0 : -(weapon.id === "spear" ? 28 : 20)), py - 4, weapon.id === "spear" ? 28 : 20, 8);
+      ctx.fillStyle = weapon.id === "spear" ? "#f6d86f" : "#f6d86f";
+      ctx.fillRect(px + (dir.x > 0 ? 2 : -(weapon.id === "spear" ? 26 : 18)), py - 2, weapon.id === "spear" ? 24 : 16, 4);
       ctx.fillStyle = "#cfd8e9";
-      ctx.fillRect(px + (dir.x > 0 ? 17 : -22), py - 2, 6, 4);
+      ctx.fillRect(px + (dir.x > 0 ? (weapon.id === "spear" ? 25 : 17) : -(weapon.id === "spear" ? 30 : 22)), py - 2, 6, 4);
     } else {
-      ctx.fillStyle = "#fff4ce";
-      ctx.fillRect(px - 4, py + (dir.y > 0 ? 0 : -20), 8, 20);
+      ctx.fillStyle = weapon.id === "spear" ? "#d8e8ff" : "#fff4ce";
+      ctx.fillRect(px - 4, py + (dir.y > 0 ? 0 : -(weapon.id === "spear" ? 28 : 20)), 8, weapon.id === "spear" ? 28 : 20);
       ctx.fillStyle = "#f6d86f";
-      ctx.fillRect(px - 2, py + (dir.y > 0 ? 2 : -18), 4, 16);
+      ctx.fillRect(px - 2, py + (dir.y > 0 ? 2 : -(weapon.id === "spear" ? 26 : 18)), 4, weapon.id === "spear" ? 24 : 16);
       ctx.fillStyle = "#cfd8e9";
-      ctx.fillRect(px - 2, py + (dir.y > 0 ? 17 : -22), 4, 6);
+      ctx.fillRect(px - 2, py + (dir.y > 0 ? (weapon.id === "spear" ? 25 : 17) : -(weapon.id === "spear" ? 30 : 22)), 4, 6);
     }
     ctx.restore();
   }
 
   function drawEffects() {
+    for (const projectile of state.projectiles) {
+      const sx = projectile.x - state.camera.x;
+      const sy = projectile.y - state.camera.y;
+      ctx.fillStyle = projectile.color;
+      ctx.fillRect(sx - projectile.r, sy - projectile.r, projectile.r * 2, projectile.r * 2);
+      ctx.fillStyle = "#fff6d1";
+      ctx.fillRect(sx - 1, sy - 1, 2, 2);
+    }
+
     for (const dust of state.strikeDust) {
       const sx = dust.x - state.camera.x;
       const sy = dust.y - state.camera.y;
       ctx.save();
       ctx.globalAlpha = dust.life / dust.maxLife;
-      ctx.fillStyle = "#fff8df";
+      ctx.fillStyle = dust.weaponId === "spear" ? "#d8e8ff" : "#fff8df";
       ctx.fillRect(sx - 4, sy - 4, 8, 8);
       ctx.fillStyle = "#f6d86f";
       ctx.fillRect(sx - 2, sy - 2, 4, 4);
@@ -1984,9 +2335,14 @@
     syncBuildStamp();
     resizeCanvas();
     state.player = makePlayer();
+    state.dungeons = {
+      ruins: emptyDungeonProgress(),
+      rootwood: emptyDungeonProgress(),
+      ember: emptyDungeonProgress(),
+    };
     state.areas = buildAreas();
     setArea("overworld", "start", true);
-    setMessage("Press Start, move with WASD, click or tap to slash, Enter to interact.", 999);
+    setMessage("Press Start, move with WASD, click or tap to attack, Enter to interact.", 999);
     computeStatus();
     refreshDebugPanel();
     requestAnimationFrame(loop);
@@ -2021,6 +2377,26 @@
     if (event.code === "F8") {
       resetGame();
       setMessage("Field reset.", 1.5);
+      return;
+    }
+    if (event.code === "KeyQ") {
+      cycleWeapon(-1);
+      return;
+    }
+    if (event.code === "KeyE") {
+      cycleWeapon(1);
+      return;
+    }
+    if (event.code === "Digit1") {
+      setActiveWeapon("sword");
+      return;
+    }
+    if (event.code === "Digit2") {
+      setActiveWeapon("spear");
+      return;
+    }
+    if (event.code === "Digit3") {
+      setActiveWeapon("wand");
       return;
     }
 

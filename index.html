@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Elderfield — Retro Adventure Prototype</title>
+  <title>Elderfield — World & HUD Pass</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell">
     <section class="title-panel">
       <div>
-        <p class="eyebrow">Browser adventure prototype</p>
+        <p class="eyebrow">SNES-style browser adventure</p>
         <h1>Elderfield</h1>
         <p class="subtitle">
-          A top-down retro field quest with camera follow, sword combat, a three-room dungeon pass,
-          original pixel-style art, desktop controls, touch controls for mobile, and a built-in diagnostics overlay.
+          A growing top-down fantasy action game with a larger overworld, three dungeon paths,
+          unlockable weapons, a camera-follow field map, mobile controls, and a built-in diagnostics overlay.
         </p>
       </div>
       <div class="legend">
-        <span>WASD / Arrows = Move</span>
-        <span>Click / Tap = Slash toward cursor</span>
-        <span>Enter = Interact</span>
-        <span>F3 / ~ = Debug • F4 = Hitboxes</span>
+        <span><strong>Move</strong> WASD / Arrows</span>
+        <span><strong>Attack</strong> Click / Tap</span>
+        <span><strong>Interact</strong> Enter</span>
+        <span><strong>Switch Weapon</strong> Q / E or 1-3</span>
+        <span><strong>Debug</strong> F3 / ~ • Hitboxes F4</span>
       </div>
     </section>
 
@@ -29,21 +30,29 @@
       <div class="canvas-wrap" id="canvasWrap">
         <canvas id="gameCanvas" aria-label="Elderfield game"></canvas>
 
-        <div class="hud hud-top">
-          <div class="hud-pill hud-hearts-pill">
-            <span class="label">Hearts</span>
+        <div class="hud-cluster hud-left">
+          <div class="hud-chip hearts-chip">
             <div class="hearts-meter" id="heartsValue" aria-label="Hearts meter"></div>
           </div>
-          <div class="hud-pill"><span class="label">Enemies</span><span id="enemiesValue">0</span></div>
-          <div class="hud-pill"><span class="label">Rupees</span><span id="rupeesValue">000</span></div>
-          <div class="hud-pill"><span class="label">Zone</span><span id="zoneValue">South Meadow</span></div>
-          <div class="hud-pill"><span class="label">Goal</span><span id="objectiveValue">Find the Triune Gate.</span></div>
-          <div class="hud-pill"><span class="label">Relics</span><span id="rewardsValue">0</span></div>
-          <div class="hud-pill hud-build"><span class="label">Build</span><span id="versionValue">v2.2.0</span></div>
-          <div class="hud-pill status-pill" id="statusPill" data-state="good">
-            <span class="status-dot"></span>
-            <span class="label">Status</span>
-            <span id="statusValue">GOOD</span>
+          <div class="hud-chip counter-chip">
+            <span class="chip-icon rupee-icon" aria-hidden="true"></span>
+            <span class="chip-value" id="rupeesValue">000</span>
+          </div>
+          <div class="hud-chip counter-chip">
+            <span class="chip-icon relic-icon" aria-hidden="true"></span>
+            <span class="chip-value" id="rewardsValue">0/3</span>
+          </div>
+        </div>
+
+        <div class="hud-cluster hud-right">
+          <div class="hud-strip" id="weaponHud" aria-label="Weapons"></div>
+          <div class="hud-strip" id="dungeonHud" aria-label="Dungeon progress"></div>
+          <div class="hud-meta">
+            <div class="build-watermark" id="buildWatermark">v2.3.0 • World &amp; HUD Pass</div>
+            <div class="status-pill" id="statusPill" data-state="good">
+              <span class="status-dot"></span>
+              <span id="statusValue">GOOD</span>
+            </div>
           </div>
         </div>
 
@@ -52,7 +61,7 @@
           <strong id="areaBannerTitle">South Meadow</strong>
         </div>
 
-        <div class="message-box" id="messageBox">Explore the field. Press Enter at signs, gates, doors, and the shrine.</div>
+        <div class="message-box" id="messageBox">Explore the expanded field. Press Enter near shrines, signs, gates, and relic devices.</div>
 
         <aside class="debug-panel" id="debugPanel" hidden>
           <div class="debug-header">
@@ -63,19 +72,19 @@
             <button class="debug-copy-btn" id="copyDebugButton" type="button">Copy Debug Report</button>
           </div>
           <div class="debug-status-row">
-            <span class="mini-badge">Build <strong id="debugBuildValue">v2.2.0</strong></span>
+            <span class="mini-badge">Build <strong id="debugBuildValue">v2.3.0</strong></span>
             <span class="mini-badge mini-status" id="debugStatusBadge" data-state="good">GOOD</span>
+            <span class="mini-badge mini-zone"><strong id="zoneValue">South Meadow</strong></span>
+            <span class="mini-badge mini-objective"><span id="objectiveValue">Find a dungeon.</span></span>
           </div>
           <pre id="debugContent">debug booting...</pre>
         </aside>
 
-        <div class="build-watermark" id="buildWatermark">v2.2.0 • Dungeon Pass</div>
-
         <div class="start-card" id="startCard">
           <h2>Elderfield</h2>
           <p>
-            The meadow is waking, the Triune Gate is open, and a knight waits under the ruins. Cut down foes,
-            take a relic, and return to the shrine.
+            South Meadow is no longer alone. Three dungeons now wait across the land, and new weapons
+            sleep behind their knights.
           </p>
           <div class="start-controls">
             <button id="startButton" class="primary-btn">Start Adventure</button>
