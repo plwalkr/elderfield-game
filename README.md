@@ -3,12 +3,11 @@
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
 ## New in v2.8.0
-- browser save/load using local storage
-- Continue Adventure, New Journey, and Delete Save actions on the start card
-- autosave while traveling, plus shrine and dungeon progress saves
-- debug report now includes save availability, last save time, save reason, and checkpoint
-- build/version badge moved to the **top-right** so it no longer fights the message box
-- layout tightened to keep the page cleaner and reduce annoying browser scroll on desktop
+- Dawnrest and Greenhollow added as the first real safe-settlement spaces
+- named NPCs, readable dialogue, and early quest hooks
+- painterly fantasy visual pass with smoother shapes and less chunky pixel treatment
+- build/version badge stays in the **top-right** and the layout remains clean with no browser scroll sprawl
+- save/load from the previous pass stays intact, including Continue Adventure / New Journey / Delete Save
 
 ## Save behavior
 - the game stores progress in your browser
@@ -62,4 +61,4 @@ Look for:
 
 - Added Dawnrest, the first safe haven on the Warden road
 - Added named NPC foundations and early side-quest hooks
-- Moved toward a less pixel-stretched HD-retro presentation
+- Shifted toward a softer painterly fantasy 2D presentation
