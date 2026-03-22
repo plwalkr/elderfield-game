@@ -42,9 +42,9 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.8.0";
+  const GAME_VERSION = "v2.8.1";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Town & NPC Foundations";
+  const BUILD_NAME = "Town & NPC Foundations • Performance Hotfix";
   const SAVE_KEY = "elderfield-save-v2_7";
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Dawnrest";
@@ -152,6 +152,10 @@
       checkpoint: null,
       lastReason: "none",
       autosaveTimer: 0,
+    },
+    renderCache: {
+      vignette: null,
+      sizeKey: "",
     },
   };
 
@@ -849,6 +853,8 @@
       dungeonId,
       roomIndex,
       regions: [],
+      groundCanvas: null,
+      groundReady: false,
     };
   }
 
@@ -2471,21 +2477,250 @@ function drawAtmosphere() {
   ctx.restore();
 }
 
-  function drawGround() {
-    const area = currentArea();
-    const startX = Math.floor(state.camera.x / TILE);
-    const startY = Math.floor(state.camera.y / TILE);
-    const endX = Math.ceil((state.camera.x + state.logicalWidth) / TILE) + 1;
-    const endY = Math.ceil((state.camera.y + state.logicalHeight) / TILE) + 1;
-    for (let y = startY; y < endY; y += 1) {
-      for (let x = startX; x < endX; x += 1) {
-        if (x < 0 || y < 0 || x >= area.width || y >= area.height) continue;
+
+  function getCacheCanvas(width, height) {
+    const c = document.createElement("canvas");
+    c.width = width;
+    c.height = height;
+    return c;
+  }
+
+  function cacheFillRoundedRect(targetCtx, x, y, w, h, r = 4, color = "#fff") {
+    const rr = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+    targetCtx.fillStyle = color;
+    targetCtx.beginPath();
+    targetCtx.moveTo(x + rr, y);
+    targetCtx.arcTo(x + w, y, x + w, y + h, rr);
+    targetCtx.arcTo(x + w, y + h, x, y + h, rr);
+    targetCtx.arcTo(x, y + h, x, y, rr);
+    targetCtx.arcTo(x, y, x + w, y, rr);
+    targetCtx.closePath();
+    targetCtx.fill();
+  }
+
+  function drawFlowerCached(targetCtx, x, y, color) {
+    targetCtx.fillStyle = color;
+    targetCtx.beginPath();
+    targetCtx.arc(x + 2, y + 2, 1.4, 0, Math.PI * 2);
+    targetCtx.arc(x + 5, y + 3.2, 1.4, 0, Math.PI * 2);
+    targetCtx.arc(x + 2.6, y + 5.6, 1.3, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.strokeStyle = "#3b7f34";
+    targetCtx.lineWidth = 1;
+    targetCtx.lineCap = "round";
+    targetCtx.beginPath();
+    targetCtx.moveTo(x + 3.2, y + 6.2);
+    targetCtx.lineTo(x + 3.4, y + 9.4);
+    targetCtx.stroke();
+  }
+
+  function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
+    const palette = themeColors(theme);
+    const n1 = seededNoise(x * 2, y * 3);
+    const n2 = seededNoise(x * 13, y * 17);
+    if (tile === 0 || tile === 1 || tile === 5 || tile === 6 || tile === 13) {
+      targetCtx.fillStyle = n1 > 0.56 ? palette.grassB : palette.grassA;
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "rgba(255,255,255,0.06)";
+      targetCtx.fillRect(sx, sy, TILE, 6);
+      targetCtx.fillStyle = palette.mid;
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 7, sy + 16, 4.6, 2.6, -0.25, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 17, sy + 9, 3.6, 2.1, 0.35, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.strokeStyle = palette.dark;
+      targetCtx.lineWidth = 1.1;
+      targetCtx.lineCap = "round";
+      targetCtx.beginPath();
+      targetCtx.moveTo(sx + 5, sy + 18); targetCtx.lineTo(sx + 6, sy + 11);
+      targetCtx.moveTo(sx + 10, sy + 17); targetCtx.lineTo(sx + 12, sy + 8);
+      targetCtx.stroke();
+      if (n2 > 0.78) {
+        targetCtx.fillStyle = "rgba(255,255,255,0.12)";
+        targetCtx.beginPath();
+        targetCtx.arc(sx + 15, sy + 6, 1.0, 0, Math.PI * 2);
+        targetCtx.fill();
+      }
+      if (tile === 5) {
+        drawFlowerCached(targetCtx, sx + 8, sy + 8, "#ffd86e");
+        drawFlowerCached(targetCtx, sx + 14, sy + 14, "#fff5a8");
+      } else if (tile === 6) {
+        drawFlowerCached(targetCtx, sx + 9, sy + 7, "#e9d3ff");
+        drawFlowerCached(targetCtx, sx + 15, sy + 13, "#ffd2ea");
+      } else if (tile === 13) {
+        targetCtx.fillStyle = "#2d4d2b";
+        targetCtx.fillRect(sx + 5, sy + 6, 2, 10);
+        targetCtx.fillRect(sx + 12, sy + 10, 2, 7);
+        targetCtx.fillRect(sx + 16, sy + 5, 2, 8);
+      }
+      return;
+    }
+    if (tile === 2) {
+      targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 7, sy + 6, 5, 1.6, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 16, sy + 13, 6, 1.8, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+      return;
+    }
+    if (tile === 3) {
+      targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.pathA : palette.pathB;
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "rgba(255,246,214,0.09)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 8, sy + 7, 4.6, 2.2, -0.3, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 17, sy + 15, 3.7, 1.9, 0.2, 0, Math.PI * 2);
+      targetCtx.fill();
+      return;
+    }
+    if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
+      const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
+      const stone = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
+      cacheFillRoundedRect(targetCtx, sx + 1, sy + 1, TILE - 2, TILE - 2, 5, stone);
+      targetCtx.fillStyle = "rgba(255,255,255,0.07)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 9, sy + 7, 5.5, 1.9, -0.15, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 15, sy + 16, 4.1, 1.6, 0.15, 0, Math.PI * 2);
+      targetCtx.fill();
+      if (tile === 8 || tile === 14) cacheFillRoundedRect(targetCtx, sx + 3, sy + 17, 18, 3, 2, "rgba(58,47,39,0.14)");
+      if (tile === 12) {
+        targetCtx.strokeStyle = "rgba(255,255,255,0.08)";
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(sx + 4, sy + 7);
+        targetCtx.lineTo(sx + 11, sy + 13);
+        targetCtx.lineTo(sx + 16, sy + 9);
+        targetCtx.stroke();
+      }
+      return;
+    }
+    if (tile === 4) {
+      drawCachedTile(targetCtx, 0, sx, sy, x, y, theme);
+      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+      targetCtx.fillRect(sx + 3, sy + 18, 18, 3);
+      targetCtx.fillStyle = "#606870";
+      targetCtx.fillRect(sx + 4, sy + 6, 16, 11);
+      targetCtx.fillStyle = "#8d99a4";
+      targetCtx.fillRect(sx + 6, sy + 7, 11, 6);
+      targetCtx.fillStyle = "#dfe8ef";
+      targetCtx.fillRect(sx + 11, sy + 9, 3, 2);
+      return;
+    }
+    if (tile === 9) {
+      targetCtx.fillStyle = theme === "rootwood" ? "#283c29" : theme === "ember" ? "#34231f" : "#2b2c31";
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = theme === "rootwood" ? "#3f5940" : theme === "ember" ? "#5b3c31" : "#494a52";
+      targetCtx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
+      return;
+    }
+    if (tile === 10) {
+      targetCtx.fillStyle = "#1a2231";
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "#6fb7ff";
+      targetCtx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
+      targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
+      targetCtx.fillStyle = "rgba(180,220,255,0.18)";
+      targetCtx.fillRect(sx + 6, sy + 6, 12, 12);
+      return;
+    }
+    if (tile === 15) {
+      targetCtx.fillStyle = (x + y) % 2 === 0 ? "#764732" : "#8a5234";
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "rgba(255, 165, 88, 0.12)";
+      targetCtx.fillRect(sx + 2, sy + 3, 5, 2);
+      targetCtx.fillStyle = "#d28b4a";
+      targetCtx.fillRect(sx + 6, sy + 5, 2, 2);
+      targetCtx.fillRect(sx + 13, sy + 11, 3, 2);
+      targetCtx.fillStyle = "#341d14";
+      targetCtx.fillRect(sx + 17, sy + 16, 3, 2);
+      return;
+    }
+    if (tile === 16) {
+      targetCtx.fillStyle = seededNoise(x * 2, y * 3) > 0.5 ? "#5a2d23" : "#6b3527";
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "rgba(255,190,120,0.08)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 9, sy + 15, 5.6, 2.2, -0.25, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 18, sy + 7, 3.8, 1.6, 0.3, 0, Math.PI * 2);
+      targetCtx.fill();
+      return;
+    }
+    targetCtx.fillStyle = "magenta";
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+  }
+
+  function drawCachedWorldObject(targetCtx, tile, sx, sy) {
+    if (tile === 1) {
+      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 20, 8, 3, 0, 0, Math.PI * 2); targetCtx.fill();
+      cacheFillRoundedRect(targetCtx, sx + 10, sy + 11, 4, 10, 2, "#6d4f32");
+      targetCtx.fillStyle = "rgba(34,60,31,0.16)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 11, sy + 9, 9, 6.5, 0, 0, Math.PI * 2); targetCtx.fill();
+    } else if (tile === 4) {
+      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 19, 8, 2.5, 0, 0, Math.PI * 2); targetCtx.fill();
+    } else if (tile === 9) {
+      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 20, 8, 2.5, 0, 0, Math.PI * 2); targetCtx.fill();
+      cacheFillRoundedRect(targetCtx, sx + 4, sy + 4, 16, 3, 1.5, "rgba(255,255,255,0.04)");
+    }
+  }
+
+  function ensureAreaGroundCache(area) {
+    if (!area || area.groundReady && area.groundCanvas) return;
+    const canvas = getCacheCanvas(area.width * TILE, area.height * TILE);
+    const targetCtx = canvas.getContext("2d");
+    targetCtx.imageSmoothingEnabled = true;
+    for (let y = 0; y < area.height; y += 1) {
+      for (let x = 0; x < area.width; x += 1) {
+        const sx = x * TILE;
+        const sy = y * TILE;
         const tile = area.world[y][x];
-        const sx = x * TILE - state.camera.x;
-        const sy = y * TILE - state.camera.y;
-        drawTile(tile, sx, sy, x, y, area.theme);
+        drawCachedTile(targetCtx, tile, sx, sy, x, y, area.theme);
+        if (tile === 1 || tile === 4 || tile === 9) drawCachedWorldObject(targetCtx, tile, sx, sy);
       }
     }
+    area.groundCanvas = canvas;
+    area.groundReady = true;
+  }
+
+  function ensureVignetteCache() {
+    const key = `${state.logicalWidth}x${state.logicalHeight}`;
+    if (state.renderCache.vignette && state.renderCache.sizeKey === key) return;
+    const canvas = getCacheCanvas(state.logicalWidth, state.logicalHeight);
+    const targetCtx = canvas.getContext("2d");
+    const gradient = targetCtx.createRadialGradient(
+      state.logicalWidth / 2,
+      state.logicalHeight / 2,
+      Math.min(state.logicalWidth, state.logicalHeight) * 0.28,
+      state.logicalWidth / 2,
+      state.logicalHeight / 2,
+      Math.max(state.logicalWidth, state.logicalHeight) * 0.82,
+    );
+    gradient.addColorStop(0, "rgba(0,0,0,0)");
+    gradient.addColorStop(1, "rgba(0,0,0,0.2)");
+    targetCtx.fillStyle = gradient;
+    targetCtx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+    state.renderCache.vignette = canvas;
+    state.renderCache.sizeKey = key;
+  }
+
+  function drawGround() {
+    const area = currentArea();
+    ensureAreaGroundCache(area);
+    ctx.drawImage(
+      area.groundCanvas,
+      state.camera.x,
+      state.camera.y,
+      state.logicalWidth,
+      state.logicalHeight,
+      0,
+      0,
+      state.logicalWidth,
+      state.logicalHeight,
+    );
   }
 
 
@@ -2748,30 +2983,7 @@ function drawFlower(x, y, color) {
   }
 
 function drawWorldObjects() {
-  const area = currentArea();
-  for (let y = 0; y < area.height; y += 1) {
-    for (let x = 0; x < area.width; x += 1) {
-      const tile = area.world[y][x];
-      if (![1, 4, 9].includes(tile)) continue;
-      const sx = x * TILE - state.camera.x;
-      const sy = y * TILE - state.camera.y;
-      if (sx < -TILE || sy < -TILE || sx > state.logicalWidth || sy > state.logicalHeight) continue;
-      if (tile === 1) {
-        ctx.fillStyle = "rgba(0,0,0,0.16)";
-        ctx.beginPath(); ctx.ellipse(sx + 12, sy + 20, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 10, sy + 11, 4, 10, 2, "#6d4f32");
-        ctx.fillStyle = "rgba(34,60,31,0.16)";
-        ctx.beginPath(); ctx.ellipse(sx + 11, sy + 9, 9, 6.5, 0, 0, Math.PI * 2); ctx.fill();
-      } else if (tile === 4) {
-        ctx.fillStyle = "rgba(0,0,0,0.15)";
-        ctx.beginPath(); ctx.ellipse(sx + 12, sy + 19, 8, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-      } else if (tile === 9) {
-        ctx.fillStyle = "rgba(0,0,0,0.16)";
-        ctx.beginPath(); ctx.ellipse(sx + 12, sy + 20, 8, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 4, sy + 4, 16, 3, 1.5, "rgba(255,255,255,0.04)");
-      }
-    }
-  }
+  // Static tree/stone highlights are baked into the area ground cache for performance.
 }
 
 function drawInteractables() {
@@ -3083,18 +3295,8 @@ function drawDebug() {
   }
 
   function drawVignette() {
-    const gradient = ctx.createRadialGradient(
-      state.logicalWidth / 2,
-      state.logicalHeight / 2,
-      Math.min(state.logicalWidth, state.logicalHeight) * 0.28,
-      state.logicalWidth / 2,
-      state.logicalHeight / 2,
-      Math.max(state.logicalWidth, state.logicalHeight) * 0.82,
-    );
-    gradient.addColorStop(0, "rgba(0,0,0,0)");
-    gradient.addColorStop(1, "rgba(0,0,0,0.2)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+    ensureVignetteCache();
+    ctx.drawImage(state.renderCache.vignette, 0, 0);
   }
 
   function drawTransition() {

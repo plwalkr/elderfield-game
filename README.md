@@ -1,13 +1,11 @@
-# Elderfield — v2.8.0 Town & NPC Foundations
+# Elderfield — v2.8.1 Town & NPC Foundations • Performance Hotfix
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v2.8.0
-- Dawnrest and Greenhollow added as the first real safe-settlement spaces
-- named NPCs, readable dialogue, and early quest hooks
-- painterly fantasy visual pass with smoother shapes and less chunky pixel treatment
-- build/version badge stays in the **top-right** and the layout remains clean with no browser scroll sprawl
-- save/load from the previous pass stays intact, including Continue Adventure / New Journey / Delete Save
+## New in v2.8.1
+- performance hotfix for the painterly pass using cached ground rendering and cached vignette overlay
+- keeps the painterly fantasy look while targeting a steadier framerate
+- save/load, town foundations, and top-right build badge remain intact
 
 ## Save behavior
 - the game stores progress in your browser
@@ -50,7 +48,7 @@ Upload the files to your repo root and enable GitHub Pages from the main branch 
 
 ## Verify the update worked
 Look for:
-- on-screen build badge: `v2.8.0 • Town & NPC Foundations`
+- on-screen build badge: `v2.8.1 • Town & NPC Foundations • Performance Hotfix`
 - the build badge now living in the **top-right**
 - start card buttons for **Continue Adventure / New Journey / Delete Save**
 - debug report including a **Save** section
@@ -62,3 +60,10 @@ Look for:
 - Added Dawnrest, the first safe haven on the Warden road
 - Added named NPC foundations and early side-quest hooks
 - Shifted toward a softer painterly fantasy 2D presentation
+
+
+## v2.8.1 notes
+
+- Fixed low-FPS regression from the initial painterly pass
+- Static terrain is now cached instead of being fully repainted every frame
+- Vignette overlay is cached instead of regenerated each draw
