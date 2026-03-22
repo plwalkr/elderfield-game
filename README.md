@@ -1,11 +1,13 @@
-# Elderfield — v2.8.1 Town & NPC Foundations • Performance Hotfix
+# Elderfield — v2.9.0 Puzzle & Secret Pass
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v2.8.1
-- performance hotfix for the painterly pass using cached ground rendering and cached vignette overlay
-- keeps the painterly fantasy look while targeting a steadier framerate
-- save/load, town foundations, and top-right build badge remain intact
+## New in v2.9.0
+- hidden caves and cracked-wall secrets in the overworld
+- rune-plate and push-block style environmental puzzles
+- optional secret rewards, including Heart Fragments and Elowen's silver-token thread
+- debug report now includes a Secrets section
+- painterly fantasy presentation and save/load remain intact
 
 ## Save behavior
 - the game stores progress in your browser
@@ -67,3 +69,11 @@ Look for:
 - Fixed low-FPS regression from the initial painterly pass
 - Static terrain is now cached instead of being fully repainted every frame
 - Vignette overlay is cached instead of regenerated each draw
+
+
+## v2.9.0 notes
+
+- Added Whisperroot Grotto and Bridge-Stone Cache
+- Added cracked wall reveals in Crownfall and Greenhollow
+- Added secret chests, Heart Fragments, and an Elowen heirloom payoff
+- Added rune-plate and push-block puzzle hooks for future expansion

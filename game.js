@@ -42,10 +42,11 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.8.1";
+  const GAME_VERSION = "v2.9.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Town & NPC Foundations • Performance Hotfix";
+  const BUILD_NAME = "Puzzle & Secret Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
+  const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Dawnrest";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
@@ -152,6 +153,16 @@
       checkpoint: null,
       lastReason: "none",
       autosaveTimer: 0,
+    },
+    secrets: {
+      heartFragments: 0,
+      crownfallWall: false,
+      greenhollowWall: false,
+      whisperPlateSolved: false,
+      whisperHeartClaimed: false,
+      bridgeBlockSolved: false,
+      silverTokenClaimed: false,
+      silverTokenDelivered: false,
     },
     renderCache: {
       vignette: null,
@@ -426,6 +437,16 @@
       `- RewardsOwned=${state.rewardsOwned.join(", ") || "none"}`,
       ...dungeonLines,
       ``,
+      `Secrets`,
+      `- HeartFragments=${state.secrets.heartFragments}/${HEART_FRAGMENTS_PER_VESSEL}`,
+      `- CrownfallWall=${!!state.secrets.crownfallWall}`,
+      `- GreenhollowWall=${!!state.secrets.greenhollowWall}`,
+      `- WhisperPlateSolved=${!!state.secrets.whisperPlateSolved}`,
+      `- WhisperHeartClaimed=${!!state.secrets.whisperHeartClaimed}`,
+      `- BridgeBlockSolved=${!!state.secrets.bridgeBlockSolved}`,
+      `- SilverTokenClaimed=${!!state.secrets.silverTokenClaimed}`,
+      `- SilverTokenDelivered=${!!state.secrets.silverTokenDelivered}`,
+      ``,
       `Save`,
       `- Available=${state.save.available}`,
       `- HasSave=${state.save.hasSave}`,
@@ -539,6 +560,19 @@
     };
   }
 
+  function emptySecrets() {
+    return {
+      heartFragments: 0,
+      crownfallWall: false,
+      greenhollowWall: false,
+      whisperPlateSolved: false,
+      whisperHeartClaimed: false,
+      bridgeBlockSolved: false,
+      silverTokenClaimed: false,
+      silverTokenDelivered: false,
+    };
+  }
+
   function storageAvailable() {
     try {
       const probe = "__elderfield_save_probe__";
@@ -606,6 +640,7 @@
       rewardsOwned: [...state.rewardsOwned],
       overworld: { fieldCleared: !!state.overworld.fieldCleared },
       dungeons: JSON.parse(JSON.stringify(state.dungeons)),
+      secrets: JSON.parse(JSON.stringify(state.secrets)),
     };
   }
 
@@ -686,6 +721,54 @@
         exitPortal.visible = true;
       }
     }
+
+    const crownWall = getInteractable("overworld", (item) => item.type === "crackedWall" && item.revealKey === "crownfallWall");
+    const crownDoor = getInteractable("overworld", (item) => item.type === "secretEntrance" && item.secretId === "whisper");
+    if (crownWall) crownWall.visible = !state.secrets.crownfallWall;
+    if (crownDoor) crownDoor.visible = !!state.secrets.crownfallWall;
+
+    const greenWall = getInteractable("overworld", (item) => item.type === "crackedWall" && item.revealKey === "greenhollowWall");
+    const greenDoor = getInteractable("overworld", (item) => item.type === "secretEntrance" && item.secretId === "bridge");
+    if (greenWall) greenWall.visible = !state.secrets.greenhollowWall;
+    if (greenDoor) greenDoor.visible = !!state.secrets.greenhollowWall;
+
+    const whisperPlate = getInteractable("whisper_grotto", (item) => item.type === "runePlate" && item.secretId === "whisperPlate");
+    const whisperChest = getInteractable("whisper_grotto", (item) => item.type === "secretChest" && item.secretId === "whisperHeart");
+    if (whisperPlate) whisperPlate.active = !!state.secrets.whisperPlateSolved;
+    if (whisperChest) {
+      whisperChest.visible = !!state.secrets.whisperPlateSolved || !!state.secrets.whisperHeartClaimed;
+      whisperChest.opened = !!state.secrets.whisperHeartClaimed;
+    }
+
+    const bridgeArea = state.areas.bridge_cache;
+    const bridgePlate = getInteractable("bridge_cache", (item) => item.type === "runePlate" && item.secretId === "bridgePlate");
+    const bridgeChest = getInteractable("bridge_cache", (item) => item.type === "secretChest" && item.secretId === "bridgeToken");
+    const bridgeBlock = getInteractable("bridge_cache", (item) => item.type === "pushBlock" && item.secretId === "bridgeBlock");
+    if (bridgePlate) bridgePlate.active = !!state.secrets.bridgeBlockSolved;
+    if (bridgeChest) {
+      bridgeChest.visible = !!state.secrets.bridgeBlockSolved || !!state.secrets.silverTokenClaimed;
+      bridgeChest.opened = !!state.secrets.silverTokenClaimed;
+    }
+    if (bridgeArea && bridgeBlock) {
+      if (Number.isInteger(bridgeBlock.startX) && Number.isInteger(bridgeBlock.startY) && bridgeArea.solids[bridgeBlock.startY]) bridgeArea.solids[bridgeBlock.startY][bridgeBlock.startX] = false;
+      if (Number.isInteger(bridgeBlock.targetY) && bridgeArea.solids[bridgeBlock.targetY]) bridgeArea.solids[bridgeBlock.targetY][bridgeBlock.targetX] = false;
+      if (state.secrets.bridgeBlockSolved) {
+        bridgeBlock.tileX = bridgeBlock.targetX;
+        bridgeBlock.tileY = bridgeBlock.targetY;
+        bridgeBlock.x = bridgeBlock.tileX * TILE;
+        bridgeBlock.y = bridgeBlock.tileY * TILE;
+        bridgeBlock.locked = true;
+      } else {
+        bridgeBlock.tileX = bridgeBlock.startX;
+        bridgeBlock.tileY = bridgeBlock.startY;
+        bridgeBlock.x = bridgeBlock.tileX * TILE;
+        bridgeBlock.y = bridgeBlock.tileY * TILE;
+        bridgeBlock.locked = false;
+      }
+      bridgeArea.solids[bridgeBlock.tileY][bridgeBlock.tileX] = true;
+    }
+
+    syncElowenDialogue();
   }
 
   function loadSavePayload(payload, silent = false) {
@@ -693,6 +776,7 @@
 
     state.rewardsOwned = Array.isArray(payload.rewardsOwned) ? [...payload.rewardsOwned] : [];
     state.overworld = { fieldCleared: !!payload.overworld?.fieldCleared };
+    state.secrets = Object.assign(emptySecrets(), payload.secrets || {});
     state.dungeons = {
       ruins: Object.assign(emptyDungeonProgress(), payload.dungeons?.ruins || {}),
       rootwood: Object.assign(emptyDungeonProgress(), payload.dungeons?.rootwood || {}),
@@ -772,6 +856,7 @@
     state.save.autosaveTimer = 0;
     state.rewardsOwned = [];
     state.overworld = { fieldCleared: false };
+    state.secrets = emptySecrets();
     state.dungeons = {
       ruins: emptyDungeonProgress(),
       rootwood: emptyDungeonProgress(),
@@ -780,6 +865,7 @@
     state.rupees = 0;
     state.player = makePlayer();
     state.areas = buildAreas();
+    applyPersistentWorldState();
     setArea("overworld", "start", true);
     state.objectiveText = "Walk the relic roads of the Dawn Wardens. Read the old stones and learn why Princess Elaria was hidden away.";
     startCard.hidden = true;
@@ -1266,6 +1352,65 @@ area.interactables.push({
       text: "Waystone of Vaelor: In the elder years the high wyrm Vaelor circled these roads in silver dawnfire. Only one black wing answered him and was not forgiven.",
     });
 
+    area.interactables.push({
+      type: "crackedWall",
+      secretId: "whisper",
+      revealKey: "crownfallWall",
+      x: 63 * TILE,
+      y: 10 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      revealTitle: "Whisperroot Grotto",
+      revealText: "Your blow opens a pale break in Crownfall stone. A forgotten grotto answers beyond.",
+    });
+
+    area.interactables.push({
+      type: "secretEntrance",
+      secretId: "whisper",
+      x: 63 * TILE,
+      y: 10 * TILE,
+      w: TILE * 3,
+      h: TILE * 3,
+      visible: false,
+      targetAreaId: "whisper_grotto",
+      targetSpawn: "entry",
+      text: "You slip through the broken stone into a quiet hidden grotto.",
+    });
+
+    area.interactables.push({
+      type: "crackedWall",
+      secretId: "bridge",
+      revealKey: "greenhollowWall",
+      x: 36 * TILE,
+      y: 72 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      revealTitle: "Bridge-Stone Cache",
+      revealText: "Loose bridge-stones collapse inward and a narrow cache opens beneath Greenhollow.",
+    });
+
+    area.interactables.push({
+      type: "secretEntrance",
+      secretId: "bridge",
+      x: 36 * TILE,
+      y: 72 * TILE,
+      w: TILE * 3,
+      h: TILE * 3,
+      visible: false,
+      targetAreaId: "bridge_cache",
+      targetSpawn: "entry",
+      text: "An old stair curls down beneath the bridge stones into a hidden cache.",
+    });
+
+    area.interactables.push({
+      type: "loreTablet",
+      x: 58 * TILE,
+      y: 24 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: "Hidden Stone: Where the wardens feared thieves or kings, they hid small mercies in the walls — silver, heart-stone, and songs of return.",
+    });
+
     area.spawns.start = { x: 80.5 * TILE, y: 88.5 * TILE };
     area.spawns.fromRuins = { x: 78.5 * TILE, y: 18.5 * TILE };
     area.spawns.fromRootwood = { x: 128.5 * TILE, y: 35.5 * TILE };
@@ -1286,6 +1431,137 @@ area.interactables.push({
       });
     });
 
+    return area;
+  }
+
+
+  function buildWhisperGrotto() {
+    const area = makeArea("whisper_grotto", "Whisperroot Grotto", 26, 18, 13, "rootwood");
+    area.spawns.entry = { x: 4.5 * TILE, y: 14.5 * TILE };
+    area.spawns.back = { x: 4.5 * TILE, y: 14.5 * TILE };
+
+    ring(area, 0, 0, area.width, area.height, 9, true);
+    clearRect(area, 1, 1, area.width - 2, area.height - 2, 13);
+    fillRect(area, 1, 13, 4, 4, 10, false);
+    clearRect(area, 1, 13, 4, 4, 10);
+    fillRect(area, 6, 3, 5, 4, 14, false);
+    fillRect(area, 14, 4, 6, 5, 14, false);
+    fillRect(area, 10, 10, 10, 4, 12, false);
+    fillRect(area, 20, 11, 3, 3, 2, true);
+    scatterDungeonColumns(area, 8, 10, 2, 2);
+    scatterDungeonColumns(area, 18, 9, 2, 2);
+
+    area.interactables.push({
+      type: "returnSigil",
+      x: 2 * TILE,
+      y: 13 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      targetAreaId: "overworld",
+      targetSpawn: "fromRuins",
+      title: "Return to Crownfall",
+    });
+    area.interactables.push({
+      type: "loreTablet",
+      x: 6 * TILE,
+      y: 4 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: "Whisperroot Inscription: Not every mercy was made for kings. Some were hidden for the lost, the hunted, and the children of the wardens when night grew too sharp.",
+    });
+    area.interactables.push({
+      type: "runePlate",
+      secretId: "whisperPlate",
+      x: 12 * TILE,
+      y: 10 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      active: false,
+    });
+    area.interactables.push({
+      type: "secretChest",
+      secretId: "whisperHeart",
+      x: 19 * TILE,
+      y: 5 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      visible: false,
+      opened: false,
+      rewardKind: "heartFragment",
+      rewardName: "Whisperroot Heart Fragment",
+    });
+    return area;
+  }
+
+  function buildBridgeCache() {
+    const area = makeArea("bridge_cache", "Bridge-Stone Cache", 28, 18, 14, "ruins");
+    area.spawns.entry = { x: 4.5 * TILE, y: 14.5 * TILE };
+    area.spawns.back = { x: 4.5 * TILE, y: 14.5 * TILE };
+
+    ring(area, 0, 0, area.width, area.height, 9, true);
+    clearRect(area, 1, 1, area.width - 2, area.height - 2, 14);
+    fillRect(area, 1, 13, 4, 4, 10, false);
+    clearRect(area, 1, 13, 4, 4, 10);
+    fillRect(area, 8, 4, 12, 8, 7, false);
+    fillRect(area, 12, 12, 10, 3, 8, false);
+    scatterDungeonColumns(area, 7, 7, 2, 2);
+    scatterDungeonColumns(area, 18, 7, 2, 2);
+
+    area.interactables.push({
+      type: "returnSigil",
+      x: 2 * TILE,
+      y: 13 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      targetAreaId: "overworld",
+      targetSpawn: "start",
+      title: "Return to Greenhollow",
+    });
+    area.interactables.push({
+      type: "loreTablet",
+      x: 8 * TILE,
+      y: 4 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: "Bridge Cache Mark: When flood or war broke the south road, the wardens hid silver for ferrymen, healers, and hungry households beneath the bridge stones.",
+    });
+    area.interactables.push({
+      type: "runePlate",
+      secretId: "bridgePlate",
+      x: 15 * TILE,
+      y: 11 * TILE,
+      w: TILE,
+      h: TILE,
+      active: false,
+    });
+    area.interactables.push({
+      type: "pushBlock",
+      secretId: "bridgeBlock",
+      x: 10 * TILE,
+      y: 11 * TILE,
+      w: TILE,
+      h: TILE,
+      tileX: 10,
+      tileY: 11,
+      startX: 10,
+      startY: 11,
+      targetX: 15,
+      targetY: 11,
+      locked: false,
+    });
+    area.solids[11][10] = true;
+    area.interactables.push({
+      type: "secretChest",
+      secretId: "bridgeToken",
+      x: 21 * TILE,
+      y: 10 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      visible: false,
+      opened: false,
+      rewardKind: "silverToken",
+      rewardName: "Silver Token",
+    });
     return area;
   }
 
@@ -1548,6 +1824,8 @@ area.interactables.push({
   function buildAreas() {
     return {
       overworld: buildOverworld(),
+      whisper_grotto: buildWhisperGrotto(),
+      bridge_cache: buildBridgeCache(),
       ruins_1: buildDungeonRoom1("ruins"),
       ruins_2: buildDungeonRoom2("ruins"),
       ruins_3: buildDungeonRoom3("ruins"),
@@ -1593,7 +1871,9 @@ area.interactables.push({
     state.player.attackTimer = 0;
     state.player.attackCooldown = 0;
     state.player.slashHitIds.clear();
-    if (area.id === "overworld") {
+    updateSecretTriggers();
+
+  if (area.id === "overworld") {
       state.zoneName = zoneForOverworldPosition(area, state.player.x, state.player.y);
     } else {
       state.zoneName = area.name;
@@ -1606,6 +1886,111 @@ area.interactables.push({
       state.camera.y = clamp(state.player.y - state.logicalHeight / 2, 0, area.height * TILE - state.logicalHeight);
     }
     refreshDebugPanel();
+  }
+
+
+
+  function itemBox(item, pad = 0) {
+    return { x: item.x + item.w / 2, y: item.y + item.h / 2, w: item.w + pad, h: item.h + pad };
+  }
+
+  function getInteractable(areaId, predicate) {
+    const area = state.areas[areaId];
+    if (!area) return null;
+    return area.interactables.find(predicate) || null;
+  }
+
+  function syncElowenDialogue() {
+    const elowen = getInteractable("overworld", (item) => item.type === "npc" && item.name === "Elowen");
+    if (!elowen) return;
+    if (state.secrets.silverTokenDelivered) {
+      elowen.text = "Elowen: Grandfather's silver token hangs above our hearth again. The road feels kinder for it. Dawnrest will remember what you did.";
+    } else if (state.secrets.silverTokenClaimed) {
+      elowen.text = "Elowen: You found it? Grandfather's token? Oh, please... if you've really brought it back from the bridge stones, let me see it.";
+    } else {
+      elowen.text = "Elowen: My boy hid grandfather's crest near the old bridge stones and now he swears the briar shadows won't let him fetch it. If you ever search Greenhollow thoroughly, keep an eye open for a silver token.";
+    }
+  }
+
+  function grantHeartFragment(sourceName = "Heart Fragment") {
+    state.secrets.heartFragments += 1;
+    if (state.secrets.heartFragments >= HEART_FRAGMENTS_PER_VESSEL) {
+      state.secrets.heartFragments = 0;
+      state.player.maxHealth += 1;
+      state.player.health = state.player.maxHealth;
+      showAreaBanner("Heart Vessel", `Max health ${state.player.maxHealth}`, 2.4);
+      setMessage(`${sourceName} completes a Heart Vessel. Your life rises to ${state.player.maxHealth}.`, 3.8);
+    } else {
+      showAreaBanner("Heart Fragment", `${state.secrets.heartFragments}/${HEART_FRAGMENTS_PER_VESSEL}`, 2.2);
+      setMessage(`${sourceName} claimed. ${state.secrets.heartFragments}/${HEART_FRAGMENTS_PER_VESSEL} fragments toward a new Heart Vessel.`, 3.2);
+    }
+    burst(state.player.x, state.player.y - 12, ["#ff8f9d", "#ffd9dd", "#fff0f3"]);
+    updateHud();
+    saveGame("heart-fragment", true);
+  }
+
+  function revealCrackedWall(item) {
+    if (!item || item.visible === false) return false;
+    item.visible = false;
+    state.secrets[item.revealKey] = true;
+    const hiddenDoor = currentArea().interactables.find((candidate) => candidate.type === "secretEntrance" && candidate.secretId === item.secretId);
+    if (hiddenDoor) hiddenDoor.visible = true;
+    burst(item.x + item.w / 2, item.y + item.h / 2, ["#d9d0c4", "#f4dd98", "#f7f1ea"]);
+    addCameraShake(3.4, 0.12);
+    showAreaBanner("Hidden Way Revealed", item.revealTitle || "Secret found", 2.1);
+    setMessage(item.revealText || "Cracked stone gives way to an older path.", 3.3);
+    updateHud();
+    saveGame(`secret-${item.secretId}`, true);
+    return true;
+  }
+
+  function tryBreakCrackedWalls(hitBox) {
+    const area = currentArea();
+    for (const item of area.interactables) {
+      if (item.type !== "crackedWall" || item.visible === false) continue;
+      if (rectsOverlap(hitBox, itemBox(item))) {
+        return revealCrackedWall(item);
+      }
+    }
+    return false;
+  }
+
+  function openSecretChest(item) {
+    if (!item || item.opened) return;
+    item.opened = true;
+    if (item.rewardKind === "heartFragment") {
+      state.secrets.whisperHeartClaimed = true;
+      grantHeartFragment("Whisperroot Heart Fragment");
+    } else if (item.rewardKind === "silverToken") {
+      state.secrets.silverTokenClaimed = true;
+      showAreaBanner("Silver Token", "Heirloom found", 2.2);
+      setMessage("You found the silver token Elowen spoke of. Return it in Dawnrest and see what old gratitude remembers.", 4.4);
+      burst(item.x + item.w / 2, item.y + item.h / 2, ["#dce9f7", "#fff9d6", "#eef1f4"]);
+      syncElowenDialogue();
+      updateHud();
+      saveGame("silver-token", true);
+    }
+  }
+
+  function updateSecretTriggers() {
+    const area = currentArea();
+    const p = state.player;
+    for (const item of area.interactables) {
+      if (item.visible === false) continue;
+      if (item.type === "runePlate" && !item.active && rectsOverlap(p, itemBox(item, -6))) {
+        item.active = true;
+        if (item.secretId === "whisperPlate") {
+          state.secrets.whisperPlateSolved = true;
+          const chest = area.interactables.find((candidate) => candidate.type === "secretChest" && candidate.secretId === "whisperHeart");
+          if (chest) chest.visible = true;
+          burst(item.x + item.w / 2, item.y + item.h / 2, ["#9de28a", "#e9ffd9", "#fff2ba"]);
+          showAreaBanner("Rune Answered", area.name, 2.0);
+          setMessage("Ancient stone answers your step. A hidden chest rises in the grotto.", 3.5);
+          updateHud();
+          saveGame("whisper-plate", true);
+        }
+      }
+    }
   }
 
   function beginTransition(areaId, spawnKey, message = "") {
@@ -1646,6 +2031,19 @@ area.interactables.push({
 
     if (state.victory) {
       state.objectiveText = "The Dawn Shrine blazes again. Elderfield remembers its name.";
+      return;
+    }
+
+    if (area && area.id === "whisper_grotto") {
+      state.objectiveText = state.secrets.whisperHeartClaimed ? "The grotto has yielded its hidden heart. Return to the kingdom road." : state.secrets.whisperPlateSolved ? "A secret chest has risen. Claim what the grotto guarded." : "Walk the living rune and listen for what the grotto hides.";
+      return;
+    }
+
+    if (area && area.id === "bridge_cache") {
+      if (state.secrets.silverTokenDelivered) state.objectiveText = "Elowen's heirloom is home again. Return to the kingdom road.";
+      else if (state.secrets.silverTokenClaimed) state.objectiveText = "Carry the silver token back to Elowen in Dawnrest.";
+      else if (state.secrets.bridgeBlockSolved) state.objectiveText = "The old chest is free. Claim the hidden heirloom.";
+      else state.objectiveText = "Push the Warden stone onto the rune plate.";
       return;
     }
 
@@ -1991,6 +2389,17 @@ function onAreaEnemiesCleared(area) {
       }
 
       if (item.type === "npc") {
+        if (item.name === "Elowen" && state.secrets.silverTokenClaimed && !state.secrets.silverTokenDelivered) {
+          state.secrets.silverTokenDelivered = true;
+          state.rupees += 10;
+          syncElowenDialogue();
+          grantHeartFragment("Elowen's Family Heirloom");
+          showAreaBanner("Heirloom Returned", "Elowen", 2.4);
+          setMessage("Elowen: You found it... Grandfather's token. Please, take this heart-shard we kept for road-wardens, and ten rupees besides. Dawnrest won't forget.", 5.4);
+          updateHud();
+          saveGame("elowen-heirloom", true);
+          return;
+        }
         setMessage(`${item.role ? item.role + " • " : ""}${item.text}`, 5.2);
         showAreaBanner(item.name || "Traveler", item.role || "Townfolk", 1.6);
         return;
@@ -2038,6 +2447,11 @@ function onAreaEnemiesCleared(area) {
         return;
       }
 
+      if (item.type === "secretEntrance") {
+        beginTransition(item.targetAreaId, item.targetSpawn, item.text || "A hidden path answers your touch.");
+        return;
+      }
+
       if (item.type === "returnSigil") {
         beginTransition(item.targetAreaId, item.targetSpawn, "The sigil breathes you back into the field.");
         return;
@@ -2069,6 +2483,61 @@ function onAreaEnemiesCleared(area) {
         }
         progress.sealUnlocked = true;
         beginTransition(item.targetAreaId, item.targetSpawn, "The seal parts. A knight waits ahead.");
+        return;
+      }
+
+      if (item.type === "pushBlock") {
+        if (item.locked) {
+          setMessage("The old Warden stone is settled into its rune.", 2.0);
+          return;
+        }
+        const dirX = Math.abs(p.lastDir.x) > Math.abs(p.lastDir.y) ? Math.sign(p.lastDir.x) : 0;
+        const dirY = dirX === 0 ? Math.sign(p.lastDir.y) : 0;
+        if (!dirX && !dirY) {
+          setMessage("Set your shoulder and choose a direction first.", 1.8);
+          return;
+        }
+        const tx = item.tileX + dirX;
+        const ty = item.tileY + dirY;
+        if (tx < 1 || ty < 1 || tx >= area.width - 1 || ty >= area.height - 1 || area.solids[ty][tx]) {
+          setMessage("The stone grinds, but that way is blocked.", 1.9);
+          return;
+        }
+        area.solids[item.tileY][item.tileX] = false;
+        item.tileX = tx;
+        item.tileY = ty;
+        item.x = tx * TILE;
+        item.y = ty * TILE;
+        area.solids[item.tileY][item.tileX] = true;
+        addCameraShake(2.1, 0.08);
+        if (tx === item.targetX && ty === item.targetY) {
+          item.locked = true;
+          state.secrets.bridgeBlockSolved = true;
+          const plate = area.interactables.find((candidate) => candidate.type === "runePlate" && candidate.secretId === "bridgePlate");
+          if (plate) plate.active = true;
+          const chest = area.interactables.find((candidate) => candidate.type === "secretChest" && candidate.secretId === "bridgeToken");
+          if (chest) chest.visible = true;
+          burst(item.x + TILE / 2, item.y + TILE / 2, ["#f0d88d", "#e6eef8", "#d8e3c9"]);
+          showAreaBanner("Stone Settled", area.name, 2.1);
+          setMessage("The rune takes the stone's weight. A hidden chest rises from the floor.", 3.5);
+          updateHud();
+          saveGame("bridge-block", true);
+        } else {
+          setMessage("The old stone grinds one space.", 1.6);
+        }
+        return;
+      }
+
+      if (item.type === "secretChest") {
+        if (!item.visible) {
+          setMessage("The hidden chest has not risen yet.", 2.0);
+          return;
+        }
+        if (item.opened) {
+          setMessage(`${item.rewardName || "The hidden prize"} is already claimed.`, 2.0);
+          return;
+        }
+        openSecretChest(item);
         return;
       }
 
@@ -2187,6 +2656,8 @@ function updatePlayer(dt) {
     doAttack(aim);
   }
 
+  updateSecretTriggers();
+
   if (area.id === "overworld") {
     const nextZone = zoneForOverworldPosition(area, p.x, p.y);
     if (nextZone !== state.zoneName) {
@@ -2204,6 +2675,7 @@ function updatePlayer(dt) {
         damageEnemy(area, enemy, slash, p);
       }
     }
+    tryBreakCrackedWalls({ x: slash.x, y: slash.y, w: slash.w, h: slash.h });
   }
 
   for (let i = area.pickups.length - 1; i >= 0; i -= 1) {
@@ -2321,12 +2793,17 @@ function updatePickupsAndParticles(dt) {
     projectile.life -= dt;
     projectile.x += projectile.vx * dt;
     projectile.y += projectile.vy * dt;
+    const area = currentArea();
+    if (projectile.owner === "player" && tryBreakCrackedWalls({ x: projectile.x, y: projectile.y, w: projectile.r * 2, h: projectile.r * 2 })) {
+      burst(projectile.x, projectile.y, ["#ffbf6b", "#fff0c2"]);
+      state.projectiles.splice(i, 1);
+      continue;
+    }
     if (projectile.life <= 0 || isSolidAtPixel(projectile.x, projectile.y)) {
       burst(projectile.x, projectile.y, projectile.owner === "enemy" ? ["#ffd3a6", "#fff0c2"] : ["#ffbf6b", "#fff0c2"]);
       state.projectiles.splice(i, 1);
       continue;
     }
-    const area = currentArea();
     if (projectile.owner === "player") {
       for (const enemy of area.enemies) {
         if (enemy.dead || projectile.hitIds.has(enemy.id)) continue;
@@ -2450,6 +2927,8 @@ function burst(x, y, palette) {
 function drawAtmosphere() {
   const area = currentArea();
   ctx.save();
+  updateSecretTriggers();
+
   if (area.id === "overworld") {
     if (state.zoneName === "Rootwood March") {
       ctx.fillStyle = "rgba(62, 104, 58, 0.08)";
@@ -3043,6 +3522,15 @@ function drawInteractables() {
         fillRoundedRect(sx + 15, sy + 12, 4, 8, 2, colors[2]);
         ctx.fillStyle = "rgba(255,255,255,0.20)";
         ctx.beginPath(); ctx.arc(sx + 10.6, sy + 6.8, 0.9, 0, Math.PI * 2); ctx.arc(sx + 13.6, sy + 6.8, 0.9, 0, Math.PI * 2); ctx.fill();
+      } else if (item.type === "crackedWall") {
+        fillRoundedRect(sx + 4, sy + 5, item.w - 8, item.h - 10, 5, "#7f7468");
+        softLine(sx + 10, sy + 10, sx + item.w - 10, sy + item.h - 10, "#ded3bf", 1.3, 1);
+        softLine(sx + item.w - 12, sy + 11, sx + 11, sy + item.h - 12, "#c8b48d", 1.1, 1);
+        softLine(sx + 14, sy + 8, sx + 20, sy + 18, "#fff4d4", 1.0, 1);
+      } else if (item.type === "secretEntrance") {
+        const pulse = 0.44 + Math.sin(performance.now() / 220) * 0.18;
+        fillRoundedRect(sx + 6, sy + 7, item.w - 12, item.h - 10, 8, "#1c1a20");
+        fillRoundedRect(sx + 10, sy + 11, item.w - 20, item.h - 18, 7, `rgba(156, 205, 163, ${0.18 + pulse * 0.18})`);
       } else if (item.type === "loreTablet") {
         const pulse = 0.5 + Math.sin(performance.now() / 260) * 0.16;
         fillRoundedRect(sx + 6, sy + 8, 36, 26, 6, "#7d7567");
@@ -3051,6 +3539,11 @@ function drawInteractables() {
         softLine(sx + 16, sy + 16, sx + 32, sy + 16, "#cfbb84", 1.3, 1);
         softLine(sx + 15, sy + 21, sx + 33, sy + 21, "#cfbb84", 1.3, 1);
         softLine(sx + 17, sy + 26, sx + 31, sy + 26, "#cfbb84", 1.3, 1);
+      } else if (item.type === "runePlate") {
+        const glow = item.active ? 0.34 : 0.10;
+        fillRoundedRect(sx + 2, sy + 2, item.w - 4, item.h - 4, 5, item.active ? "#d1d8b1" : "#7c7f74");
+        fillRoundedRect(sx + 5, sy + 5, item.w - 10, item.h - 10, 4, `rgba(134, 210, 126, ${glow})`);
+        softLine(sx + 7, sy + item.h / 2, sx + item.w - 7, sy + item.h / 2, item.active ? "#eaffcc" : "#b7bcad", 1.2, 1);
       } else if (item.type === "shrine") {
         const glow = allDungeonsCleared() && state.overworld.fieldCleared || item.active;
         const pulse = 0.55 + Math.sin(performance.now() / 220) * 0.25;
@@ -3080,6 +3573,12 @@ function drawInteractables() {
           fillRoundedRect(sx + 20, sy + 16, 20, 6, 4, "#b45b31");
           fillRoundedRect(sx + 18, sy + 12, 24, 10, 5, `rgba(255,160,80,${0.12 + pulse * 0.16})`);
         }
+      } else if (item.type === "pushBlock") {
+        ctx.fillStyle = "rgba(0,0,0,0.16)";
+        ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 1, 8, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+        fillRoundedRect(sx + 2, sy + 2, item.w - 4, item.h - 4, 5, "#8b8479");
+        fillRoundedRect(sx + 5, sy + 5, item.w - 10, item.h - 10, 4, "#b9b09e");
+        softLine(sx + 7, sy + 7, sx + item.w - 7, sy + item.h - 7, "rgba(255,255,255,0.18)", 1.0, 1);
       } else if (item.type === "returnSigil" || item.type === "exitPortal") {
         const pulse = 0.4 + Math.sin(performance.now() / 200) * 0.2;
         fillRoundedRect(sx + 3, sy + 3, item.w - 6, item.h - 6, 8, "#18212f");
@@ -3095,6 +3594,10 @@ function drawInteractables() {
         fillRoundedRect(sx + 8, sy + 12, 32, 12, 5, "#675e52");
         fillRoundedRect(sx + 20, sy + 2, 8, 12, 4, "#f6d86f");
         fillRoundedRect(sx + 28, sy + 6, 8, 4, 3, "#f6d86f");
+      } else if (item.type === "secretChest") {
+        fillRoundedRect(sx + 6, sy + 10, 36, 16, 6, item.rewardKind === "silverToken" ? "#5a4632" : "#6f3a44");
+        fillRoundedRect(sx + 10, sy + 14, 28, 8, 4, item.rewardKind === "silverToken" ? "#d7dfe7" : "#ffd6dd");
+        if (item.opened) fillRoundedRect(sx + 14, sy + 6, 20, 4, 3, item.rewardKind === "silverToken" ? "#eef4fb" : "#fff0f3");
       } else if (item.type === "rewardChest") {
         const wood = item.dungeonId === "ember" ? "#7b4023" : item.dungeonId === "rootwood" ? "#5a4327" : "#6a3d24";
         fillRoundedRect(sx + 6, sy + 10, 36, 16, 6, wood);
@@ -3346,6 +3849,7 @@ function drawDebug() {
     state.save.available = storageAvailable();
     syncBuildStamp();
     resizeCanvas();
+    state.secrets = emptySecrets();
     state.player = makePlayer();
     state.dungeons = {
       ruins: emptyDungeonProgress(),
@@ -3353,6 +3857,7 @@ function drawDebug() {
       ember: emptyDungeonProgress(),
     };
     state.areas = buildAreas();
+    applyPersistentWorldState();
     setArea("overworld", "start", true);
     updateStartButtons();
     if (state.save.available) {
