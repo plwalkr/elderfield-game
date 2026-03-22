@@ -12,6 +12,8 @@
   const restartButton = document.getElementById("restartButton");
   const touchAttack = document.getElementById("touchAttack");
   const touchInteract = document.getElementById("touchInteract");
+  const debugPanel = document.getElementById("debugPanel");
+  const debugContent = document.getElementById("debugContent");
 
   const TILE = 24;
   const WORLD_W = 84;
@@ -20,9 +22,11 @@
   const ATTACK_COOLDOWN = 0.25;
   const ATTACK_TIME = 0.13;
   const ENEMY_TOUCH_DAMAGE = 1;
+  const GAME_VERSION = "v1.1.0";
 
   const keys = Object.create(null);
   const touchState = { up: false, down: false, left: false, right: false };
+  const pointerState = { x: 0, y: 0, active: false };
 
   const state = {
     running: false,
@@ -42,12 +46,38 @@
     lastTime: 0,
     message: "",
     messageTimer: 0,
+    debug: {
+      enabled: false,
+      hitboxes: false,
+      fps: 0,
+      fpsFrames: 0,
+      fpsTime: 0,
+      lastAction: "boot",
+    },
   };
 
   function setMessage(text, time = 2.5) {
     state.message = text;
     state.messageTimer = time;
     messageBox.textContent = text;
+  }
+
+  function setDebugAction(text) {
+    state.debug.lastAction = text;
+  }
+
+  function toggleDebug() {
+    state.debug.enabled = !state.debug.enabled;
+    debugPanel.hidden = !state.debug.enabled;
+    setDebugAction(state.debug.enabled ? "debug-open" : "debug-closed");
+    setMessage(state.debug.enabled ? "Dev overlay opened." : "Dev overlay hidden.", 1.4);
+    if (state.debug.enabled) updateDebugPanel(0);
+  }
+
+  function toggleHitboxes() {
+    state.debug.hitboxes = !state.debug.hitboxes;
+    setDebugAction(state.debug.hitboxes ? "hitboxes-on" : "hitboxes-off");
+    setMessage(state.debug.hitboxes ? "Hitboxes visible." : "Hitboxes hidden.", 1.4);
   }
 
   function resizeCanvas() {
@@ -370,6 +400,29 @@
     };
   }
 
+  function clearAllEnemies() {
+    let changed = false;
+    for (const enemy of state.enemies) {
+      if (enemy.dead) continue;
+      enemy.dead = true;
+      burst(enemy.x, enemy.y, enemy.tint === "moss" ? ["#98f58d", "#d7ffd0"] : ["#ffb25e", "#fff0c2"]);
+      changed = true;
+    }
+    if (changed) {
+      updateHud();
+      setDebugAction("clear-enemies");
+      setMessage("All field enemies cleared for testing.", 2.2);
+    }
+  }
+
+  function healPlayer() {
+    if (!state.player) return;
+    state.player.health = state.player.maxHealth;
+    updateHud();
+    setDebugAction("heal-player");
+    setMessage("Hearts restored.", 1.6);
+  }
+
   function interact() {
     if (!state.running) return;
     const p = state.player;
@@ -567,6 +620,7 @@
     drawEnemies();
     drawPlayer();
     drawEffects();
+    drawDebug();
     drawVignette();
   }
 
@@ -807,6 +861,93 @@
     }
   }
 
+  function drawDebugHitbox(entity, color = "#7cf0ff") {
+    const sx = entity.x - entity.w / 2 - state.camera.x;
+    const sy = entity.y - entity.h / 2 - state.camera.y;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(Math.round(sx) + 0.5, Math.round(sy) + 0.5, entity.w, entity.h);
+    ctx.restore();
+  }
+
+  function drawDebugWorldMarker(x, y, size, color) {
+    const sx = x - state.camera.x;
+    const sy = y - state.camera.y;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(sx - size, sy);
+    ctx.lineTo(sx + size, sy);
+    ctx.moveTo(sx, sy - size);
+    ctx.lineTo(sx, sy + size);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawDebug() {
+    if (!state.debug.hitboxes || !state.player) return;
+    drawDebugHitbox(state.player, "#8be8ff");
+
+    for (const enemy of state.enemies) {
+      if (enemy.dead) continue;
+      drawDebugHitbox(enemy, "#ff9d7b");
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 208, 122, 0.35)";
+      ctx.beginPath();
+      ctx.arc(enemy.x - state.camera.x, enemy.y - state.camera.y, enemy.chaseRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    for (const item of state.interactables) {
+      drawDebugHitbox({
+        x: item.x + item.w / 2,
+        y: item.y + item.h / 2,
+        w: item.w,
+        h: item.h,
+      }, item.type === "shrine" ? "#c9b3ff" : "#ffe087");
+    }
+
+    const slash = currentSlashBox();
+    if (slash) drawDebugHitbox(slash, "#f7f0b5");
+    if (pointerState.active) drawDebugWorldMarker(pointerState.x, pointerState.y, 8, "#ffffff");
+  }
+
+  function updateDebugPanel(dt) {
+    state.debug.fpsFrames += 1;
+    state.debug.fpsTime += dt;
+    if (state.debug.fpsTime >= 0.25) {
+      state.debug.fps = Math.round(state.debug.fpsFrames / state.debug.fpsTime);
+      state.debug.fpsFrames = 0;
+      state.debug.fpsTime = 0;
+    }
+
+    if (!state.debug.enabled || !state.player) return;
+
+    const p = state.player;
+    const alive = state.enemies.filter((enemy) => !enemy.dead).length;
+    const attack = currentSlashBox();
+    const pointerText = pointerState.active
+      ? `${pointerState.x.toFixed(1)}, ${pointerState.y.toFixed(1)}`
+      : "inactive";
+
+    debugContent.textContent = [
+      `build     ${GAME_VERSION}`,
+      `fps       ${state.debug.fps}`,
+      `running   ${state.running} | victory ${state.victory} | gameOver ${state.gameOver}`,
+      `player    ${p.x.toFixed(1)}, ${p.y.toFixed(1)} | dir ${p.lastDir.x.toFixed(0)},${p.lastDir.y.toFixed(0)}`,
+      `hearts    ${p.health}/${p.maxHealth} | invuln ${p.invuln.toFixed(2)} | attack ${p.attackTimer.toFixed(2)}`,
+      `camera    ${state.camera.x.toFixed(1)}, ${state.camera.y.toFixed(1)} | canvas ${state.logicalWidth}x${state.logicalHeight}`,
+      `pointer   ${pointerText}`,
+      `enemies   alive ${alive}/${state.enemies.length} | particles ${state.particles.length} | strikeDust ${state.strikeDust.length}`,
+      `slash     ${attack ? `${attack.x.toFixed(1)}, ${attack.y.toFixed(1)} ${attack.w}x${attack.h}` : "inactive"}`,
+      `touch     U:${touchState.up ? 1 : 0} D:${touchState.down ? 1 : 0} L:${touchState.left ? 1 : 0} R:${touchState.right ? 1 : 0}`,
+      `debug     hitboxes ${state.debug.hitboxes} | last ${state.debug.lastAction}`,
+    ].join("\n");
+  }
+
   function drawVignette() {
     const gradient = ctx.createRadialGradient(
       state.logicalWidth / 2,
@@ -844,6 +985,7 @@
       updateParticles(dt);
     }
 
+    updateDebugPanel(dt);
     draw();
     requestAnimationFrame(loop);
   }
@@ -857,6 +999,7 @@
     state.camera.y = 0;
     state.particles.length = 0;
     state.strikeDust.length = 0;
+    state.debug.lastAction = "reset-game";
     buildWorld();
     startCard.hidden = true;
     startButton.hidden = false;
@@ -867,7 +1010,7 @@
   function init() {
     resizeCanvas();
     buildWorld();
-    setMessage("Press Start, move with WASD, click or tap to slash.", 999);
+    setMessage("Press Start, move with WASD, click or tap to slash. F3 opens dev overlay.", 999);
     requestAnimationFrame(loop);
   }
 
@@ -875,8 +1018,37 @@
 
   window.addEventListener("keydown", (event) => {
     keys[event.code] = true;
-    if (event.code === "Enter") {
+
+    if (["F3", "F4", "F6", "F8", "Backquote", "KeyH", "Enter"].includes(event.code)) {
       event.preventDefault();
+    }
+
+    if (event.code === "F3" || event.code === "Backquote") {
+      toggleDebug();
+      return;
+    }
+
+    if (event.code === "F4") {
+      toggleHitboxes();
+      return;
+    }
+
+    if (event.code === "F6") {
+      clearAllEnemies();
+      return;
+    }
+
+    if (event.code === "KeyH") {
+      healPlayer();
+      return;
+    }
+
+    if (event.code === "F8") {
+      resetGame();
+      return;
+    }
+
+    if (event.code === "Enter") {
       if (!state.running && (state.victory || state.gameOver)) {
         resetGame();
       } else if (!state.running) {
@@ -891,11 +1063,26 @@
     keys[event.code] = false;
   });
 
+  canvas.addEventListener("pointermove", (event) => {
+    const worldPoint = screenToWorld(event.clientX, event.clientY);
+    pointerState.x = worldPoint.x;
+    pointerState.y = worldPoint.y;
+    pointerState.active = true;
+  });
+
+  canvas.addEventListener("pointerleave", () => {
+    pointerState.active = false;
+  });
+
   canvas.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    if (!state.running) return;
     const worldPoint = screenToWorld(event.clientX, event.clientY);
+    pointerState.x = worldPoint.x;
+    pointerState.y = worldPoint.y;
+    pointerState.active = true;
+    if (!state.running) return;
     doAttack({ x: worldPoint.x - state.player.x, y: worldPoint.y - state.player.y });
+    setDebugAction("pointer-attack");
   });
 
   startButton.addEventListener("click", resetGame);
@@ -923,10 +1110,12 @@
   touchAttack.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     doAttack(state.player.lastDir);
+    setDebugAction("touch-attack");
   });
 
   touchInteract.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    setDebugAction("touch-interact");
     if (!state.running) {
       resetGame();
       return;

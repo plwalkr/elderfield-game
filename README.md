@@ -34,3 +34,25 @@ Open `index.html` directly in a browser, or serve the folder with any simple loc
 - Sword cooldown tuning and enemy knockback polish
 - Pause menu and title music
 - Save points and multi-map zones
+
+
+## Upgrade pass v1.1.0
+
+Added a hidden developer overlay for faster testing and future expansion.
+
+### Debug shortcuts
+- `F3` or `` ` ``: toggle debug overlay
+- `F4`: toggle hitboxes and aggro circles
+- `F6`: clear all enemies for testing
+- `H`: refill player hearts
+- `F8`: reset the current field
+
+### What the overlay shows
+- version and FPS
+- player position and facing direction
+- attack timer and invulnerability time
+- camera position and canvas size
+- pointer world position
+- living enemy count and particle count
+- touch input state
+- last debug action
