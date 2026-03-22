@@ -13,14 +13,15 @@
         <p class="eyebrow">Browser adventure prototype</p>
         <h1>Elderfield</h1>
         <p class="subtitle">
-          A top-down retro field quest with camera follow, sword combat, original pixel-style art,
-          desktop controls, touch controls for mobile, and a built-in diagnostics pass for testing.
+          A top-down retro field quest with camera follow, sword combat, a three-room dungeon pass,
+          original pixel-style art, desktop controls, touch controls for mobile, and a built-in diagnostics overlay.
         </p>
       </div>
       <div class="legend">
         <span>WASD / Arrows = Move</span>
         <span>Click / Tap = Slash toward cursor</span>
         <span>Enter = Interact</span>
+        <span>F3 / ~ = Debug • F4 = Hitboxes</span>
       </div>
     </section>
 
@@ -36,7 +37,9 @@
           <div class="hud-pill"><span class="label">Enemies</span><span id="enemiesValue">0</span></div>
           <div class="hud-pill"><span class="label">Rupees</span><span id="rupeesValue">000</span></div>
           <div class="hud-pill"><span class="label">Zone</span><span id="zoneValue">South Meadow</span></div>
-          <div class="hud-pill hud-build"><span class="label">Build</span><span id="versionValue">v2.1.0</span></div>
+          <div class="hud-pill"><span class="label">Goal</span><span id="objectiveValue">Find the Triune Gate.</span></div>
+          <div class="hud-pill"><span class="label">Relics</span><span id="rewardsValue">0</span></div>
+          <div class="hud-pill hud-build"><span class="label">Build</span><span id="versionValue">v2.2.0</span></div>
           <div class="hud-pill status-pill" id="statusPill" data-state="good">
             <span class="status-dot"></span>
             <span class="label">Status</span>
@@ -45,11 +48,11 @@
         </div>
 
         <div class="area-banner" id="areaBanner" hidden>
-          <span class="area-banner-overline">Region entered</span>
+          <span class="area-banner-overline" id="areaBannerOverline">Region entered</span>
           <strong id="areaBannerTitle">South Meadow</strong>
         </div>
 
-        <div class="message-box" id="messageBox">Clear the field, then approach the shrine and press Enter.</div>
+        <div class="message-box" id="messageBox">Explore the field. Press Enter at signs, gates, doors, and the shrine.</div>
 
         <aside class="debug-panel" id="debugPanel" hidden>
           <div class="debug-header">
@@ -60,18 +63,19 @@
             <button class="debug-copy-btn" id="copyDebugButton" type="button">Copy Debug Report</button>
           </div>
           <div class="debug-status-row">
-            <span class="mini-badge">Build <strong id="debugBuildValue">v2.1.0</strong></span>
+            <span class="mini-badge">Build <strong id="debugBuildValue">v2.2.0</strong></span>
             <span class="mini-badge mini-status" id="debugStatusBadge" data-state="good">GOOD</span>
           </div>
           <pre id="debugContent">debug booting...</pre>
         </aside>
 
-        <div class="build-watermark" id="buildWatermark">v2.1.0 • Hero Pass</div>
+        <div class="build-watermark" id="buildWatermark">v2.2.0 • Dungeon Pass</div>
 
         <div class="start-card" id="startCard">
           <h2>Elderfield</h2>
           <p>
-            The meadow is overrun. Cut through every creature, gather what they drop, then return to the shrine and awaken it.
+            The meadow is waking, the Triune Gate is open, and a knight waits under the ruins. Cut down foes,
+            take a relic, and return to the shrine.
           </p>
           <div class="start-controls">
             <button id="startButton" class="primary-btn">Start Adventure</button>
