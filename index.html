@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Elderfield — Retro Adventure Prototype</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="title-panel">
+      <div>
+        <p class="eyebrow">Browser adventure prototype</p>
+        <h1>Elderfield</h1>
+        <p class="subtitle">
+          A top-down retro field quest with camera follow, sword combat, original pixel-style art,
+          desktop controls, and touch controls for mobile.
+        </p>
+      </div>
+      <div class="legend">
+        <span>WASD / Arrows = Move</span>
+        <span>Click / Tap = Slash toward cursor</span>
+        <span>Enter = Interact</span>
+      </div>
+    </section>
+
+    <section class="game-panel">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="gameCanvas" aria-label="Elderfield game"></canvas>
+
+        <div class="hud hud-top">
+          <div class="hud-pill"><span class="label">Hearts</span><span id="heartsValue">5</span></div>
+          <div class="hud-pill"><span class="label">Enemies</span><span id="enemiesValue">0</span></div>
+          <div class="hud-pill"><span class="label">Zone</span><span>Elderfield</span></div>
+        </div>
+
+        <div class="message-box" id="messageBox">Clear the field, then approach the shrine and press Enter.</div>
+
+        <div class="start-card" id="startCard">
+          <h2>Elderfield</h2>
+          <p>
+            The meadow is overrun. Cut through every creature, then return to the shrine and awaken it.
+          </p>
+          <div class="start-controls">
+            <button id="startButton" class="primary-btn">Start Adventure</button>
+            <button id="restartButton" class="ghost-btn" hidden>Restart</button>
+          </div>
+        </div>
+
+        <div class="touch-ui" id="touchUi">
+          <div class="dpad" aria-hidden="true">
+            <button class="dpad-btn up" data-touch-dir="up">▲</button>
+            <button class="dpad-btn left" data-touch-dir="left">◀</button>
+            <button class="dpad-btn down" data-touch-dir="down">▼</button>
+            <button class="dpad-btn right" data-touch-dir="right">▶</button>
+          </div>
+          <div class="action-buttons" aria-hidden="true">
+            <button class="action-btn attack" id="touchAttack">Slash</button>
+            <button class="action-btn interact" id="touchInteract">Enter</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
