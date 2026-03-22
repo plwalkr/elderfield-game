@@ -2,7 +2,7 @@
 (() => {
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
 
   const canvasWrap = document.getElementById("canvasWrap");
   const messageBox = document.getElementById("messageBox");
@@ -42,13 +42,14 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.7.1";
+  const GAME_VERSION = "v2.8.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Save & Progress Pass";
+  const BUILD_NAME = "Town & NPC Foundations";
   const SAVE_KEY = "elderfield-save-v2_7";
   const AUTOSAVE_INTERVAL = 8.5;
-  const START_ZONE = "Greenhollow";
+  const START_ZONE = "Dawnrest";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
+  const RENDER_STYLE = "HD Retro";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -384,6 +385,7 @@
       `Viewport`,
       `- LogicalSize=${state.logicalWidth}x${state.logicalHeight}`,
       `- CanvasBacking=${canvas.width}x${canvas.height}`,
+      `- Render=${RENDER_STYLE}`,
       `- Camera=${state.camera.x.toFixed(1)}, ${state.camera.y.toFixed(1)}`,
       `- CameraShake=${state.cameraShake.power.toFixed(2)} @ ${state.cameraShake.time.toFixed(3)}`,
       `- Transition=${state.transition.active ? `${state.transition.stage}@${state.transition.alpha.toFixed(2)}` : "idle"}`,
@@ -815,9 +817,11 @@
     state.logicalWidth = base;
     state.logicalHeight = Math.floor(base / targetAspect);
 
-    canvas.width = state.logicalWidth;
-    canvas.height = state.logicalHeight;
-    ctx.imageSmoothingEnabled = false;
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(state.logicalWidth * dpr);
+    canvas.height = Math.floor(state.logicalHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
   }
 
   function make2DArray(w, h, fill) {
@@ -972,6 +976,7 @@
       { name: "Crownfall Ruins", x: 50, y: 2, w: 56, h: 34 },
       { name: "Rootwood March", x: 108, y: 12, w: 50, h: 42 },
       { name: "Cinderreach", x: 2, y: 16, w: 48, h: 42 },
+      { name: "Dawnrest", x: 92, y: 66, w: 34, h: 20 },
       { name: "Greenhollow", x: 18, y: 50, w: 126, h: 44 },
     ];
 
@@ -1017,6 +1022,140 @@
     clearRect(area, 124, 30, 7, 6, 13);
     clearRect(area, 23, 30, 7, 6, 15);
     clearRect(area, 72, 14, 11, 8, 14);
+
+    clearRect(area, 92, 66, 34, 20, 0);
+    paintGround(area, 92, 66, 34, 20, 0);
+    fillRect(area, 102, 71, 13, 10, 3, false);
+    carvePath(area, 81, 80, 108, 80, 3);
+    carvePath(area, 108, 75, 108, 80, 3);
+    carvePath(area, 98, 75, 120, 75, 3);
+    placeWaterPatch(area, 117, 83, 6, 3);
+    fillRect(area, 95, 69, 10, 7, 4, true);
+    fillRect(area, 111, 69, 11, 8, 4, true);
+    fillRect(area, 97, 79, 9, 5, 4, true);
+    fillRect(area, 114, 79, 9, 5, 4, true);
+
+    area.interactables.push({
+      type: "townSign",
+      x: 92 * TILE,
+      y: 79 * TILE,
+      w: TILE,
+      h: TILE,
+      text: "Dawnrest — lantern refuge of the old Warden road. Keep peace within the stones.",
+    });
+
+    area.interactables.push({
+      type: "house",
+      x: 95 * TILE,
+      y: 68 * TILE,
+      w: TILE * 10,
+      h: TILE * 8,
+      label: "Lantern Market",
+      text: "Warm light and road dust cling to the little market house. Someone here still trades like the old kingdom might return.",
+      roof: "green",
+    });
+
+    area.interactables.push({
+      type: "house",
+      x: 111 * TILE,
+      y: 68 * TILE,
+      w: TILE * 11,
+      h: TILE * 9,
+      label: "Warden Hall",
+      text: "The hall is small, but the old crest still hangs above its door. Dawnrest remembers who kept the roads once.",
+      roof: "slate",
+    });
+
+    area.interactables.push({
+      type: "house",
+      x: 97 * TILE,
+      y: 78 * TILE,
+      w: TILE * 9,
+      h: TILE * 6,
+      label: "Baker's Hearth",
+      text: "Fresh bread, cedar smoke, and rain-dried herbs. It feels like the sort of place legends would miss when they leave.",
+      roof: "amber",
+    });
+
+    area.interactables.push({
+      type: "house",
+      x: 114 * TILE,
+      y: 78 * TILE,
+      w: TILE * 9,
+      h: TILE * 6,
+      label: "Scholar's Loft",
+      text: "Pages, charcoal, and old maps cover the scholar's loft. The roads of Elderfield are still being remembered here.",
+      roof: "green",
+    });
+
+    area.interactables.push({
+      type: "well",
+      x: 107 * TILE,
+      y: 78 * TILE,
+      w: TILE * 2,
+      h: TILE * 2,
+      text: "The old well water is cold and clear. Coins glitter below. Someone whispers that wishes sink deeper than water in Dawnrest.",
+    });
+
+    area.interactables.push({
+      type: "npc",
+      x: 101 * TILE,
+      y: 77 * TILE,
+      w: TILE,
+      h: TILE,
+      name: "Mara of the Lantern Market",
+      role: "Merchant",
+      text: "Mara: Trade is thin, but not dead. Bring me fifteen bright rupees when you can, and I'll start gathering better road-gear for you. The kingdom will need merchants again.",
+      palette: "merchant",
+    });
+
+    area.interactables.push({
+      type: "npc",
+      x: 117 * TILE,
+      y: 77 * TILE,
+      w: TILE,
+      h: TILE,
+      name: "Oren Valewright",
+      role: "Scholar",
+      text: "Oren: Crownfall names Vaelor in silver ink and Cindervane in ash. Dragons are not beasts in these records. They were treaties, warnings, and kings unto themselves.",
+      palette: "scholar",
+    });
+
+    area.interactables.push({
+      type: "npc",
+      x: 109 * TILE,
+      y: 73 * TILE,
+      w: TILE,
+      h: TILE,
+      name: "Ser Rowan Ashmere",
+      role: "Guard",
+      text: "Rowan: If Dawnrest stands, the roads are not lost. Bring peace to the wilds and the Warden bells may ring again. Until then, we hold a little line against a great dark.",
+      palette: "guard",
+    });
+
+    area.interactables.push({
+      type: "npc",
+      x: 98 * TILE,
+      y: 82 * TILE,
+      w: TILE,
+      h: TILE,
+      name: "Elowen",
+      role: "Villager",
+      text: "Elowen: My boy hid grandfather's crest near the old bridge stones and now he swears the briar shadows won't let him fetch it. If you ever search Greenhollow thoroughly, keep an eye open for a silver token.",
+      palette: "villager",
+    });
+
+    area.interactables.push({
+      type: "npc",
+      x: 121 * TILE,
+      y: 82 * TILE,
+      w: TILE,
+      h: TILE,
+      name: "Cael the Roadwalker",
+      role: "Traveler",
+      text: "Cael: I saw black wings over Cinderreach where no bird should live. If Cindervane stirs, even rumor is dangerous. Still... rumor often knows the road before kings do.",
+      palette: "traveler",
+    });
 
     area.interactables.push({
       type: "shrine",
@@ -1840,8 +1979,19 @@ function onAreaEnemiesCleared(area) {
       const box = { x: item.x + item.w / 2, y: item.y + item.h / 2, w: item.w + 20, h: item.h + 20 };
       if (!rectsOverlap(p, box)) continue;
 
-      if (item.type === "sign" || item.type === "loreTablet") {
+      if (item.type === "sign" || item.type === "loreTablet" || item.type === "townSign") {
         setMessage(item.text, item.type === "loreTablet" ? 4.4 : 3.8);
+        return;
+      }
+
+      if (item.type === "npc") {
+        setMessage(`${item.role ? item.role + " • " : ""}${item.text}`, 5.2);
+        showAreaBanner(item.name || "Traveler", item.role || "Townfolk", 1.6);
+        return;
+      }
+
+      if (item.type === "house" || item.type === "well") {
+        setMessage(item.text || item.label || "An old place of the road.", 4.2);
         return;
       }
 
@@ -2295,14 +2445,17 @@ function drawAtmosphere() {
   const area = currentArea();
   ctx.save();
   if (area.id === "overworld") {
-    if (state.zoneName === "East Woods") {
+    if (state.zoneName === "Rootwood March") {
       ctx.fillStyle = "rgba(62, 104, 58, 0.08)";
       ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
-    } else if (state.zoneName === "North Ruins") {
+    } else if (state.zoneName === "Crownfall Ruins") {
       ctx.fillStyle = "rgba(150, 132, 96, 0.07)";
       ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
-    } else if (state.zoneName === "Ashen Reach") {
+    } else if (state.zoneName === "Cinderreach") {
       ctx.fillStyle = "rgba(144, 88, 52, 0.08)";
+      ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+    } else if (state.zoneName === "Dawnrest") {
+      ctx.fillStyle = "rgba(236, 198, 132, 0.06)";
       ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
     }
   } else if (area.theme === "rootwood") {
@@ -2589,13 +2742,66 @@ function drawInteractables() {
       const sy = item.y - state.camera.y;
       if (sx > state.logicalWidth + 40 || sy > state.logicalHeight + 40 || sx + item.w < -40 || sy + item.h < -40) continue;
 
-if (item.type === "sign") {
-  ctx.fillStyle = "#8b5c31";
+if (item.type === "sign" || item.type === "townSign") {
+  ctx.fillStyle = item.type === "townSign" ? "#6f4b28" : "#8b5c31";
   ctx.fillRect(sx + 10, sy + 10, 4, 10);
-  ctx.fillStyle = "#dcb97a";
+  ctx.fillStyle = item.type === "townSign" ? "#f2d799" : "#dcb97a";
   ctx.fillRect(sx + 6, sy + 3, 12, 9);
   ctx.fillStyle = "#6e4b2a";
   ctx.fillRect(sx + 8, sy + 5, 8, 2);
+  if (item.type === "townSign") {
+    ctx.fillStyle = "rgba(255,245,210,0.35)";
+    ctx.fillRect(sx + 7, sy + 4, 10, 1);
+  }
+} else if (item.type === "house") {
+  const roof = item.roof === "slate" ? ["#5e6674", "#8892a3"] : item.roof === "amber" ? ["#8e5237", "#c98a4e"] : ["#486247", "#7aa56e"];
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.fillRect(sx + 6, sy + item.h - 8, item.w - 12, 6);
+  ctx.fillStyle = "#d7c5a3";
+  ctx.fillRect(sx + 10, sy + 18, item.w - 20, item.h - 28);
+  ctx.fillStyle = roof[0];
+  ctx.beginPath();
+  ctx.moveTo(sx + 6, sy + 20);
+  ctx.lineTo(sx + item.w / 2, sy + 4);
+  ctx.lineTo(sx + item.w - 6, sy + 20);
+  ctx.lineTo(sx + item.w - 10, sy + 24);
+  ctx.lineTo(sx + 10, sy + 24);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = roof[1];
+  ctx.fillRect(sx + 12, sy + 22, item.w - 24, 4);
+  ctx.fillStyle = "#6d4a2c";
+  ctx.fillRect(sx + item.w / 2 - 5, sy + item.h - 20, 10, 12);
+  ctx.fillStyle = "#8bb6d8";
+  ctx.fillRect(sx + 16, sy + 28, 10, 8);
+  ctx.fillRect(sx + item.w - 26, sy + 28, 10, 8);
+} else if (item.type === "well") {
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.fillRect(sx + 4, sy + item.h - 3, item.w - 8, 3);
+  ctx.fillStyle = "#7f857f";
+  ctx.fillRect(sx + 3, sy + 5, item.w - 6, item.h - 8);
+  ctx.fillStyle = "#d8e6f2";
+  ctx.fillRect(sx + 7, sy + 9, item.w - 14, item.h - 16);
+  ctx.fillStyle = "#6b4728";
+  ctx.fillRect(sx + 6, sy + 2, 2, 8);
+  ctx.fillRect(sx + item.w - 8, sy + 2, 2, 8);
+  ctx.fillRect(sx + 6, sy + 2, item.w - 12, 2);
+} else if (item.type === "npc") {
+  const colors = item.palette === "merchant" ? ["#7f4f2c","#d9b06f","#4b8a44"] : item.palette === "scholar" ? ["#46506b","#c7d1e0","#9d8b5f"] : item.palette === "guard" ? ["#4f5665","#cad3df","#6d90a8"] : item.palette === "traveler" ? ["#5a4f6f","#d8c9e2","#7c6b52"] : ["#5b553f","#e2d2aa","#7bb06c"];
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 8, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = colors[0];
+  ctx.fillRect(sx + 7, sy + 10, 10, 11);
+  ctx.fillStyle = colors[1];
+  ctx.fillRect(sx + 8, sy + 4, 8, 7);
+  ctx.fillStyle = colors[2];
+  ctx.fillRect(sx + 5, sy + 12, 4, 8);
+  ctx.fillRect(sx + 15, sy + 12, 4, 8);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.fillRect(sx + 10, sy + 6, 2, 1);
+  ctx.fillRect(sx + 13, sy + 6, 2, 1);
 } else if (item.type === "loreTablet") {
   const pulse = 0.5 + Math.sin(performance.now() / 260) * 0.16;
   ctx.fillStyle = "#6e6558";
@@ -2976,7 +3182,7 @@ function drawDebug() {
       updateStartButtons();
       setMessage(state.save.hasSave ? "Continue your road or begin a new one." : "Press Start to begin your road through Elderfield.", 999);
     } else {
-      setMessage("Press Start, move with WASD, click or tap to attack, and Enter to read stones, gates, and the Dawn Shrine.", 999);
+      setMessage("Press Start, move with WASD, click or tap to attack, and Enter to speak, read stones, and rest your road in Dawnrest.", 999);
     }
     computeStatus();
     refreshDebugPanel();

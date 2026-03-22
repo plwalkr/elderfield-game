@@ -1,4 +1,4 @@
-# Elderfield — World Bible Starter (updated through v2.7.1)
+# Elderfield — World Bible Starter (updated through v2.8.0)
 
 ## Core Promise
 Elderfield is a top-down action-adventure love letter to classic Zelda structure with heavier high-fantasy atmosphere, deeper history, and more emotional legendary weight.

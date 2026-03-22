@@ -1,4 +1,4 @@
-# Elderfield — Lore Foundation (updated through v2.7.1)
+# Elderfield — Lore Foundation (updated through v2.8.0)
 
 ## Core Named Pillars
 - **Kingdom:** Elderfield
