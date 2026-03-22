@@ -1,8 +1,8 @@
-# Elderfield — v2.9.0 Puzzle & Secret Pass
+# Elderfield — v3.0.0 Atmosphere & Depth Pass
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v2.9.0
+## New in v3.0.0
 - hidden caves and cracked-wall secrets in the overworld
 - rune-plate and push-block style environmental puzzles
 - optional secret rewards, including Heart Fragments and Elowen's silver-token thread
@@ -71,7 +71,7 @@ Look for:
 - Vignette overlay is cached instead of regenerated each draw
 
 
-## v2.9.0 notes
+## v3.0.0 notes
 
 - Added Whisperroot Grotto and Bridge-Stone Cache
 - Added cracked wall reveals in Crownfall and Greenhollow

@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v2.9.0";
+  const GAME_VERSION = "v3.0.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Puzzle & Secret Pass";
+  const BUILD_NAME = "Atmosphere & Depth Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Dawnrest";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Painterly Fantasy 2D";
+  const RENDER_STYLE = "Painterly Fantasy 2.5D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -2977,6 +2977,19 @@ function drawAtmosphere() {
     targetCtx.fill();
   }
 
+  function cacheSoftLine(targetCtx, x1, y1, x2, y2, color, width = 1.2, alpha = 1) {
+    targetCtx.save();
+    targetCtx.globalAlpha = alpha;
+    targetCtx.strokeStyle = color;
+    targetCtx.lineWidth = width;
+    targetCtx.lineCap = "round";
+    targetCtx.beginPath();
+    targetCtx.moveTo(x1, y1);
+    targetCtx.lineTo(x2, y2);
+    targetCtx.stroke();
+    targetCtx.restore();
+  }
+
   function drawFlowerCached(targetCtx, x, y, color) {
     targetCtx.fillStyle = color;
     targetCtx.beginPath();
@@ -2997,27 +3010,36 @@ function drawAtmosphere() {
     const palette = themeColors(theme);
     const n1 = seededNoise(x * 2, y * 3);
     const n2 = seededNoise(x * 13, y * 17);
+    const n3 = seededNoise(x * 23, y * 29);
     if (tile === 0 || tile === 1 || tile === 5 || tile === 6 || tile === 13) {
       targetCtx.fillStyle = n1 > 0.56 ? palette.grassB : palette.grassA;
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.06)";
-      targetCtx.fillRect(sx, sy, TILE, 6);
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.fillRect(sx, sy, TILE, 5);
+      targetCtx.fillStyle = "rgba(0,0,0,0.08)";
+      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 5);
       targetCtx.fillStyle = palette.mid;
       targetCtx.beginPath();
-      targetCtx.ellipse(sx + 7, sy + 16, 4.6, 2.6, -0.25, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 17, sy + 9, 3.6, 2.1, 0.35, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 7, sy + 16, 4.8, 2.8, -0.25, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 17, sy + 9, 3.8, 2.2, 0.35, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 18, sy + 19, 5.3, 2.0, 0.2, 0, Math.PI * 2);
       targetCtx.fill();
-      targetCtx.strokeStyle = palette.dark;
-      targetCtx.lineWidth = 1.1;
-      targetCtx.lineCap = "round";
-      targetCtx.beginPath();
-      targetCtx.moveTo(sx + 5, sy + 18); targetCtx.lineTo(sx + 6, sy + 11);
-      targetCtx.moveTo(sx + 10, sy + 17); targetCtx.lineTo(sx + 12, sy + 8);
-      targetCtx.stroke();
+      cacheSoftLine(targetCtx, sx + 3, sy + 19, sx + 7, sy + 8, palette.dark, 1.1, 0.85);
+      cacheSoftLine(targetCtx, sx + 9, sy + 20, sx + 12, sy + 7, palette.dark, 1.15, 0.88);
+      cacheSoftLine(targetCtx, sx + 15, sy + 18, sx + 18, sy + 9, palette.dark, 1.0, 0.8);
+      cacheSoftLine(targetCtx, sx + 6, sy + 14, sx + 14, sy + 5, "rgba(255,255,255,0.08)", 0.9, 0.65);
       if (n2 > 0.78) {
         targetCtx.fillStyle = "rgba(255,255,255,0.12)";
         targetCtx.beginPath();
         targetCtx.arc(sx + 15, sy + 6, 1.0, 0, Math.PI * 2);
+        targetCtx.arc(sx + 9, sy + 10, 0.7, 0, Math.PI * 2);
+        targetCtx.fill();
+      }
+      if (n3 > 0.71) {
+        targetCtx.fillStyle = "rgba(56,74,42,0.20)";
+        targetCtx.beginPath();
+        targetCtx.arc(sx + 5, sy + 12, 1.4, 0, Math.PI * 2);
+        targetCtx.arc(sx + 18, sy + 14, 1.2, 0, Math.PI * 2);
         targetCtx.fill();
       }
       if (tile === 5) {
@@ -3028,42 +3050,59 @@ function drawAtmosphere() {
         drawFlowerCached(targetCtx, sx + 15, sy + 13, "#ffd2ea");
       } else if (tile === 13) {
         targetCtx.fillStyle = "#2d4d2b";
-        targetCtx.fillRect(sx + 5, sy + 6, 2, 10);
-        targetCtx.fillRect(sx + 12, sy + 10, 2, 7);
-        targetCtx.fillRect(sx + 16, sy + 5, 2, 8);
+        cacheFillRoundedRect(targetCtx, sx + 5, sy + 6, 2, 10, 1, "#2d4d2b");
+        cacheFillRoundedRect(targetCtx, sx + 12, sy + 10, 2, 7, 1, "#2d4d2b");
+        cacheFillRoundedRect(targetCtx, sx + 16, sy + 5, 2, 8, 1, "#2d4d2b");
       }
       return;
     }
     if (tile === 2) {
       targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+      targetCtx.fillStyle = "rgba(255,255,255,0.12)";
       targetCtx.beginPath();
       targetCtx.ellipse(sx + 7, sy + 6, 5, 1.6, 0, 0, Math.PI * 2);
       targetCtx.ellipse(sx + 16, sy + 13, 6, 1.8, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 10, sy + 18, 5, 1.4, 0, 0, Math.PI * 2);
       targetCtx.fill();
+      cacheSoftLine(targetCtx, sx + 3, sy + 18, sx + 11, sy + 18, "rgba(220,245,255,0.20)", 1.15, 0.9);
+      cacheSoftLine(targetCtx, sx + 14, sy + 8, sx + 20, sy + 8, "rgba(220,245,255,0.22)", 1.15, 0.92);
+      targetCtx.fillStyle = "rgba(9,34,49,0.10)";
+      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 5);
       return;
     }
     if (tile === 3) {
       targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.pathA : palette.pathB;
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,246,214,0.09)";
+      targetCtx.fillStyle = "rgba(255,246,214,0.10)";
       targetCtx.beginPath();
       targetCtx.ellipse(sx + 8, sy + 7, 4.6, 2.2, -0.3, 0, Math.PI * 2);
       targetCtx.ellipse(sx + 17, sy + 15, 3.7, 1.9, 0.2, 0, Math.PI * 2);
       targetCtx.fill();
+      cacheSoftLine(targetCtx, sx + 4, sy + 19, sx + 18, sy + 6, "rgba(116,86,49,0.26)", 1.15, 0.9);
+      if (n3 > 0.65) {
+        targetCtx.fillStyle = "rgba(105,74,44,0.22)";
+        targetCtx.beginPath();
+        targetCtx.arc(sx + 13, sy + 12, 1.5, 0, Math.PI * 2);
+        targetCtx.arc(sx + 8, sy + 17, 1.1, 0, Math.PI * 2);
+        targetCtx.fill();
+      }
       return;
     }
     if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
       const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
       const stone = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
       cacheFillRoundedRect(targetCtx, sx + 1, sy + 1, TILE - 2, TILE - 2, 5, stone);
-      targetCtx.fillStyle = "rgba(255,255,255,0.07)";
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
       targetCtx.beginPath();
       targetCtx.ellipse(sx + 9, sy + 7, 5.5, 1.9, -0.15, 0, Math.PI * 2);
       targetCtx.ellipse(sx + 15, sy + 16, 4.1, 1.6, 0.15, 0, Math.PI * 2);
       targetCtx.fill();
-      if (tile === 8 || tile === 14) cacheFillRoundedRect(targetCtx, sx + 3, sy + 17, 18, 3, 2, "rgba(58,47,39,0.14)");
+      targetCtx.fillStyle = "rgba(0,0,0,0.10)";
+      targetCtx.fillRect(sx + 2, sy + TILE - 4, TILE - 4, 3);
+      cacheSoftLine(targetCtx, sx + 6, sy + 8, sx + 12, sy + 13, tile === 14 ? "rgba(90,72,56,0.34)" : "rgba(54,48,42,0.28)", 1.2, 1);
+      cacheSoftLine(targetCtx, sx + 12, sy + 13, sx + 17, sy + 10, tile === 14 ? "rgba(90,72,56,0.34)" : "rgba(54,48,42,0.28)", 1.2, 1);
+      if (tile === 8 || tile === 14) cacheFillRoundedRect(targetCtx, sx + 3, sy + 17, 18, 3, 2, "rgba(58,47,39,0.16)");
       if (tile === 12) {
         targetCtx.strokeStyle = "rgba(255,255,255,0.08)";
         targetCtx.lineWidth = 1;
@@ -3132,18 +3171,23 @@ function drawAtmosphere() {
 
   function drawCachedWorldObject(targetCtx, tile, sx, sy) {
     if (tile === 1) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 20, 8, 3, 0, 0, Math.PI * 2); targetCtx.fill();
+      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 21, 9, 3.3, 0, 0, Math.PI * 2); targetCtx.fill();
       cacheFillRoundedRect(targetCtx, sx + 10, sy + 11, 4, 10, 2, "#6d4f32");
-      targetCtx.fillStyle = "rgba(34,60,31,0.16)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 11, sy + 9, 9, 6.5, 0, 0, Math.PI * 2); targetCtx.fill();
+      cacheFillRoundedRect(targetCtx, sx + 10, sy + 11, 1.2, 10, 1, "rgba(255,255,255,0.10)");
+      targetCtx.fillStyle = "rgba(34,60,31,0.18)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 11, sy + 10, 10, 7, 0, 0, Math.PI * 2); targetCtx.fill();
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 8, sy + 8, 5.5, 2.4, -0.4, 0, Math.PI * 2); targetCtx.fill();
     } else if (tile === 4) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 19, 8, 2.5, 0, 0, Math.PI * 2); targetCtx.fill();
-    } else if (tile === 9) {
       targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 20, 8, 2.5, 0, 0, Math.PI * 2); targetCtx.fill();
-      cacheFillRoundedRect(targetCtx, sx + 4, sy + 4, 16, 3, 1.5, "rgba(255,255,255,0.04)");
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 19, 8.5, 2.8, 0, 0, Math.PI * 2); targetCtx.fill();
+      cacheSoftLine(targetCtx, sx + 6, sy + 9, sx + 18, sy + 9, "rgba(255,255,255,0.08)", 1.0, 0.9);
+    } else if (tile === 9) {
+      targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 20, 8.5, 2.7, 0, 0, Math.PI * 2); targetCtx.fill();
+      cacheFillRoundedRect(targetCtx, sx + 4, sy + 4, 16, 3, 1.5, "rgba(255,255,255,0.05)");
+      cacheFillRoundedRect(targetCtx, sx + 5, sy + 17, 14, 2, 1, "rgba(0,0,0,0.10)");
     }
   }
 
@@ -3480,37 +3524,56 @@ function drawInteractables() {
         fillRoundedRect(sx + 5, sy + 3, 14, 10, 3, item.type === "townSign" ? "#f1ddb1" : "#ddbf82");
         softLine(sx + 8, sy + 7, sx + 16, sy + 7, "rgba(120,82,42,0.40)", 1.4, 1);
       } else if (item.type === "house") {
-        const roof = item.roof === "slate" ? ["#647282", "#95a4b9"] : item.roof === "amber" ? ["#965b3d", "#d69963"] : ["#567556", "#88b17e"];
-        ctx.fillStyle = "rgba(0,0,0,0.18)";
-        ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, (item.w - 14) / 2, 4, 0, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 10, sy + 20, item.w - 20, item.h - 30, 10, "#dccaac");
+        const roof = item.roof === "slate" ? ["#647282", "#95a4b9", "#4d5865"] : item.roof === "amber" ? ["#965b3d", "#d69963", "#75432d"] : ["#567556", "#88b17e", "#415a40"];
+        ctx.fillStyle = "rgba(0,0,0,0.22)";
+        ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, (item.w - 10) / 2, 5, 0, 0, Math.PI * 2); ctx.fill();
+        fillRoundedRect(sx + 8, sy + 25, item.w - 16, item.h - 32, 10, "#e3d2b3");
+        fillRoundedRect(sx + 10, sy + 27, item.w - 20, item.h - 36, 9, "#d1bf9f");
+        ctx.fillStyle = roof[2];
+        ctx.beginPath();
+        ctx.moveTo(sx + 6, sy + 24);
+        ctx.quadraticCurveTo(sx + item.w / 2, sy + 4, sx + item.w - 6, sy + 24);
+        ctx.lineTo(sx + item.w - 10, sy + 31);
+        ctx.lineTo(sx + 10, sy + 31);
+        ctx.closePath();
+        ctx.fill();
         ctx.fillStyle = roof[0];
         ctx.beginPath();
-        ctx.moveTo(sx + 7, sy + 21);
-        ctx.quadraticCurveTo(sx + item.w / 2, sy + 2, sx + item.w - 7, sy + 21);
-        ctx.lineTo(sx + item.w - 12, sy + 27);
-        ctx.lineTo(sx + 12, sy + 27);
+        ctx.moveTo(sx + 8, sy + 20);
+        ctx.quadraticCurveTo(sx + item.w / 2, sy + 1, sx + item.w - 8, sy + 20);
+        ctx.lineTo(sx + item.w - 12, sy + 29);
+        ctx.lineTo(sx + 12, sy + 29);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = roof[1];
         ctx.beginPath();
-        ctx.moveTo(sx + 12, sy + 23);
-        ctx.lineTo(sx + item.w - 12, sy + 23);
-        ctx.lineTo(sx + item.w - 14, sy + 27);
-        ctx.lineTo(sx + 14, sy + 27);
+        ctx.moveTo(sx + 14, sy + 22);
+        ctx.quadraticCurveTo(sx + item.w / 2, sy + 8, sx + item.w - 14, sy + 22);
+        ctx.lineTo(sx + item.w - 16, sy + 26);
+        ctx.lineTo(sx + 16, sy + 26);
         ctx.closePath();
         ctx.fill();
-        fillRoundedRect(sx + item.w / 2 - 5, sy + item.h - 22, 10, 14, 3, "#725032");
-        fillRoundedRect(sx + 15, sy + 28, 11, 9, 3, "#a3c9e0");
-        fillRoundedRect(sx + item.w - 26, sy + 28, 11, 9, 3, "#a3c9e0");
+        softLine(sx + 16, sy + 24, sx + item.w - 16, sy + 24, "rgba(255,255,255,0.12)", 1.5, 0.9);
+        ctx.fillStyle = "rgba(76,46,28,0.22)";
+        ctx.fillRect(sx + 12, sy + 31, item.w - 24, 3);
+        fillRoundedRect(sx + item.w / 2 - 6, sy + item.h - 24, 12, 16, 3, "#7b5535");
+        fillRoundedRect(sx + item.w / 2 - 4, sy + item.h - 18, 2, 5, 1, "rgba(255,244,203,0.20)");
+        fillRoundedRect(sx + 14, sy + 31, 12, 10, 3, "#9fc4da");
+        fillRoundedRect(sx + item.w - 26, sy + 31, 12, 10, 3, "#9fc4da");
+        fillRoundedRect(sx + 16, sy + 33, 8, 6, 2, "rgba(228,243,255,0.75)");
+        fillRoundedRect(sx + item.w - 24, sy + 33, 8, 6, 2, "rgba(228,243,255,0.75)");
+        fillRoundedRect(sx + 8, sy + 25, 4, item.h - 32, 5, "rgba(255,255,255,0.10)");
+        fillRoundedRect(sx + item.w - 12, sy + 26, 4, item.h - 33, 5, "rgba(0,0,0,0.10)");
       } else if (item.type === "well") {
-        ctx.fillStyle = "rgba(0,0,0,0.16)";
-        ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, (item.w - 8) / 2, 3, 0, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 3, sy + 6, item.w - 6, item.h - 9, 7, "#8d958d");
-        fillRoundedRect(sx + 7, sy + 10, item.w - 14, item.h - 17, 6, "#cfe6f2");
-        fillRoundedRect(sx + 5, sy + 2, 3, 10, 2, "#6b4728");
-        fillRoundedRect(sx + item.w - 8, sy + 2, 3, 10, 2, "#6b4728");
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, (item.w - 8) / 2, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+        fillRoundedRect(sx + 3, sy + 7, item.w - 6, item.h - 10, 7, "#8d958d");
+        fillRoundedRect(sx + 5, sy + 9, item.w - 10, item.h - 14, 6, "#6c726c");
+        fillRoundedRect(sx + 7, sy + 11, item.w - 14, item.h - 18, 6, "#cfe6f2");
+        fillRoundedRect(sx + 5, sy + 2, 3, 11, 2, "#6b4728");
+        fillRoundedRect(sx + item.w - 8, sy + 2, 3, 11, 2, "#6b4728");
         fillRoundedRect(sx + 6, sy + 2, item.w - 12, 3, 2, "#87633b");
+        softLine(sx + 7, sy + 12, sx + item.w - 7, sy + 12, "rgba(255,255,255,0.16)", 1.3, 0.85);
       } else if (item.type === "npc") {
         const colors = item.palette === "merchant" ? ["#845431","#dec28d","#5a9b57"] : item.palette === "scholar" ? ["#50617a","#d7e2ed","#af9c73"] : item.palette === "guard" ? ["#5c6675","#d5dee8","#7598b0"] : item.palette === "traveler" ? ["#6c5b80","#e2d7ef","#8d785d"] : ["#66604a","#eadbb9","#8abf7d"];
         ctx.fillStyle = "rgba(0,0,0,0.18)";

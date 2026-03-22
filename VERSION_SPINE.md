@@ -9,7 +9,7 @@
 ## Near Term Queue
 - **v2.8.0 — Town & NPC Foundations**
 - **v2.8.0 — Town & NPC Foundations**
-- **v2.9.0 — Puzzle & Secret Pass**
+- **v3.0.0 — Atmosphere & Depth Pass**
 - **v3.0.0 — Vertical Slice**
 
 ## Midgame Vision
