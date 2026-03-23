@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.9.0";
-  const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "ALttP Structure Pivot II";
+  const GAME_VERSION = "v3.10.0";
+  const BUILD_DATE = "2026-03-23";
+  const BUILD_NAME = "Rootwood Roadhold Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield ALttP Structure Pivot II 3/4D";
+  const RENDER_STYLE = "Elderfield Rootwood Roadhold Pass 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -1273,6 +1273,149 @@
       w: TILE,
       h: TILE,
       text: "North waits Crownfall, east waits Rootwood, west waits Cinderreach. Walk every relic road and bring their light home to the Dawn Shrine.",
+    });
+
+    area.interactables.push(
+      {
+        type: "prop",
+        propKind: "brazier",
+        x: 74 * TILE,
+        y: 79 * TILE,
+        w: TILE * 2,
+        h: TILE * 2,
+        text: "A little Warden brazier keeps a patient flame beside the Dawn Shrine.",
+      },
+      {
+        type: "prop",
+        propKind: "brazier",
+        x: 81 * TILE,
+        y: 79 * TILE,
+        w: TILE * 2,
+        h: TILE * 2,
+        text: "The second brazier answers the first, as if the shrine still expects wardens to return in pairs.",
+      },
+      {
+        type: "prop",
+        propKind: "cart",
+        x: 105 * TILE,
+        y: 84 * TILE,
+        w: TILE * 3,
+        h: TILE * 2,
+        text: "A little road-cart waits under canvas and flour sacks. Dawnrest survives by whatever trade can still limp down the old roads.",
+      },
+      {
+        type: "prop",
+        propKind: "lanternPost",
+        x: 103 * TILE,
+        y: 74 * TILE,
+        w: TILE,
+        h: TILE * 2,
+        text: "A Dawnrest lantern post burns with a steady village warmth.",
+      },
+      {
+        type: "prop",
+        propKind: "lanternPost",
+        x: 113 * TILE,
+        y: 74 * TILE,
+        w: TILE,
+        h: TILE * 2,
+        text: "Someone keeps the lantern glass polished. Small mercies still count in Elderfield.",
+      },
+      {
+        type: "prop",
+        propKind: "obelisk",
+        x: 68 * TILE,
+        y: 18 * TILE,
+        w: TILE * 2,
+        h: TILE * 3,
+        text: "A weathered crown-stone stands watch over the road to Crownfall, its runes nearly lost to lichen and rain.",
+      },
+      {
+        type: "prop",
+        propKind: "obelisk",
+        x: 84 * TILE,
+        y: 18 * TILE,
+        w: TILE * 2,
+        h: TILE * 3,
+        text: "The old road obelisk leans, but the carved ward-sign still points north toward fallen crowns.",
+      },
+      {
+        type: "prop",
+        propKind: "rootGate",
+        x: 119 * TILE,
+        y: 36 * TILE,
+        w: TILE * 10,
+        h: TILE * 4,
+        text: "A root-braced roadhold marks the safer edge of Rootwood March. The deeper wild is another matter.",
+      },
+      {
+        type: "prop",
+        propKind: "palisade",
+        x: 118 * TILE,
+        y: 39 * TILE,
+        w: TILE,
+        h: TILE * 8,
+        variant: "vertical",
+        text: "Sharp palisade stakes hem the road where Rootwood has tried to swallow it whole.",
+      },
+      {
+        type: "prop",
+        propKind: "palisade",
+        x: 130 * TILE,
+        y: 39 * TILE,
+        w: TILE,
+        h: TILE * 8,
+        variant: "vertical",
+        text: "These ward-stakes were cut fresh. Someone is still fighting to keep the green road open.",
+      },
+      {
+        type: "prop",
+        propKind: "cart",
+        x: 133 * TILE,
+        y: 39 * TILE,
+        w: TILE * 3,
+        h: TILE * 2,
+        text: "A ranger cart waits under sap-stained canvas, stocked with rope, hooks, and storm oil.",
+      },
+      {
+        type: "prop",
+        propKind: "lanternPost",
+        x: 121 * TILE,
+        y: 42 * TILE,
+        w: TILE,
+        h: TILE * 2,
+        text: "Rootwood lantern glass has gone green at the edges, but it still holds back the dusk.",
+      },
+      {
+        type: "prop",
+        propKind: "lanternPost",
+        x: 128 * TILE,
+        y: 42 * TILE,
+        w: TILE,
+        h: TILE * 2,
+        text: "The watch-lantern hisses softly in the damp March air.",
+      }
+    );
+
+    area.interactables.push({
+      type: "sign",
+      x: 121 * TILE,
+      y: 44 * TILE,
+      w: TILE,
+      h: TILE,
+      text: "Rootwood March watch-post. Keep to the lantern road. If the briars whisper your true name, do not answer.",
+    });
+
+    area.interactables.push({
+      type: "npc",
+      x: 132 * TILE,
+      y: 41 * TILE,
+      w: TILE,
+      h: TILE,
+      name: "Brannoc Thornstep",
+      role: "Tracker",
+      text: "Brannoc: The Hollow has been angrier since the Briar King's dream deepened. Still, the roots know old oaths. Carry the blood of Aurel cleanly and Rootwood may judge you last instead of first.",
+      palette: "tracker",
     });
 
 
@@ -2591,6 +2734,11 @@ function onAreaEnemiesCleared(area) {
         return;
       }
 
+      if (item.type === "prop") {
+        setMessage(item.text || item.label || "A roadward detail holds its quiet place in Elderfield.", 3.2);
+        return;
+      }
+
       if (item.type === "shrine") {
         if (!allDungeonsCleared()) {
           saveGame("shrine", false);
@@ -3346,31 +3494,42 @@ function drawAtmosphere() {
 
   function drawCachedWorldObject(targetCtx, tile, sx, sy) {
     if (tile === 1) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.22)";
+      targetCtx.fillStyle = "rgba(0,0,0,0.24)";
       targetCtx.beginPath();
-      targetCtx.ellipse(sx + 12, sy + 22, 10, 3, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 12, sy + 22, 11, 3.2, 0, 0, Math.PI * 2);
       targetCtx.fill();
-      targetCtx.fillStyle = "#6a492b";
-      targetCtx.fillRect(sx + 10, sy + 13, 4, 9);
-      targetCtx.fillStyle = "#4a331f";
+      targetCtx.fillStyle = "#5c3f25";
+      targetCtx.fillRect(sx + 10, sy + 12, 4, 10);
+      targetCtx.fillStyle = "#3f2c1a";
       targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
-      targetCtx.fillStyle = "#2f5a24";
+      targetCtx.fillRect(sx + 9, sy + 19, 2, 3);
+      targetCtx.fillRect(sx + 13, sy + 19, 2, 3);
+      targetCtx.fillStyle = "#24471c";
       targetCtx.beginPath();
-      targetCtx.ellipse(sx + 11, sy + 10, 10, 6, -0.12, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 8, sy + 14, 8, 5, -0.2, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 16, sy + 14, 7, 5, 0.22, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 11, sy + 11, 11, 6.5, -0.10, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 8, sy + 14, 8.5, 5.4, -0.18, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 16, sy + 14, 8, 5.2, 0.20, 0, Math.PI * 2);
       targetCtx.fill();
-      targetCtx.fillStyle = "#4e823a";
+      targetCtx.fillStyle = "#35672a";
       targetCtx.beginPath();
-      targetCtx.ellipse(sx + 10, sy + 8, 8, 4.5, -0.1, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 7, sy + 12, 6, 4, -0.2, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 17, sy + 12, 5, 4, 0.18, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 11, sy + 8, 9, 4.8, -0.08, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 6.5, sy + 11, 6.5, 4.4, -0.18, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 17.5, sy + 11, 6.3, 4.1, 0.16, 0, Math.PI * 2);
       targetCtx.fill();
-      targetCtx.fillStyle = "#86c86a";
+      targetCtx.fillStyle = "#5e9a49";
       targetCtx.beginPath();
-      targetCtx.ellipse(sx + 7, sy + 8, 3, 1.6, 0, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 16, sy + 8, 3, 1.4, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 8, sy + 8, 3.6, 1.8, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 16, sy + 8, 3.1, 1.5, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 12, sy + 6.5, 2.5, 1.1, 0, 0, Math.PI * 2);
       targetCtx.fill();
+      targetCtx.strokeStyle = "rgba(140, 198, 108, 0.35)";
+      targetCtx.lineWidth = 1;
+      targetCtx.beginPath();
+      targetCtx.moveTo(sx + 6, sy + 16);
+      targetCtx.lineTo(sx + 4, sy + 19);
+      targetCtx.moveTo(sx + 18, sy + 16);
+      targetCtx.lineTo(sx + 20, sy + 19);
+      targetCtx.stroke();
     } else if (tile === 4) {
       targetCtx.fillStyle = "rgba(0,0,0,0.18)";
       targetCtx.beginPath();
@@ -3924,7 +4083,7 @@ function drawHumanoidFigure(x, y, opts = {}) {
 }
 
 function drawHouseAsset(item, sx, sy) {
-  const roofMap = { slate: ["#736958", "#d5bf96", "#4e4334", "#2e2419"], amber: ["#8e6c47", "#e0be8d", "#684a2f", "#3b2919"], moss: ["#69734a", "#cfbc88", "#50603a", "#2e3d21"] };
+  const roofMap = { slate: ["#736958", "#d5bf96", "#4e4334", "#2e2419"], amber: ["#8e6c47", "#e0be8d", "#684a2f", "#3b2919"], moss: ["#69734a", "#cfbc88", "#50603a", "#2e3d21"], green: ["#5f7148", "#d7c894", "#485534", "#29321f"] };
   const roof = roofMap[item.roof] || roofMap.moss;
   const wall = ["#c9aa7e", "#eed9b8", "#9d7d58", "#6e5238"];
   const roofTop = sy + 4;
@@ -3932,9 +4091,8 @@ function drawHouseAsset(item, sx, sy) {
   const wallY = sy + 27;
   ctx.fillStyle = "rgba(0,0,0,0.24)";
   ctx.beginPath(); ctx.ellipse(sx + item.w / 2 + 5, sy + item.h - 4, item.w * 0.34, 5, 0, 0, Math.PI * 2); ctx.fill();
-  // foundation
   fillRoundedRect(sx + 8, sy + item.h - 14, item.w - 16, 9, 3, wall[3]);
-  // roof mass
+  fillRoundedRect(sx + 12, sy + item.h - 18, item.w - 24, 5, 2, "#847261");
   ctx.fillStyle = roof[3];
   ctx.beginPath();
   ctx.moveTo(sx + 12, eaveY);
@@ -3953,33 +4111,117 @@ function drawHouseAsset(item, sx, sy) {
   ctx.lineTo(sx + item.w - 14, eaveY - 2);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = roof[1];
+  fillRoundedRect(sx + item.w / 2 - 4, roofTop - 8, 8, 5, 2, roof[1]);
   softLine(sx + 24, roofTop + 11, sx + item.w - 24, roofTop + 11, roof[1], 2.5, 0.9);
   for (let ry = roofTop + 14; ry < eaveY - 2; ry += 4) softLine(sx + 20, ry, sx + item.w - 20, ry, "rgba(255,245,215,0.18)", 1.2, 0.8);
   fillRoundedRect(sx + item.w - 19, roofTop + 5, 7, 13, 2, "#806040");
   fillRoundedRect(sx + item.w - 18, roofTop + 4, 5, 2, 1, "#d9d1c6");
-  // wall plane
   fillRoundedRect(sx + 12, wallY, item.w - 24, item.h - (wallY - sy) - 8, 4, wall[0]);
   fillRoundedRect(sx + 16, wallY + 4, item.w - 32, item.h - (wallY - sy) - 13, 3, wall[1]);
-  // timber posts
   fillRoundedRect(sx + 18, wallY + 2, 3, item.h - (wallY - sy) - 12, 1, wall[2]);
   fillRoundedRect(sx + item.w - 21, wallY + 2, 3, item.h - (wallY - sy) - 12, 1, wall[2]);
-  // windows
+  fillRoundedRect(sx + item.w / 2 - 1, wallY + 2, 2, item.h - (wallY - sy) - 12, 1, "rgba(120, 86, 56, 0.85)");
   [sx + 23, sx + item.w - 37].forEach(wx => {
     fillRoundedRect(wx, wallY + 7, 12, 11, 2, wall[2]);
     fillRoundedRect(wx + 2, wallY + 9, 8, 7, 1, "#253344");
+    fillRoundedRect(wx - 2, wallY + 8, 2, 9, 1, "#74583d");
+    fillRoundedRect(wx + 12, wallY + 8, 2, 9, 1, "#74583d");
     ctx.fillStyle = "rgba(255,227,171,0.24)"; ctx.fillRect(wx + 3, wallY + 10, 3, 2);
+    fillRoundedRect(wx + 1, wallY + 18, 10, 2, 1, "#7d6042");
   });
-  // door + lantern
   const doorX = sx + item.w / 2 - 10;
   fillRoundedRect(doorX, sy + item.h - 31, 20, 25, 3, wall[2]);
   fillRoundedRect(doorX + 2, sy + item.h - 27, 16, 19, 2, "#231b14");
+  fillRoundedRect(doorX - 10, sy + item.h - 20, 4, 14, 2, wall[2]);
+  fillRoundedRect(doorX + 26, sy + item.h - 20, 4, 14, 2, wall[2]);
+  fillRoundedRect(doorX - 10, sy + item.h - 22, 40, 3, 2, "#8a6944");
   ctx.fillStyle = "rgba(255,214,134,0.24)"; ctx.fillRect(doorX + 7, sy + item.h - 21, 2, 4);
   fillRoundedRect(sx + item.w - 12, wallY + 12, 4, 10, 2, "#7d5c31");
   ctx.fillStyle = "rgba(255,220,150,0.33)"; ctx.beginPath(); ctx.ellipse(sx + item.w - 10, wallY + 18, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
-  // porch
   ctx.fillStyle = "rgba(255,215,120,0.15)";
   ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawPropAsset(item, sx, sy) {
+  const kind = item.propKind || "lanternPost";
+  if (kind === "lanternPost") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + item.w / 2 - 2, sy + 10, 4, item.h - 16, 2, "#6c4b2b");
+    fillRoundedRect(sx + item.w / 2 - 7, sy + 10, 14, 3, 2, "#805c35");
+    fillRoundedRect(sx + item.w / 2 + 3, sy + 12, 2, 9, 1, "#7a5934");
+    fillRoundedRect(sx + item.w / 2 - 2, sy + 16, 7, 9, 2, "#cda96a");
+    fillRoundedRect(sx + item.w / 2 - 1, sy + 17, 5, 7, 2, "rgba(255, 223, 153, 0.78)");
+    ctx.fillStyle = "rgba(255, 215, 133, 0.20)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2 + 1, sy + 21, 16, 18, 0, 0, Math.PI * 2); ctx.fill();
+  } else if (kind === "cart") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 18, 4, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 6, sy + 10, item.w - 12, 12, 4, "#7a5532");
+    fillRoundedRect(sx + 10, sy + 6, item.w - 20, 8, 3, "#9f7448");
+    fillRoundedRect(sx + 12, sy + 2, 10, 7, 3, "#6a7f4e");
+    fillRoundedRect(sx + 24, sy + 3, 9, 6, 3, "#8b7b62");
+    fillRoundedRect(sx + 18, sy + 9, 12, 4, 2, "#cfbc88");
+    fillRoundedRect(sx + item.w - 8, sy + 14, 12, 3, 2, "#805c35");
+    [sx + 10, sx + item.w - 18].forEach((wx) => {
+      fillRoundedRect(wx, sy + item.h - 12, 10, 10, 5, "#493724");
+      fillRoundedRect(wx + 2, sy + item.h - 10, 6, 6, 3, "#d1c099");
+    });
+  } else if (kind === "palisade") {
+    const vertical = (item.variant || "vertical") === "vertical";
+    if (vertical) {
+      for (let px = 0; px < item.w; px += 7) {
+        fillRoundedRect(sx + px, sy + 5, 5, item.h - 8, 2, px % 14 === 0 ? "#7a5632" : "#8b643d");
+        ctx.fillStyle = px % 14 === 0 ? "#9d7a4b" : "#b08c5a";
+        ctx.beginPath();
+        ctx.moveTo(sx + px, sy + 7);
+        ctx.lineTo(sx + px + 2.5, sy + 1);
+        ctx.lineTo(sx + px + 5, sy + 7);
+        ctx.closePath();
+        ctx.fill();
+      }
+      fillRoundedRect(sx + 1, sy + item.h - 12, item.w - 2, 4, 2, "rgba(74, 49, 27, 0.85)");
+    } else {
+      for (let py = 0; py < item.h; py += 7) {
+        fillRoundedRect(sx + 5, sy + py, item.w - 8, 5, 2, py % 14 === 0 ? "#7d5834" : "#916843");
+      }
+      fillRoundedRect(sx + 8, sy + 2, 4, item.h - 4, 2, "#6b492b");
+      fillRoundedRect(sx + item.w - 12, sy + 2, 4, item.h - 4, 2, "#6b492b");
+    }
+  } else if (kind === "brazier") {
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 7, sy + 14, item.w - 14, 8, 4, "#6f675d");
+    fillRoundedRect(sx + 10, sy + 9, item.w - 20, 8, 4, "#969081");
+    ctx.fillStyle = "rgba(255, 176, 92, 0.24)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + 12, 13, 11, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + item.w / 2 - 3, sy + 7, 6, 9, 3, "#ffd27f");
+    fillRoundedRect(sx + item.w / 2 - 1, sy + 3, 2, 7, 1, "#fff0b6");
+  } else if (kind === "obelisk") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 9, sy + 5, item.w - 18, item.h - 10, 5, "#766e61");
+    fillRoundedRect(sx + 12, sy + 8, item.w - 24, item.h - 16, 4, "#a49a89");
+    softLine(sx + item.w / 2, sy + 12, sx + item.w / 2, sy + item.h - 12, "#d7c994", 1.4, 0.85);
+    softLine(sx + item.w / 2 - 5, sy + 19, sx + item.w / 2 + 5, sy + 19, "#d7c994", 1.1, 0.8);
+    softLine(sx + item.w / 2 - 4, sy + 28, sx + item.w / 2 + 4, sy + 28, "#d7c994", 1.0, 0.75);
+  } else if (kind === "rootGate") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, item.w * 0.32, 5, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 12, sy + 18, 10, item.h - 24, 3, "#5e3c23");
+    fillRoundedRect(sx + item.w - 22, sy + 18, 10, item.h - 24, 3, "#5e3c23");
+    fillRoundedRect(sx + 22, sy + 12, item.w - 44, 8, 4, "#7d5735");
+    softLine(sx + 28, sy + 16, sx + item.w - 28, sy + 16, "rgba(228, 205, 149, 0.28)", 1.5, 1);
+    softLine(sx + 22, sy + 14, sx + 12, sy + 2, "#4d6e35", 2.0, 0.95);
+    softLine(sx + 18, sy + 18, sx + 8, sy + 9, "#4d6e35", 1.8, 0.95);
+    softLine(sx + item.w - 22, sy + 14, sx + item.w - 12, sy + 2, "#4d6e35", 2.0, 0.95);
+    softLine(sx + item.w - 18, sy + 18, sx + item.w - 8, sy + 9, "#4d6e35", 1.8, 0.95);
+    fillRoundedRect(sx + 27, sy + 18, 5, 9, 2, "#c49f62");
+    fillRoundedRect(sx + item.w - 32, sy + 18, 5, 9, 2, "#c49f62");
+    ctx.fillStyle = "rgba(255, 219, 143, 0.16)";
+    ctx.beginPath(); ctx.ellipse(sx + 29.5, sy + 24, 10, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(sx + item.w - 29.5, sy + 24, 10, 12, 0, 0, Math.PI * 2); ctx.fill();
+  }
 }
 
 function drawNPCAsset(item, sx, sy) {
@@ -3988,12 +4230,13 @@ function drawNPCAsset(item, sx, sy) {
     scholar: { cloak: "#4b5e77", tunic: "#9f8b69", trim: "#d7e5ef", hair: "#6c6043", accent: "#8fa7c7" },
     guard: { cloak: "#33486a", tunic: "#6f7f8f", trim: "#d8e0ef", hair: "#7d6c51", accent: "#93a6b8" },
     traveler: { cloak: "#5c4c73", tunic: "#6e5c46", trim: "#e4d7ef", hair: "#87553d", accent: "#b6a6d4" },
+    tracker: { cloak: "#42533b", tunic: "#7d684b", trim: "#dce6ba", hair: "#5d4731", accent: "#9fb47d" },
     villager: { cloak: "#586249", tunic: "#8d7758", trim: "#eadbb9", hair: "#705138", accent: "#8aa182" },
   };
   const colors = palettes[item.palette || "villager"] || palettes.villager;
   const walk = performance.now()/1000 + (item.x + item.y) * 0.002;
   drawHumanoidFigure(sx + 12, sy + 11, {
-    walk, moving: true, cloak: colors.cloak, tunic: colors.tunic, trim: colors.trim, hair: colors.hair, boots: "#6b4b2d", accent: colors.accent, shield: item.role === "Guard", hood: item.role === "Scholar", lantern: item.role === "Traveler" || item.role === "Merchant"
+    walk, moving: true, cloak: colors.cloak, tunic: colors.tunic, trim: colors.trim, hair: colors.hair, boots: "#6b4b2d", accent: colors.accent, shield: item.role === "Guard", hood: item.role === "Scholar" || item.role === "Tracker", lantern: item.role === "Traveler" || item.role === "Merchant" || item.role === "Tracker"
   });
   if (item.role === "Guard") fillRoundedRect(sx + 16, sy + 1, 2.5, 16, 1.5, "#d7e0ef");
 }
@@ -4058,6 +4301,8 @@ function drawInteractables() {
 
 } else if (item.type === "house") {
   drawHouseAsset(item, sx, sy);
+} else if (item.type === "prop") {
+  drawPropAsset(item, sx, sy);
 } else if (item.type === "well") {
 
         ctx.fillStyle = "rgba(0,0,0,0.18)";
@@ -4264,18 +4509,31 @@ function drawForegroundOccluders() {
     }
   }
   for (const item of area.interactables) {
-    if (item.type !== 'house' || item.visible === false) continue;
-    if (p.x < item.x || p.x > item.x + item.w || p.y > item.y + 34 || p.y < item.y + 8) continue;
-    const sx = item.x - state.camera.x;
-    const sy = item.y - state.camera.y;
-    ctx.fillStyle = 'rgba(60,44,23,0.92)';
-    ctx.beginPath();
-    ctx.moveTo(sx + 14, sy + 28);
-    ctx.lineTo(sx + 22, sy + 16);
-    ctx.lineTo(sx + item.w - 22, sy + 16);
-    ctx.lineTo(sx + item.w - 14, sy + 28);
-    ctx.closePath();
-    ctx.fill();
+    if (item.type === 'house' && item.visible !== false) {
+      if (p.x < item.x || p.x > item.x + item.w || p.y > item.y + 34 || p.y < item.y + 8) continue;
+      const sx = item.x - state.camera.x;
+      const sy = item.y - state.camera.y;
+      ctx.fillStyle = 'rgba(60,44,23,0.92)';
+      ctx.beginPath();
+      ctx.moveTo(sx + 14, sy + 28);
+      ctx.lineTo(sx + 22, sy + 16);
+      ctx.lineTo(sx + item.w - 22, sy + 16);
+      ctx.lineTo(sx + item.w - 14, sy + 28);
+      ctx.closePath();
+      ctx.fill();
+      continue;
+    }
+    if (item.type === 'prop' && item.propKind === 'rootGate' && item.visible !== false) {
+      if (p.x < item.x + 18 || p.x > item.x + item.w - 18 || p.y > item.y + 30 || p.y < item.y + 8) continue;
+      const sx = item.x - state.camera.x;
+      const sy = item.y - state.camera.y;
+      fillRoundedRect(sx + 22, sy + 12, item.w - 44, 8, 4, 'rgba(95, 66, 39, 0.94)');
+      softLine(sx + 28, sy + 16, sx + item.w - 28, sy + 16, 'rgba(230, 208, 150, 0.24)', 1.5, 1);
+      softLine(sx + 22, sy + 14, sx + 12, sy + 2, 'rgba(84, 118, 58, 0.92)', 2.0, 0.92);
+      softLine(sx + item.w - 22, sy + 14, sx + item.w - 12, sy + 2, 'rgba(84, 118, 58, 0.92)', 2.0, 0.92);
+      fillRoundedRect(sx + 27, sy + 18, 5, 9, 2, 'rgba(196, 159, 98, 0.95)');
+      fillRoundedRect(sx + item.w - 32, sy + 18, 5, 9, 2, 'rgba(196, 159, 98, 0.95)');
+    }
   }
 }
 
