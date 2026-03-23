@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.8.0";
+  const GAME_VERSION = "v3.9.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "ALttP Structure Pivot I";
+  const BUILD_NAME = "ALttP Structure Pivot II";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield ALttP Structure Pivot 3/4D";
+  const RENDER_STYLE = "Elderfield ALttP Structure Pivot II 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -3303,7 +3303,7 @@ function drawAtmosphere() {
       targetCtx.fillStyle = "rgba(255,255,255,0.10)";
       targetCtx.fillRect(sx, sy, TILE, 2);
       targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.fillRect(sx, sy + TILE - 4, TILE, 4);
+      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 5);
       for (let bx = 2; bx < TILE - 2; bx += 7) {
         targetCtx.fillStyle = "rgba(255,255,255,0.08)";
         targetCtx.fillRect(sx + bx, sy + 5, 5, 4);
@@ -4420,7 +4420,7 @@ function drawDebug() {
       updateStartButtons();
       setMessage(state.save.hasSave ? "Continue your road or begin a new one." : "Press Start to begin your road through Elderfield.", 999);
     } else {
-      setMessage("Press Start, move with WASD, click or tap to attack, and Enter to speak, read stones, and rest your road in Dawnrest.", 999);
+      setMessage("Press Start, move with WASD, left-click or tap to attack, and Enter or right-click to speak, open doors, read stones, and rest your road in Dawnrest.", 999);
     }
     computeStatus();
     refreshDebugPanel();
@@ -4511,6 +4511,10 @@ function drawDebug() {
     pointerState.attackHeld = false;
   });
 
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+
   canvas.addEventListener("pointerdown", (event) => {
     event.preventDefault();
     if (!state.running) return;
@@ -4518,11 +4522,19 @@ function drawDebug() {
     pointerState.x = worldPoint.x;
     pointerState.y = worldPoint.y;
     pointerState.active = true;
+
+    if (event.button === 2) {
+      pointerState.attackHeld = false;
+      interact();
+      return;
+    }
+
     pointerState.attackHeld = true;
     doAttack({ x: worldPoint.x - state.player.x, y: worldPoint.y - state.player.y });
   });
 
-  canvas.addEventListener("pointerup", () => {
+  canvas.addEventListener("pointerup", (event) => {
+    if (event && event.button === 2) return;
     pointerState.attackHeld = false;
   });
 
