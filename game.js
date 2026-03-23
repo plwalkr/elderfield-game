@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.10.0";
+  const GAME_VERSION = "v3.11.0";
   const BUILD_DATE = "2026-03-23";
-  const BUILD_NAME = "Rootwood Roadhold Pass";
+  const BUILD_NAME = "Rootwood Screencraft Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Rootwood Roadhold Pass 3/4D";
+  const RENDER_STYLE = "Elderfield Rootwood Screencraft Pass 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -1060,6 +1060,29 @@
     return area.name;
   }
 
+  function overworldRegionAtTile(area, tx, ty) {
+    return zoneForOverworldPosition(area, (tx + 0.5) * TILE, (ty + 0.5) * TILE);
+  }
+
+  function organicPatch(area, cx, cy, rx, ry, tile, solid, jitter = 0.18) {
+    const minX = Math.max(0, Math.floor(cx - rx - 1));
+    const maxX = Math.min(area.width - 1, Math.ceil(cx + rx + 1));
+    const minY = Math.max(0, Math.floor(cy - ry - 1));
+    const maxY = Math.min(area.height - 1, Math.ceil(cy + ry + 1));
+    for (let iy = minY; iy <= maxY; iy += 1) {
+      for (let ix = minX; ix <= maxX; ix += 1) {
+        const dx = (ix - cx) / Math.max(1, rx);
+        const dy = (iy - cy) / Math.max(1, ry);
+        const dist = dx * dx + dy * dy;
+        const edge = 1 + (seededNoise(ix * 7 + cx * 13, iy * 9 + cy * 11) - 0.5) * jitter;
+        if (dist <= edge) {
+          area.world[iy][ix] = tile;
+          area.solids[iy][ix] = solid;
+        }
+      }
+    }
+  }
+
   function paintGround(area, x, y, w, h, tile) {
     for (let iy = y; iy < y + h; iy += 1) {
       for (let ix = x; ix < x + w; ix += 1) {
@@ -1122,6 +1145,32 @@
     clearRect(area, 124, 30, 7, 6, 13);
     clearRect(area, 23, 30, 7, 6, 15);
     clearRect(area, 72, 14, 11, 8, 14);
+
+    // stronger authored screen composition around Rootwood and Crownfall
+    organicPatch(area, 61, 13, 8, 5, 14, true, 0.18);
+    organicPatch(area, 95, 13, 8, 5, 14, true, 0.18);
+    organicPatch(area, 57, 26, 5, 6, 14, true, 0.12);
+    organicPatch(area, 99, 25, 5, 6, 14, true, 0.12);
+    placeForestPatch(area, 47, 7, 7, 8);
+    placeForestPatch(area, 101, 7, 7, 8);
+    clearRect(area, 72, 14, 11, 8, 14);
+
+    organicPatch(area, 116, 24, 10, 8, 9, true, 0.28);
+    organicPatch(area, 142, 24, 9, 8, 9, true, 0.24);
+    organicPatch(area, 114, 48, 9, 7, 9, true, 0.24);
+    organicPatch(area, 144, 47, 10, 8, 9, true, 0.24);
+    organicPatch(area, 151, 35, 5, 12, 9, true, 0.18);
+    organicPatch(area, 109, 35, 4, 11, 9, true, 0.18);
+    placeForestPatch(area, 112, 16, 10, 12);
+    placeForestPatch(area, 142, 16, 12, 16);
+    placeForestPatch(area, 111, 46, 11, 10);
+    placeForestPatch(area, 138, 48, 16, 10);
+    carvePath(area, 121, 33, 135, 33, 3);
+    carvePath(area, 124, 33, 124, 46, 3);
+    carvePath(area, 132, 33, 132, 46, 3);
+    clearRect(area, 121, 27, 16, 8, 13);
+    clearRect(area, 120, 40, 18, 8, 13);
+    clearRect(area, 124, 30, 7, 6, 13);
 
     clearRect(area, 92, 66, 34, 20, 0);
     paintGround(area, 92, 66, 34, 20, 0);
@@ -1394,6 +1443,33 @@
         w: TILE,
         h: TILE * 2,
         text: "The watch-lantern hisses softly in the damp March air.",
+      },
+      {
+        type: "prop",
+        propKind: "rootTotem",
+        x: 115 * TILE,
+        y: 27 * TILE,
+        w: TILE * 2,
+        h: TILE * 3,
+        text: "A carved root-totem marks the safer lantern road. Someone has freshened its old Warden cuts with resin and ash.",
+      },
+      {
+        type: "prop",
+        propKind: "rootTotem",
+        x: 138 * TILE,
+        y: 28 * TILE,
+        w: TILE * 2,
+        h: TILE * 3,
+        text: "This March totem is split and healed over, as if the forest tried to swallow the warning and failed.",
+      },
+      {
+        type: "prop",
+        propKind: "deadfall",
+        x: 136 * TILE,
+        y: 46 * TILE,
+        w: TILE * 3,
+        h: TILE * 2,
+        text: "A thorny deadfall chokes the lower brush. Rootwood does not close quietly.",
       }
     );
 
@@ -1601,13 +1677,21 @@ area.interactables.push({
       [22, 39], [34, 31], [20, 51], [68, 20], [88, 26], [100, 18], [143, 48], [122, 69], [53, 44], [85, 48]
     ];
     enemySpots.forEach((spot, index) => {
+      const ex = (spot[0] + 0.5) * TILE;
+      const ey = (spot[1] + 0.5) * TILE;
+      const region = zoneForOverworldPosition(area, ex, ey);
+      let tint = "moss";
+      if (region === "Rootwood March") tint = "vine";
+      else if (region === "Crownfall Ruins") tint = "stone";
+      else if (region === "Cinderreach") tint = "ember";
+      else if (region === "Dawnrest") tint = index % 2 === 0 ? "moss" : "stone";
       spawnEnemy(area, {
-        x: (spot[0] + 0.5) * TILE,
-        y: (spot[1] + 0.5) * TILE,
+        x: ex,
+        y: ey,
         speed: 54 + (index % 3) * 11,
         chaseRadius: 132 + Math.random() * 64,
         health: index % 5 === 0 ? 2 : 1,
-        tint: index % 4 === 0 ? "stone" : index % 2 === 0 ? "moss" : "ember",
+        tint,
       });
     });
 
@@ -3263,6 +3347,16 @@ function drawAtmosphere() {
     if (state.zoneName === "Rootwood March") {
       ctx.fillStyle = "rgba(62, 104, 58, 0.08)";
       ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
+      const sway = performance.now() / 1200;
+      for (let i = 0; i < 4; i += 1) {
+        const px = (i + 0.4) * (state.logicalWidth / 4) + Math.sin(sway + i * 0.7) * 12;
+        ctx.fillStyle = "rgba(24, 48, 22, 0.12)";
+        ctx.beginPath();
+        ctx.ellipse(px, 38 + i * 5, 88 - i * 6, 24 - i * 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "rgba(210, 235, 188, 0.04)";
+      ctx.fillRect(0, 0, state.logicalWidth, 44);
     } else if (state.zoneName === "Crownfall Ruins") {
       ctx.fillStyle = "rgba(150, 132, 96, 0.07)";
       ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
@@ -3492,44 +3586,141 @@ function drawAtmosphere() {
     targetCtx.fillRect(sx, sy, TILE, TILE);
   }
 
-  function drawCachedWorldObject(targetCtx, tile, sx, sy) {
+  function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
     if (tile === 1) {
+      const region = area.id === "overworld"
+        ? overworldRegionAtTile(area, x, y)
+        : area.theme === "rootwood"
+          ? "Rootwood March"
+          : area.theme === "ember"
+            ? "Cinderreach"
+            : area.theme === "ruins"
+              ? "Crownfall Ruins"
+              : area.name;
       targetCtx.fillStyle = "rgba(0,0,0,0.24)";
       targetCtx.beginPath();
       targetCtx.ellipse(sx + 12, sy + 22, 11, 3.2, 0, 0, Math.PI * 2);
       targetCtx.fill();
-      targetCtx.fillStyle = "#5c3f25";
-      targetCtx.fillRect(sx + 10, sy + 12, 4, 10);
-      targetCtx.fillStyle = "#3f2c1a";
-      targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
-      targetCtx.fillRect(sx + 9, sy + 19, 2, 3);
-      targetCtx.fillRect(sx + 13, sy + 19, 2, 3);
-      targetCtx.fillStyle = "#24471c";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 11, sy + 11, 11, 6.5, -0.10, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 8, sy + 14, 8.5, 5.4, -0.18, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 16, sy + 14, 8, 5.2, 0.20, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.fillStyle = "#35672a";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 11, sy + 8, 9, 4.8, -0.08, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 6.5, sy + 11, 6.5, 4.4, -0.18, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 17.5, sy + 11, 6.3, 4.1, 0.16, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.fillStyle = "#5e9a49";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 8, sy + 8, 3.6, 1.8, 0, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 16, sy + 8, 3.1, 1.5, 0, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 12, sy + 6.5, 2.5, 1.1, 0, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.strokeStyle = "rgba(140, 198, 108, 0.35)";
-      targetCtx.lineWidth = 1;
-      targetCtx.beginPath();
-      targetCtx.moveTo(sx + 6, sy + 16);
-      targetCtx.lineTo(sx + 4, sy + 19);
-      targetCtx.moveTo(sx + 18, sy + 16);
-      targetCtx.lineTo(sx + 20, sy + 19);
-      targetCtx.stroke();
+      if (region === "Rootwood March") {
+        targetCtx.fillStyle = "#4d3320";
+        targetCtx.fillRect(sx + 10, sy + 11, 4, 11);
+        targetCtx.fillStyle = "#2a1a12";
+        targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
+        targetCtx.fillRect(sx + 8, sy + 18, 2, 4);
+        targetCtx.fillRect(sx + 14, sy + 18, 2, 4);
+        targetCtx.fillStyle = "#1f3d1e";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 10, 10.8, 6.2, -0.10, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 7.5, sy + 13, 7.8, 5.2, -0.18, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 16.5, sy + 13, 7.6, 5.0, 0.18, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#355f2f";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 7.2, 8.4, 4.2, -0.10, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 6.3, sy + 10.0, 5.8, 3.8, -0.22, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 17.4, sy + 10.0, 5.6, 3.6, 0.18, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.strokeStyle = "rgba(124, 173, 98, 0.26)";
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(sx + 6, sy + 16);
+        targetCtx.lineTo(sx + 3, sy + 20);
+        targetCtx.moveTo(sx + 18, sy + 16);
+        targetCtx.lineTo(sx + 21, sy + 20);
+        targetCtx.moveTo(sx + 11, sy + 12);
+        targetCtx.lineTo(sx + 11, sy + 3);
+        targetCtx.stroke();
+      } else if (region === "Crownfall Ruins") {
+        targetCtx.fillStyle = "#5a4030";
+        targetCtx.fillRect(sx + 10, sy + 11, 4, 11);
+        targetCtx.fillStyle = "#334128";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 12, sy + 9, 7.2, 4.0, 0, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 8, sy + 13, 6.4, 3.8, -0.15, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 16, sy + 13, 6.0, 3.6, 0.15, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#607d4a";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 12, sy + 6.5, 5.4, 2.6, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.strokeStyle = "rgba(196, 188, 146, 0.24)";
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(sx + 10, sy + 5);
+        targetCtx.lineTo(sx + 8, sy + 1);
+        targetCtx.moveTo(sx + 14, sy + 5);
+        targetCtx.lineTo(sx + 16, sy + 1);
+        targetCtx.stroke();
+      } else if (region === "Cinderreach") {
+        targetCtx.fillStyle = "#5f3927";
+        targetCtx.fillRect(sx + 10, sy + 11, 4, 11);
+        targetCtx.fillStyle = "#4b261c";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 11, 9.6, 5.4, -0.08, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 7, sy + 14, 6.8, 4.0, -0.16, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 17, sy + 14, 6.8, 4.0, 0.16, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#865037";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 8, 7.2, 3.1, -0.06, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.strokeStyle = "rgba(255, 171, 98, 0.28)";
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(sx + 8, sy + 7);
+        targetCtx.lineTo(sx + 5, sy + 3);
+        targetCtx.moveTo(sx + 16, sy + 7);
+        targetCtx.lineTo(sx + 19, sy + 3);
+        targetCtx.stroke();
+      } else if (region === "Dawnrest") {
+        targetCtx.fillStyle = "#6b482b";
+        targetCtx.fillRect(sx + 10, sy + 12, 4, 10);
+        targetCtx.fillStyle = "#315426";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 11, 10.4, 6.2, -0.08, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 8, sy + 13, 7.8, 4.9, -0.16, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 16, sy + 13, 7.5, 4.7, 0.16, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#6da355";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 8, sy + 8, 3.8, 1.9, 0, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 16, sy + 8, 3.4, 1.7, 0, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 12, sy + 6.8, 2.8, 1.2, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+      } else {
+        targetCtx.fillStyle = "#5c3f25";
+        targetCtx.fillRect(sx + 10, sy + 12, 4, 10);
+        targetCtx.fillStyle = "#3f2c1a";
+        targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
+        targetCtx.fillRect(sx + 9, sy + 19, 2, 3);
+        targetCtx.fillRect(sx + 13, sy + 19, 2, 3);
+        targetCtx.fillStyle = "#24471c";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 11, 11, 6.5, -0.10, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 8, sy + 14, 8.5, 5.4, -0.18, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 16, sy + 14, 8, 5.2, 0.20, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#35672a";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 11, sy + 8, 9, 4.8, -0.08, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 6.5, sy + 11, 6.5, 4.4, -0.18, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 17.5, sy + 11, 6.3, 4.1, 0.16, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.fillStyle = "#5e9a49";
+        targetCtx.beginPath();
+        targetCtx.ellipse(sx + 8, sy + 8, 3.6, 1.8, 0, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 16, sy + 8, 3.1, 1.5, 0, 0, Math.PI * 2);
+        targetCtx.ellipse(sx + 12, sy + 6.5, 2.5, 1.1, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+        targetCtx.strokeStyle = "rgba(140, 198, 108, 0.35)";
+        targetCtx.lineWidth = 1;
+        targetCtx.beginPath();
+        targetCtx.moveTo(sx + 6, sy + 16);
+        targetCtx.lineTo(sx + 4, sy + 19);
+        targetCtx.moveTo(sx + 18, sy + 16);
+        targetCtx.lineTo(sx + 20, sy + 19);
+        targetCtx.stroke();
+      }
     } else if (tile === 4) {
       targetCtx.fillStyle = "rgba(0,0,0,0.18)";
       targetCtx.beginPath();
@@ -3643,7 +3834,7 @@ function drawAtmosphere() {
         const tile = area.world[y][x];
         drawCachedTile(targetCtx, tile, sx, sy, x, y, area.theme);
         drawReliefEdges(targetCtx, area, x, y, sx, sy);
-        if (tile === 1 || tile === 4 || tile === 9) drawCachedWorldObject(targetCtx, tile, sx, sy);
+        if (tile === 1 || tile === 4 || tile === 9) drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y);
       }
     }
     drawMacroRelief(targetCtx, area);
@@ -4205,6 +4396,28 @@ function drawPropAsset(item, sx, sy) {
     softLine(sx + item.w / 2, sy + 12, sx + item.w / 2, sy + item.h - 12, "#d7c994", 1.4, 0.85);
     softLine(sx + item.w / 2 - 5, sy + 19, sx + item.w / 2 + 5, sy + 19, "#d7c994", 1.1, 0.8);
     softLine(sx + item.w / 2 - 4, sy + 28, sx + item.w / 2 + 4, sy + 28, "#d7c994", 1.0, 0.75);
+  } else if (kind === "rootTotem") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + item.w / 2 - 6, sy + 8, 12, item.h - 14, 4, "#6d4a2d");
+    fillRoundedRect(sx + item.w / 2 - 4, sy + 11, 8, item.h - 20, 3, "#8a6440");
+    fillRoundedRect(sx + item.w / 2 - 8, sy + 10, 16, 7, 4, "#4d3020");
+    fillRoundedRect(sx + item.w / 2 - 4, sy + 12, 8, 3, 2, "#d3be84");
+    fillRoundedRect(sx + item.w / 2 - 2, sy + 18, 4, 6, 2, "#d3be84");
+    softLine(sx + item.w / 2 - 7, sy + 18, sx + item.w / 2 - 12, sy + 27, "#416332", 2.0, 0.95);
+    softLine(sx + item.w / 2 + 7, sy + 18, sx + item.w / 2 + 12, sy + 27, "#416332", 2.0, 0.95);
+    softLine(sx + item.w / 2 - 2, sy + 9, sx + item.w / 2 - 7, sy + 2, "#456d37", 1.6, 0.95);
+    softLine(sx + item.w / 2 + 2, sy + 9, sx + item.w / 2 + 7, sy + 2, "#456d37", 1.6, 0.95);
+  } else if (kind === "deadfall") {
+    ctx.fillStyle = "rgba(0,0,0,0.16)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 6, sy + 11, item.w - 12, 8, 4, "#5d3a23");
+    fillRoundedRect(sx + 4, sy + 9, 12, 12, 5, "#6c482c");
+    fillRoundedRect(sx + item.w - 16, sy + 8, 12, 11, 5, "#6c482c");
+    fillRoundedRect(sx + item.w / 2 - 4, sy + 9, 8, 3, 2, "#856347");
+    softLine(sx + 10, sy + 12, sx + 4, sy + 5, "#385c2e", 1.8, 0.95);
+    softLine(sx + item.w - 10, sy + 12, sx + item.w - 4, sy + 5, "#385c2e", 1.8, 0.95);
+    softLine(sx + item.w / 2, sy + 11, sx + item.w / 2, sy + 4, "#8eb26b", 1.1, 0.75);
   } else if (kind === "rootGate") {
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, item.w * 0.32, 5, 0, 0, Math.PI * 2); ctx.fill();
@@ -4260,6 +4473,19 @@ function drawMonsterAsset(enemy, sx, sy) {
     softLine(sx + 7, sy + 2, sx + 11, sy + 8, "#274120", 1.4, 1);
     softLine(sx - 2, sy - 7, sx - 5, sy - 11, "#2e4b26", 1.1, 1);
     softLine(sx + 2, sy - 7, sx + 5, sy - 11, "#2e4b26", 1.1, 1);
+  } else if (enemy.tint === "vine") {
+    fillRoundedRect(sx - 8, sy - 2, 16, 11, 5, enemy.hurt > 0 ? "#ffffff" : "#36562c");
+    fillRoundedRect(sx - 10, sy - 4, 4, 11, 2, "#26411f");
+    fillRoundedRect(sx + 6, sy - 3, 4, 11, 2, "#26411f");
+    fillRoundedRect(sx - 6, sy - 9, 12, 7, 4, "#6d9b54");
+    fillRoundedRect(sx - 4, sy - 1, 8, 5, 3, "#bfe0a0");
+    ctx.fillStyle = "#18130f"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.9, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.9, 0, Math.PI*2); ctx.fill();
+    softLine(sx - 8, sy + 1, sx - 12, sy + 8, "#20361a", 1.6, 1);
+    softLine(sx + 8, sy + 1, sx + 12, sy + 8, "#20361a", 1.6, 1);
+    softLine(sx - 4, sy - 7, sx - 9, sy - 11, "#335226", 1.2, 1);
+    softLine(sx + 4, sy - 7, sx + 9, sy - 11, "#335226", 1.2, 1);
+    softLine(sx - 6, sy - 4, sx - 11, sy - 1, "#86b065", 1.0, 0.8);
+    softLine(sx + 6, sy - 4, sx + 11, sy - 1, "#86b065", 1.0, 0.8);
   } else if (enemy.tint === "stone") {
     fillRoundedRect(sx - 8, sy - 3, 16, 12, 5, enemy.hurt > 0 ? "#ffffff" : "#8e8678");
     fillRoundedRect(sx - 9, sy - 5, 18, 4, 2, "#72685c");
@@ -4500,9 +4726,30 @@ function drawForegroundOccluders() {
       if (p.x > wx - 4 && p.x < wx + TILE + 4 && p.y < wy + 15 && p.y > wy + 2) {
         const sx = wx - state.camera.x;
         const sy = wy - state.camera.y;
-        ctx.fillStyle = 'rgba(47,90,36,0.88)';
+        const region = area.id === "overworld"
+          ? overworldRegionAtTile(area, x, y)
+          : area.theme === "rootwood"
+            ? "Rootwood March"
+            : area.theme === "ember"
+              ? "Cinderreach"
+              : area.theme === "ruins"
+                ? "Crownfall Ruins"
+                : area.name;
+        let occ = 'rgba(47,90,36,0.88)';
+        let hi = 'rgba(115,178,79,0.65)';
+        if (region === "Rootwood March") {
+          occ = 'rgba(34,72,28,0.92)';
+          hi = 'rgba(103,156,79,0.56)';
+        } else if (region === "Cinderreach") {
+          occ = 'rgba(84,44,28,0.88)';
+          hi = 'rgba(191,118,82,0.52)';
+        } else if (region === "Crownfall Ruins") {
+          occ = 'rgba(58,78,42,0.88)';
+          hi = 'rgba(164,186,122,0.55)';
+        }
+        ctx.fillStyle = occ;
         ctx.fillRect(sx, sy + 6, TILE, 5);
-        ctx.fillStyle = 'rgba(115,178,79,0.65)';
+        ctx.fillStyle = hi;
         ctx.fillRect(sx + 3, sy + 7, 5, 1);
         ctx.fillRect(sx + 12, sy + 6, 4, 1);
       }
