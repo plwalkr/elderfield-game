@@ -42,9 +42,9 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.7.0";
+  const GAME_VERSION = "v3.7.1";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Handcrafted World Kit Pass";
+  const BUILD_NAME = "Interior Exit Hotfix";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
@@ -1448,10 +1448,10 @@ area.interactables.push({
     area.spawns.fromRuins = { x: 78.5 * TILE, y: 18.5 * TILE };
     area.spawns.fromRootwood = { x: 128.5 * TILE, y: 35.5 * TILE };
     area.spawns.fromEmber = { x: 26.5 * TILE, y: 35.5 * TILE };
-    area.spawns.dawnrestMarketDoor = { x: 100.5 * TILE, y: 77.6 * TILE };
-    area.spawns.dawnrestHallDoor = { x: 116.5 * TILE, y: 77.8 * TILE };
-    area.spawns.dawnrestBakerDoor = { x: 101.5 * TILE, y: 84.0 * TILE };
-    area.spawns.dawnrestScholarDoor = { x: 118.0 * TILE, y: 84.0 * TILE };
+    area.spawns.dawnrestMarketDoor = { x: 100.5 * TILE, y: 79.2 * TILE };
+    area.spawns.dawnrestHallDoor = { x: 116.5 * TILE, y: 79.2 * TILE };
+    area.spawns.dawnrestBakerDoor = { x: 101.5 * TILE, y: 85.6 * TILE };
+    area.spawns.dawnrestScholarDoor = { x: 118.0 * TILE, y: 85.6 * TILE };
 
     const enemySpots = [
       [42, 65], [54, 58], [62, 74], [95, 63], [107, 79], [117, 42], [131, 26], [134, 47],
@@ -1980,12 +1980,41 @@ function buildWardensHallInterior() {
     };
   }
 
+  function findNearestSafePoint(area, x, y) {
+    const candidate = { x, y, w: state.player.w, h: state.player.h };
+    if (!collides(candidate)) return { x, y };
+
+    const offsets = [
+      [0, 0], [0, 22], [0, 36], [0, 48], [0, 60], [0, 72],
+      [22, 0], [-22, 0], [36, 0], [-36, 0],
+      [22, 22], [-22, 22], [36, 22], [-36, 22],
+      [0, -22], [0, -36],
+      [48, 22], [-48, 22], [60, 22], [-60, 22],
+    ];
+    for (const [ox, oy] of offsets) {
+      candidate.x = clamp(x + ox, 16, area.width * TILE - 16);
+      candidate.y = clamp(y + oy, 16, area.height * TILE - 16);
+      if (!collides(candidate)) return { x: candidate.x, y: candidate.y };
+    }
+
+    for (let radius = 24; radius <= 120; radius += 12) {
+      for (let i = 0; i < 16; i += 1) {
+        const angle = (Math.PI * 2 * i) / 16;
+        candidate.x = clamp(x + Math.cos(angle) * radius, 16, area.width * TILE - 16);
+        candidate.y = clamp(y + Math.sin(angle) * radius, 16, area.height * TILE - 16);
+        if (!collides(candidate)) return { x: candidate.x, y: candidate.y };
+      }
+    }
+    return { x, y };
+  }
+
   function setArea(areaId, spawnKey = "start", snapCamera = false) {
     state.currentAreaId = areaId;
     const area = currentArea();
     const spawn = area.spawns[spawnKey] || area.spawns.entry || area.spawns.start || { x: 5 * TILE, y: 5 * TILE };
-    state.player.x = spawn.x;
-    state.player.y = spawn.y;
+    const safeSpawn = findNearestSafePoint(area, spawn.x, spawn.y);
+    state.player.x = safeSpawn.x;
+    state.player.y = safeSpawn.y;
     state.player.attackTimer = 0;
     state.player.attackCooldown = 0;
     state.player.slashHitIds.clear();
