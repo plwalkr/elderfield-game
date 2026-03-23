@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.1.0";
+  const GAME_VERSION = "v3.2.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Relief & Landmark Pass";
+  const BUILD_NAME = "Terrain Depth & Occlusion Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Dawnrest";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Painterly Fantasy 2.75D";
+  const RENDER_STYLE = "Painterly Fantasy 3.0D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -2910,12 +2910,14 @@ function burst(x, y, palette) {
   function draw() {
     ctx.clearRect(0, 0, state.logicalWidth, state.logicalHeight);
     drawGround();
+    drawTerrainDepthAndBanks();
     drawAtmosphere();
     drawWorldObjects();
     drawInteractables();
     drawPickups();
     drawEnemies();
     drawPlayer();
+    drawForegroundOcclusion();
     drawEffects();
     drawDebug();
     drawVignette();
@@ -2954,6 +2956,225 @@ function drawAtmosphere() {
     ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
   }
   ctx.restore();
+}
+
+
+function drawTerrainDepthAndBanks() {
+  const area = currentArea();
+  if (!area) return;
+
+  const startX = Math.max(0, Math.floor(state.camera.x / TILE) - 2);
+  const startY = Math.max(0, Math.floor(state.camera.y / TILE) - 2);
+  const endX = Math.min(area.width, Math.ceil((state.camera.x + state.logicalWidth) / TILE) + 2);
+  const endY = Math.min(area.height, Math.ceil((state.camera.y + state.logicalHeight) / TILE) + 3);
+
+  for (let y = startY; y < endY; y += 1) {
+    for (let x = startX; x < endX; x += 1) {
+      const tile = area.world[y][x];
+      const sx = x * TILE - state.camera.x;
+      const sy = y * TILE - state.camera.y;
+      drawWaterBanks(area, tile, x, y, sx, sy);
+      drawRaisedFrontFace(area, tile, x, y, sx, sy);
+    }
+  }
+}
+
+function tileAt(area, x, y, fallback = 1) {
+  if (x < 0 || y < 0 || x >= area.width || y >= area.height) return fallback;
+  return area.world[y][x];
+}
+
+function isWaterTile(tile) {
+  return tile === 2;
+}
+
+function isForestTile(tile) {
+  return tile === 1;
+}
+
+function isRaisedTerrain(tile) {
+  return tile === 4 || tile === 7 || tile === 8 || tile === 12 || tile === 14;
+}
+
+function drawWaterBanks(area, tile, x, y, sx, sy) {
+  if (!isWaterTile(tile)) return;
+  const palette = themeColors(area.theme);
+  const north = tileAt(area, x, y - 1, 0);
+  const south = tileAt(area, x, y + 1, 0);
+  const west = tileAt(area, x - 1, y, 0);
+  const east = tileAt(area, x + 1, y, 0);
+
+  ctx.save();
+  if (!isWaterTile(north)) {
+    const g = ctx.createLinearGradient(sx, sy, sx, sy + 9);
+    g.addColorStop(0, "rgba(255,248,228,0.26)");
+    g.addColorStop(1, "rgba(117,90,58,0.05)");
+    ctx.fillStyle = g;
+    ctx.fillRect(sx, sy, TILE, 9);
+    softLine(sx + 1, sy + 2, sx + TILE - 1, sy + 2, "rgba(255,250,233,0.30)", 1.1, 1);
+  }
+  if (!isWaterTile(south)) {
+    const g = ctx.createLinearGradient(sx, sy + TILE - 8, sx, sy + TILE);
+    g.addColorStop(0, "rgba(33,59,77,0.05)");
+    g.addColorStop(1, "rgba(26,39,52,0.26)");
+    ctx.fillStyle = g;
+    ctx.fillRect(sx, sy + TILE - 8, TILE, 8);
+    softLine(sx + 2, sy + TILE - 3, sx + TILE - 2, sy + TILE - 3, "rgba(16,30,43,0.30)", 1.2, 1);
+  }
+  if (!isWaterTile(west)) {
+    const g = ctx.createLinearGradient(sx, sy, sx + 6, sy);
+    g.addColorStop(0, "rgba(255,244,218,0.16)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(sx, sy + 2, 6, TILE - 4);
+  }
+  if (!isWaterTile(east)) {
+    const g = ctx.createLinearGradient(sx + TILE - 6, sy, sx + TILE, sy);
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(1, "rgba(22,38,48,0.18)");
+    ctx.fillStyle = g;
+    ctx.fillRect(sx + TILE - 6, sy + 2, 6, TILE - 4);
+  }
+  ctx.restore();
+}
+
+function drawRaisedFrontFace(area, tile, x, y, sx, sy) {
+  if (!isRaisedTerrain(tile)) return;
+  const below = tileAt(area, x, y + 1, tile);
+  if (isRaisedTerrain(below)) return;
+
+  const palette = area.theme === "ember" ? ["#85533a", "#5a3728", "#3d241b"] :
+    area.theme === "ruins" ? ["#9e9078", "#726754", "#4e4538"] :
+    ["#8d826f", "#655b4c", "#443d33"];
+
+  const faceH = 14;
+  ctx.save();
+  const grad = ctx.createLinearGradient(sx, sy + TILE - 2, sx, sy + TILE + faceH);
+  grad.addColorStop(0, palette[0]);
+  grad.addColorStop(0.45, palette[1]);
+  grad.addColorStop(1, palette[2]);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(sx, sy + TILE - 1);
+  ctx.lineTo(sx + TILE, sy + TILE - 1);
+  ctx.lineTo(sx + TILE, sy + TILE + faceH);
+  ctx.lineTo(sx, sy + TILE + faceH);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,245,224,0.14)";
+  ctx.fillRect(sx, sy + TILE - 1, TILE, 2);
+  ctx.fillStyle = "rgba(0,0,0,0.14)";
+  ctx.fillRect(sx, sy + TILE + faceH - 3, TILE, 3);
+  softLine(sx + 3, sy + TILE + 3, sx + 3, sy + TILE + faceH - 3, "rgba(255,255,255,0.10)", 1.0, 1);
+  softLine(sx + TILE - 3, sy + TILE + 2, sx + TILE - 3, sy + TILE + faceH - 2, "rgba(0,0,0,0.14)", 1.0, 1);
+  ctx.restore();
+}
+
+function drawForegroundOcclusion() {
+  drawTreeCanopies();
+  drawHouseRoofOverlays();
+}
+
+function drawTreeCanopies() {
+  const area = currentArea();
+  if (!area) return;
+  const startX = Math.max(0, Math.floor(state.camera.x / TILE) - 2);
+  const startY = Math.max(0, Math.floor(state.camera.y / TILE) - 2);
+  const endX = Math.min(area.width, Math.ceil((state.camera.x + state.logicalWidth) / TILE) + 2);
+  const endY = Math.min(area.height, Math.ceil((state.camera.y + state.logicalHeight) / TILE) + 3);
+
+  for (let y = startY; y < endY; y += 1) {
+    for (let x = startX; x < endX; x += 1) {
+      const tile = area.world[y][x];
+      if (!isForestTile(tile)) continue;
+      const sx = x * TILE - state.camera.x;
+      const sy = y * TILE - state.camera.y;
+      const dark = area.theme === "rootwood" ? "#2a5a2f" : "#2d6630";
+      const mid = area.theme === "rootwood" ? "#4f8a4a" : "#5f944c";
+      const light = area.theme === "rootwood" ? "#8fd07d" : "#9dd780";
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.beginPath();
+      ctx.ellipse(sx + 12, sy + 10, 11, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = dark;
+      ctx.beginPath();
+      ctx.ellipse(sx + 12, sy + 10, 10, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = mid;
+      ctx.beginPath();
+      ctx.ellipse(sx + 7, sy + 10, 5.5, 4.8, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(sx + 16, sy + 9, 6.5, 5.2, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(sx + 12, sy + 6.5, 6.8, 5.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.ellipse(sx + 8, sy + 8, 3.3, 2.2, 0, 0, Math.PI * 2);
+      ctx.ellipse(sx + 15, sy + 7, 3.8, 2.3, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+function drawHouseRoofOverlays() {
+  const area = currentArea();
+  if (!area) return;
+  for (const item of area.interactables) {
+    if (item.type !== "house") continue;
+    const sx = item.x - state.camera.x;
+    const sy = item.y - state.camera.y;
+    if (sx > state.logicalWidth + 80 || sy > state.logicalHeight + 80 || sx + item.w < -80 || sy + item.h < -80) continue;
+    const roof = item.roof === "slate" ? ["#6b7b8f", "#a8b7c9", "#485667", "#2d3844"] : item.roof === "amber" ? ["#9c6041", "#d9a06a", "#734128", "#522a1e"] : ["#5e7f60", "#97bf8e", "#3f5b42", "#2d412e"];
+    const center = sx + item.w / 2;
+    const roofTop = sy + 10;
+    const roofBottom = sy + 36;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath();
+    ctx.moveTo(sx + 8, roofBottom + 5);
+    ctx.lineTo(center, roofTop - 3);
+    ctx.lineTo(sx + item.w - 8, roofBottom + 5);
+    ctx.lineTo(sx + item.w - 14, roofBottom + 12);
+    ctx.lineTo(sx + 14, roofBottom + 12);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = roof[3];
+    ctx.beginPath();
+    ctx.moveTo(sx + 10, roofBottom + 4);
+    ctx.lineTo(center, roofTop);
+    ctx.lineTo(sx + item.w - 10, roofBottom + 4);
+    ctx.lineTo(sx + item.w - 18, roofBottom + 12);
+    ctx.lineTo(sx + 18, roofBottom + 12);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = roof[0];
+    ctx.beginPath();
+    ctx.moveTo(sx + 14, roofBottom - 2);
+    ctx.lineTo(center, roofTop + 2);
+    ctx.lineTo(sx + item.w - 14, roofBottom - 2);
+    ctx.lineTo(sx + item.w - 20, roofBottom + 8);
+    ctx.lineTo(sx + 20, roofBottom + 8);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = roof[1];
+    ctx.beginPath();
+    ctx.moveTo(center - 6, roofTop + 5);
+    ctx.lineTo(center, roofTop + 2);
+    ctx.lineTo(center + 18, roofBottom - 9);
+    ctx.lineTo(center + 7, roofBottom - 10);
+    ctx.closePath();
+    ctx.fill();
+
+    softLine(center, roofTop + 3, center, roofBottom - 1, "rgba(255,255,255,0.14)", 1.0, 0.9);
+    softLine(sx + 20, roofBottom + 4, sx + item.w - 20, roofBottom + 4, "rgba(0,0,0,0.24)", 1.6, 1);
+    ctx.restore();
+  }
 }
 
 

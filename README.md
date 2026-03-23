@@ -1,13 +1,13 @@
-# Elderfield — v3.1.0 Relief & Landmark Pass
+# Elderfield — v3.2.0 Terrain Depth & Occlusion Pass
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v3.1.0
-- hidden caves and cracked-wall secrets in the overworld
-- rune-plate and push-block style environmental puzzles
-- optional secret rewards, including Heart Fragments and Elowen's silver-token thread
-- debug report now includes a Secrets section
-- painterly fantasy presentation and save/load remain intact
+## New in v3.2.0
+- stronger pseudo-3D terrain depth with front faces and shoreline banks
+- tree canopy foreground occlusion to push the ALttP-style 3/4 depth feel
+- heavier roof/eave overlays so buildings read as raised structures
+- render label updated to Painterly Fantasy 3.0D
+- save/load, lore, secrets, and painterly performance base remain intact
 
 ## Save behavior
 - the game stores progress in your browser
@@ -77,3 +77,11 @@ Look for:
 - Added cracked wall reveals in Crownfall and Greenhollow
 - Added secret chests, Heart Fragments, and an Elowen heirloom payoff
 - Added rune-plate and push-block puzzle hooks for future expansion
+
+
+## v3.2.0 notes
+
+- Added raised front-face terrain rendering for stone terraces and pseudo-cliff edges
+- Added recessed shoreline/bank shading for water tiles
+- Added foreground canopy overlays for trees to improve player/environment depth
+- Added stronger house roof overlays and eave shadows for better 3/4 overhead structure
