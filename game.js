@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.2.0";
+  const GAME_VERSION = "v3.3.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Terrain Depth & Occlusion Pass";
+  const BUILD_NAME = "Tile Art Foundation Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
-  const START_ZONE = "Dawnrest";
+  const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Painterly Fantasy 3.0D";
+  const RENDER_STYLE = "Storybook Tilework 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -2910,14 +2910,13 @@ function burst(x, y, palette) {
   function draw() {
     ctx.clearRect(0, 0, state.logicalWidth, state.logicalHeight);
     drawGround();
-    drawTerrainDepthAndBanks();
     drawAtmosphere();
     drawWorldObjects();
     drawInteractables();
     drawPickups();
     drawEnemies();
     drawPlayer();
-    drawForegroundOcclusion();
+    drawForegroundOccluders();
     drawEffects();
     drawDebug();
     drawVignette();
@@ -2956,225 +2955,6 @@ function drawAtmosphere() {
     ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
   }
   ctx.restore();
-}
-
-
-function drawTerrainDepthAndBanks() {
-  const area = currentArea();
-  if (!area) return;
-
-  const startX = Math.max(0, Math.floor(state.camera.x / TILE) - 2);
-  const startY = Math.max(0, Math.floor(state.camera.y / TILE) - 2);
-  const endX = Math.min(area.width, Math.ceil((state.camera.x + state.logicalWidth) / TILE) + 2);
-  const endY = Math.min(area.height, Math.ceil((state.camera.y + state.logicalHeight) / TILE) + 3);
-
-  for (let y = startY; y < endY; y += 1) {
-    for (let x = startX; x < endX; x += 1) {
-      const tile = area.world[y][x];
-      const sx = x * TILE - state.camera.x;
-      const sy = y * TILE - state.camera.y;
-      drawWaterBanks(area, tile, x, y, sx, sy);
-      drawRaisedFrontFace(area, tile, x, y, sx, sy);
-    }
-  }
-}
-
-function tileAt(area, x, y, fallback = 1) {
-  if (x < 0 || y < 0 || x >= area.width || y >= area.height) return fallback;
-  return area.world[y][x];
-}
-
-function isWaterTile(tile) {
-  return tile === 2;
-}
-
-function isForestTile(tile) {
-  return tile === 1;
-}
-
-function isRaisedTerrain(tile) {
-  return tile === 4 || tile === 7 || tile === 8 || tile === 12 || tile === 14;
-}
-
-function drawWaterBanks(area, tile, x, y, sx, sy) {
-  if (!isWaterTile(tile)) return;
-  const palette = themeColors(area.theme);
-  const north = tileAt(area, x, y - 1, 0);
-  const south = tileAt(area, x, y + 1, 0);
-  const west = tileAt(area, x - 1, y, 0);
-  const east = tileAt(area, x + 1, y, 0);
-
-  ctx.save();
-  if (!isWaterTile(north)) {
-    const g = ctx.createLinearGradient(sx, sy, sx, sy + 9);
-    g.addColorStop(0, "rgba(255,248,228,0.26)");
-    g.addColorStop(1, "rgba(117,90,58,0.05)");
-    ctx.fillStyle = g;
-    ctx.fillRect(sx, sy, TILE, 9);
-    softLine(sx + 1, sy + 2, sx + TILE - 1, sy + 2, "rgba(255,250,233,0.30)", 1.1, 1);
-  }
-  if (!isWaterTile(south)) {
-    const g = ctx.createLinearGradient(sx, sy + TILE - 8, sx, sy + TILE);
-    g.addColorStop(0, "rgba(33,59,77,0.05)");
-    g.addColorStop(1, "rgba(26,39,52,0.26)");
-    ctx.fillStyle = g;
-    ctx.fillRect(sx, sy + TILE - 8, TILE, 8);
-    softLine(sx + 2, sy + TILE - 3, sx + TILE - 2, sy + TILE - 3, "rgba(16,30,43,0.30)", 1.2, 1);
-  }
-  if (!isWaterTile(west)) {
-    const g = ctx.createLinearGradient(sx, sy, sx + 6, sy);
-    g.addColorStop(0, "rgba(255,244,218,0.16)");
-    g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(sx, sy + 2, 6, TILE - 4);
-  }
-  if (!isWaterTile(east)) {
-    const g = ctx.createLinearGradient(sx + TILE - 6, sy, sx + TILE, sy);
-    g.addColorStop(0, "rgba(0,0,0,0)");
-    g.addColorStop(1, "rgba(22,38,48,0.18)");
-    ctx.fillStyle = g;
-    ctx.fillRect(sx + TILE - 6, sy + 2, 6, TILE - 4);
-  }
-  ctx.restore();
-}
-
-function drawRaisedFrontFace(area, tile, x, y, sx, sy) {
-  if (!isRaisedTerrain(tile)) return;
-  const below = tileAt(area, x, y + 1, tile);
-  if (isRaisedTerrain(below)) return;
-
-  const palette = area.theme === "ember" ? ["#85533a", "#5a3728", "#3d241b"] :
-    area.theme === "ruins" ? ["#9e9078", "#726754", "#4e4538"] :
-    ["#8d826f", "#655b4c", "#443d33"];
-
-  const faceH = 14;
-  ctx.save();
-  const grad = ctx.createLinearGradient(sx, sy + TILE - 2, sx, sy + TILE + faceH);
-  grad.addColorStop(0, palette[0]);
-  grad.addColorStop(0.45, palette[1]);
-  grad.addColorStop(1, palette[2]);
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.moveTo(sx, sy + TILE - 1);
-  ctx.lineTo(sx + TILE, sy + TILE - 1);
-  ctx.lineTo(sx + TILE, sy + TILE + faceH);
-  ctx.lineTo(sx, sy + TILE + faceH);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255,245,224,0.14)";
-  ctx.fillRect(sx, sy + TILE - 1, TILE, 2);
-  ctx.fillStyle = "rgba(0,0,0,0.14)";
-  ctx.fillRect(sx, sy + TILE + faceH - 3, TILE, 3);
-  softLine(sx + 3, sy + TILE + 3, sx + 3, sy + TILE + faceH - 3, "rgba(255,255,255,0.10)", 1.0, 1);
-  softLine(sx + TILE - 3, sy + TILE + 2, sx + TILE - 3, sy + TILE + faceH - 2, "rgba(0,0,0,0.14)", 1.0, 1);
-  ctx.restore();
-}
-
-function drawForegroundOcclusion() {
-  drawTreeCanopies();
-  drawHouseRoofOverlays();
-}
-
-function drawTreeCanopies() {
-  const area = currentArea();
-  if (!area) return;
-  const startX = Math.max(0, Math.floor(state.camera.x / TILE) - 2);
-  const startY = Math.max(0, Math.floor(state.camera.y / TILE) - 2);
-  const endX = Math.min(area.width, Math.ceil((state.camera.x + state.logicalWidth) / TILE) + 2);
-  const endY = Math.min(area.height, Math.ceil((state.camera.y + state.logicalHeight) / TILE) + 3);
-
-  for (let y = startY; y < endY; y += 1) {
-    for (let x = startX; x < endX; x += 1) {
-      const tile = area.world[y][x];
-      if (!isForestTile(tile)) continue;
-      const sx = x * TILE - state.camera.x;
-      const sy = y * TILE - state.camera.y;
-      const dark = area.theme === "rootwood" ? "#2a5a2f" : "#2d6630";
-      const mid = area.theme === "rootwood" ? "#4f8a4a" : "#5f944c";
-      const light = area.theme === "rootwood" ? "#8fd07d" : "#9dd780";
-      ctx.save();
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      ctx.beginPath();
-      ctx.ellipse(sx + 12, sy + 10, 11, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = dark;
-      ctx.beginPath();
-      ctx.ellipse(sx + 12, sy + 10, 10, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = mid;
-      ctx.beginPath();
-      ctx.ellipse(sx + 7, sy + 10, 5.5, 4.8, 0.2, 0, Math.PI * 2);
-      ctx.ellipse(sx + 16, sy + 9, 6.5, 5.2, -0.1, 0, Math.PI * 2);
-      ctx.ellipse(sx + 12, sy + 6.5, 6.8, 5.4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = light;
-      ctx.beginPath();
-      ctx.ellipse(sx + 8, sy + 8, 3.3, 2.2, 0, 0, Math.PI * 2);
-      ctx.ellipse(sx + 15, sy + 7, 3.8, 2.3, -0.1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-}
-
-function drawHouseRoofOverlays() {
-  const area = currentArea();
-  if (!area) return;
-  for (const item of area.interactables) {
-    if (item.type !== "house") continue;
-    const sx = item.x - state.camera.x;
-    const sy = item.y - state.camera.y;
-    if (sx > state.logicalWidth + 80 || sy > state.logicalHeight + 80 || sx + item.w < -80 || sy + item.h < -80) continue;
-    const roof = item.roof === "slate" ? ["#6b7b8f", "#a8b7c9", "#485667", "#2d3844"] : item.roof === "amber" ? ["#9c6041", "#d9a06a", "#734128", "#522a1e"] : ["#5e7f60", "#97bf8e", "#3f5b42", "#2d412e"];
-    const center = sx + item.w / 2;
-    const roofTop = sy + 10;
-    const roofBottom = sy + 36;
-
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.18)";
-    ctx.beginPath();
-    ctx.moveTo(sx + 8, roofBottom + 5);
-    ctx.lineTo(center, roofTop - 3);
-    ctx.lineTo(sx + item.w - 8, roofBottom + 5);
-    ctx.lineTo(sx + item.w - 14, roofBottom + 12);
-    ctx.lineTo(sx + 14, roofBottom + 12);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = roof[3];
-    ctx.beginPath();
-    ctx.moveTo(sx + 10, roofBottom + 4);
-    ctx.lineTo(center, roofTop);
-    ctx.lineTo(sx + item.w - 10, roofBottom + 4);
-    ctx.lineTo(sx + item.w - 18, roofBottom + 12);
-    ctx.lineTo(sx + 18, roofBottom + 12);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = roof[0];
-    ctx.beginPath();
-    ctx.moveTo(sx + 14, roofBottom - 2);
-    ctx.lineTo(center, roofTop + 2);
-    ctx.lineTo(sx + item.w - 14, roofBottom - 2);
-    ctx.lineTo(sx + item.w - 20, roofBottom + 8);
-    ctx.lineTo(sx + 20, roofBottom + 8);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = roof[1];
-    ctx.beginPath();
-    ctx.moveTo(center - 6, roofTop + 5);
-    ctx.lineTo(center, roofTop + 2);
-    ctx.lineTo(center + 18, roofBottom - 9);
-    ctx.lineTo(center + 7, roofBottom - 10);
-    ctx.closePath();
-    ctx.fill();
-
-    softLine(center, roofTop + 3, center, roofBottom - 1, "rgba(255,255,255,0.14)", 1.0, 0.9);
-    softLine(sx + 20, roofBottom + 4, sx + item.w - 20, roofBottom + 4, "rgba(0,0,0,0.24)", 1.6, 1);
-    ctx.restore();
-  }
 }
 
 
@@ -3229,129 +3009,126 @@ function drawHouseRoofOverlays() {
 
   function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
     const palette = themeColors(theme);
-    const n1 = seededNoise(x * 2, y * 3);
-    const n2 = seededNoise(x * 13, y * 17);
-    const n3 = seededNoise(x * 23, y * 29);
-    if (tile === 0 || tile === 1 || tile === 5 || tile === 6 || tile === 13) {
-      targetCtx.fillStyle = n1 > 0.56 ? palette.grassB : palette.grassA;
+    const n1 = seededNoise(Math.floor(x / 2), Math.floor(y / 2));
+    const n2 = seededNoise(x * 13 + 7, y * 17 + 11);
+    const n3 = seededNoise(x * 23 + 13, y * 29 + 5);
+    const grassBase = n1 > 0.52 ? palette.grassB : palette.grassA;
+
+    if (tile === 0 || tile === 1 || tile === 4 || tile === 5 || tile === 6 || tile === 13) {
+      targetCtx.fillStyle = grassBase;
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-      targetCtx.fillRect(sx, sy, TILE, 5);
-      targetCtx.fillStyle = "rgba(0,0,0,0.08)";
-      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 5);
       targetCtx.fillStyle = palette.mid;
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 7, sy + 16, 4.8, 2.8, -0.25, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 17, sy + 9, 3.8, 2.2, 0.35, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 18, sy + 19, 5.3, 2.0, 0.2, 0, Math.PI * 2);
-      targetCtx.fill();
-      cacheSoftLine(targetCtx, sx + 3, sy + 19, sx + 7, sy + 8, palette.dark, 1.1, 0.85);
-      cacheSoftLine(targetCtx, sx + 9, sy + 20, sx + 12, sy + 7, palette.dark, 1.15, 0.88);
-      cacheSoftLine(targetCtx, sx + 15, sy + 18, sx + 18, sy + 9, palette.dark, 1.0, 0.8);
-      cacheSoftLine(targetCtx, sx + 6, sy + 14, sx + 14, sy + 5, "rgba(255,255,255,0.08)", 0.9, 0.65);
-      if (n2 > 0.78) {
-        targetCtx.fillStyle = "rgba(255,255,255,0.12)";
-        targetCtx.beginPath();
-        targetCtx.arc(sx + 15, sy + 6, 1.0, 0, Math.PI * 2);
-        targetCtx.arc(sx + 9, sy + 10, 0.7, 0, Math.PI * 2);
-        targetCtx.fill();
+      for (let py = 2; py < TILE; py += 6) {
+        for (let px = 1; px < TILE; px += 6) {
+          const wobble = seededNoise(x * 41 + px, y * 37 + py);
+          if (wobble > 0.52) targetCtx.fillRect(sx + px, sy + py, 2, 1);
+        }
       }
-      if (n3 > 0.71) {
-        targetCtx.fillStyle = "rgba(56,74,42,0.20)";
-        targetCtx.beginPath();
-        targetCtx.arc(sx + 5, sy + 12, 1.4, 0, Math.PI * 2);
-        targetCtx.arc(sx + 18, sy + 14, 1.2, 0, Math.PI * 2);
-        targetCtx.fill();
+      targetCtx.fillStyle = "rgba(255,255,255,0.05)";
+      targetCtx.fillRect(sx, sy, TILE, 2);
+      targetCtx.fillStyle = "rgba(0,0,0,0.05)";
+      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+      if (n2 > 0.72) {
+        targetCtx.fillStyle = "rgba(32,66,24,0.18)";
+        targetCtx.fillRect(sx + 5, sy + 12, 2, 1);
+        targetCtx.fillRect(sx + 14, sy + 8, 2, 1);
+        targetCtx.fillRect(sx + 18, sy + 16, 1, 1);
       }
       if (tile === 5) {
-        drawFlowerCached(targetCtx, sx + 8, sy + 8, "#ffd86e");
-        drawFlowerCached(targetCtx, sx + 14, sy + 14, "#fff5a8");
+        drawFlowerCached(targetCtx, sx + 7, sy + 7, "#ffd86e");
+        drawFlowerCached(targetCtx, sx + 15, sy + 14, "#fff5a8");
       } else if (tile === 6) {
-        drawFlowerCached(targetCtx, sx + 9, sy + 7, "#e9d3ff");
-        drawFlowerCached(targetCtx, sx + 15, sy + 13, "#ffd2ea");
+        drawFlowerCached(targetCtx, sx + 8, sy + 6, "#e9d3ff");
+        drawFlowerCached(targetCtx, sx + 14, sy + 14, "#ffd2ea");
       } else if (tile === 13) {
-        targetCtx.fillStyle = "#2d4d2b";
-        cacheFillRoundedRect(targetCtx, sx + 5, sy + 6, 2, 10, 1, "#2d4d2b");
-        cacheFillRoundedRect(targetCtx, sx + 12, sy + 10, 2, 7, 1, "#2d4d2b");
-        cacheFillRoundedRect(targetCtx, sx + 16, sy + 5, 2, 8, 1, "#2d4d2b");
+        targetCtx.fillStyle = "#345b2b";
+        targetCtx.fillRect(sx + 5, sy + 7, 2, 10);
+        targetCtx.fillRect(sx + 12, sy + 9, 2, 8);
+        targetCtx.fillRect(sx + 17, sy + 6, 2, 9);
       }
       return;
     }
     if (tile === 2) {
       targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.12)";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 7, sy + 6, 5, 1.6, 0, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 16, sy + 13, 6, 1.8, 0, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 10, sy + 18, 5, 1.4, 0, 0, Math.PI * 2);
-      targetCtx.fill();
-      cacheSoftLine(targetCtx, sx + 3, sy + 18, sx + 11, sy + 18, "rgba(220,245,255,0.20)", 1.15, 0.9);
-      cacheSoftLine(targetCtx, sx + 14, sy + 8, sx + 20, sy + 8, "rgba(220,245,255,0.22)", 1.15, 0.92);
-      targetCtx.fillStyle = "rgba(9,34,49,0.10)";
-      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 5);
+      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+      targetCtx.fillRect(sx + 2, sy + 3, 10, 1);
+      targetCtx.fillRect(sx + 11, sy + 9, 8, 1);
+      targetCtx.fillRect(sx + 5, sy + 16, 12, 1);
+      targetCtx.fillStyle = "rgba(0,0,0,0.10)";
+      targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
       return;
     }
     if (tile === 3) {
-      targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.pathA : palette.pathB;
+      const a = palette.pathA, b = palette.pathB;
+      targetCtx.fillStyle = a;
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,246,214,0.10)";
+      targetCtx.fillStyle = b;
+      targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, TILE - 2);
+      targetCtx.fillStyle = "rgba(124,146,120,0.55)";
+      targetCtx.fillRect(sx + 0, sy + 0, TILE, 1);
+      targetCtx.fillRect(sx + 0, sy + 0, 1, TILE);
+      targetCtx.fillStyle = "rgba(101,122,96,0.35)";
+      targetCtx.fillRect(sx + TILE - 1, sy + 1, 1, TILE - 1);
+      targetCtx.fillRect(sx + 1, sy + TILE - 1, TILE - 1, 1);
+      targetCtx.strokeStyle = "rgba(145,170,139,0.55)";
+      targetCtx.lineWidth = 1;
       targetCtx.beginPath();
-      targetCtx.ellipse(sx + 8, sy + 7, 4.6, 2.2, -0.3, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 17, sy + 15, 3.7, 1.9, 0.2, 0, Math.PI * 2);
-      targetCtx.fill();
-      cacheSoftLine(targetCtx, sx + 4, sy + 19, sx + 18, sy + 6, "rgba(116,86,49,0.26)", 1.15, 0.9);
-      if (n3 > 0.65) {
-        targetCtx.fillStyle = "rgba(105,74,44,0.22)";
-        targetCtx.beginPath();
-        targetCtx.arc(sx + 13, sy + 12, 1.5, 0, Math.PI * 2);
-        targetCtx.arc(sx + 8, sy + 17, 1.1, 0, Math.PI * 2);
-        targetCtx.fill();
+      targetCtx.moveTo(sx + 8.5, sy + 1);
+      targetCtx.lineTo(sx + 8.5, sy + TILE - 1);
+      targetCtx.moveTo(sx + 16.5, sy + 1);
+      targetCtx.lineTo(sx + 16.5, sy + TILE - 1);
+      targetCtx.moveTo(sx + 1, sy + 8.5);
+      targetCtx.lineTo(sx + TILE - 1, sy + 8.5);
+      targetCtx.moveTo(sx + 1, sy + 16.5);
+      targetCtx.lineTo(sx + TILE - 1, sy + 16.5);
+      targetCtx.stroke();
+      if (n3 > 0.58) {
+        targetCtx.fillStyle = "rgba(255,255,255,0.18)";
+        targetCtx.fillRect(sx + 4, sy + 4, 3, 2);
+        targetCtx.fillRect(sx + 13, sy + 13, 3, 2);
       }
       return;
     }
     if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
       const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
-      const stone = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
-      cacheFillRoundedRect(targetCtx, sx + 1, sy + 1, TILE - 2, TILE - 2, 5, stone);
-      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 9, sy + 7, 5.5, 1.9, -0.15, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 15, sy + 16, 4.1, 1.6, 0.15, 0, Math.PI * 2);
-      targetCtx.fill();
+      const topColor = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
+      targetCtx.fillStyle = topColor;
+      targetCtx.fillRect(sx, sy, TILE, TILE);
+      targetCtx.fillStyle = "rgba(255,255,255,0.12)";
+      targetCtx.fillRect(sx, sy, TILE, 2);
       targetCtx.fillStyle = "rgba(0,0,0,0.10)";
-      targetCtx.fillRect(sx + 2, sy + TILE - 4, TILE - 4, 3);
-      cacheSoftLine(targetCtx, sx + 6, sy + 8, sx + 12, sy + 13, tile === 14 ? "rgba(90,72,56,0.34)" : "rgba(54,48,42,0.28)", 1.2, 1);
-      cacheSoftLine(targetCtx, sx + 12, sy + 13, sx + 17, sy + 10, tile === 14 ? "rgba(90,72,56,0.34)" : "rgba(54,48,42,0.28)", 1.2, 1);
-      if (tile === 8 || tile === 14) cacheFillRoundedRect(targetCtx, sx + 3, sy + 17, 18, 3, 2, "rgba(58,47,39,0.16)");
+      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+      targetCtx.strokeStyle = "rgba(95,88,77,0.40)";
+      targetCtx.lineWidth = 1;
+      targetCtx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
+      if (tile === 8 || tile === 14) {
+        targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+        targetCtx.fillRect(sx + 5, sy + 5, 10, 3);
+      }
       if (tile === 12) {
-        targetCtx.strokeStyle = "rgba(255,255,255,0.08)";
-        targetCtx.lineWidth = 1;
+        targetCtx.strokeStyle = "rgba(255,255,255,0.10)";
         targetCtx.beginPath();
-        targetCtx.moveTo(sx + 4, sy + 7);
-        targetCtx.lineTo(sx + 11, sy + 13);
-        targetCtx.lineTo(sx + 16, sy + 9);
+        targetCtx.moveTo(sx + 4.5, sy + 7.5);
+        targetCtx.lineTo(sx + 11.5, sy + 13.5);
+        targetCtx.lineTo(sx + 17.5, sy + 9.5);
         targetCtx.stroke();
       }
       return;
     }
-    if (tile === 4) {
-      drawCachedTile(targetCtx, 0, sx, sy, x, y, theme);
-      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.fillRect(sx + 3, sy + 18, 18, 3);
-      targetCtx.fillStyle = "#606870";
-      targetCtx.fillRect(sx + 4, sy + 6, 16, 11);
-      targetCtx.fillStyle = "#8d99a4";
-      targetCtx.fillRect(sx + 6, sy + 7, 11, 6);
-      targetCtx.fillStyle = "#dfe8ef";
-      targetCtx.fillRect(sx + 11, sy + 9, 3, 2);
-      return;
-    }
     if (tile === 9) {
-      targetCtx.fillStyle = theme === "rootwood" ? "#283c29" : theme === "ember" ? "#34231f" : "#2b2c31";
+      targetCtx.fillStyle = theme === "rootwood" ? "#435d41" : theme === "ember" ? "#5e4036" : "#6e786d";
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = theme === "rootwood" ? "#3f5940" : theme === "ember" ? "#5b3c31" : "#494a52";
-      targetCtx.fillRect(sx + 2, sy + 2, TILE - 4, TILE - 4);
+      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+      targetCtx.fillRect(sx, sy, TILE, 2);
+      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+      targetCtx.fillRect(sx, sy + TILE - 4, TILE, 4);
+      for (let bx = 2; bx < TILE - 2; bx += 7) {
+        targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+        targetCtx.fillRect(sx + bx, sy + 5, 5, 4);
+        targetCtx.fillStyle = "rgba(0,0,0,0.08)";
+        targetCtx.fillRect(sx + bx + 1, sy + 13, 5, 4);
+      }
       return;
     }
     if (tile === 10) {
@@ -3360,30 +3137,26 @@ function drawHouseRoofOverlays() {
       targetCtx.fillStyle = "#6fb7ff";
       targetCtx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
       targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
-      targetCtx.fillStyle = "rgba(180,220,255,0.18)";
+      targetCtx.fillStyle = "rgba(180,220,255,0.20)";
       targetCtx.fillRect(sx + 6, sy + 6, 12, 12);
       return;
     }
     if (tile === 15) {
-      targetCtx.fillStyle = (x + y) % 2 === 0 ? "#764732" : "#8a5234";
+      targetCtx.fillStyle = (x + y) % 2 === 0 ? "#7e4b32" : "#92553a";
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255, 165, 88, 0.12)";
-      targetCtx.fillRect(sx + 2, sy + 3, 5, 2);
-      targetCtx.fillStyle = "#d28b4a";
-      targetCtx.fillRect(sx + 6, sy + 5, 2, 2);
-      targetCtx.fillRect(sx + 13, sy + 11, 3, 2);
-      targetCtx.fillStyle = "#341d14";
-      targetCtx.fillRect(sx + 17, sy + 16, 3, 2);
+      targetCtx.fillStyle = "rgba(255,178,110,0.10)";
+      targetCtx.fillRect(sx + 3, sy + 4, 6, 2);
+      targetCtx.fillRect(sx + 12, sy + 10, 5, 2);
+      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
       return;
     }
     if (tile === 16) {
-      targetCtx.fillStyle = seededNoise(x * 2, y * 3) > 0.5 ? "#5a2d23" : "#6b3527";
+      targetCtx.fillStyle = seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6a3a2a" : "#7b4330";
       targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,190,120,0.08)";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 9, sy + 15, 5.6, 2.2, -0.25, 0, Math.PI * 2);
-      targetCtx.ellipse(sx + 18, sy + 7, 3.8, 1.6, 0.3, 0, Math.PI * 2);
-      targetCtx.fill();
+      targetCtx.fillStyle = "rgba(255,210,146,0.08)";
+      targetCtx.fillRect(sx + 5, sy + 14, 10, 2);
+      targetCtx.fillRect(sx + 12, sy + 6, 7, 1);
       return;
     }
     targetCtx.fillStyle = "magenta";
@@ -3392,31 +3165,38 @@ function drawHouseRoofOverlays() {
 
   function drawCachedWorldObject(targetCtx, tile, sx, sy) {
     if (tile === 1) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.22)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 21, 10.5, 4.0, 0, 0, Math.PI * 2); targetCtx.fill();
-      cacheFillRoundedRect(targetCtx, sx + 10, sy + 11, 4, 10, 2, "#6d4f32");
-      cacheFillRoundedRect(targetCtx, sx + 10, sy + 11, 1.2, 10, 1, "rgba(255,255,255,0.12)");
-      targetCtx.fillStyle = "rgba(22,42,24,0.16)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 13, sy + 11, 10.5, 7.5, 0, 0, Math.PI * 2); targetCtx.fill();
-      targetCtx.fillStyle = "#3f6b35";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 11.5, sy + 10, 7.5, 5.5, 0.12, 0, Math.PI * 2); targetCtx.fill();
-      targetCtx.fillStyle = "#5f8e4f";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 8.5, sy + 9.5, 4.6, 3.9, -0.18, 0, Math.PI * 2); targetCtx.fill();
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 15.8, sy + 8.7, 4.9, 4.0, 0.22, 0, Math.PI * 2); targetCtx.fill();
-      targetCtx.fillStyle = "rgba(215,242,189,0.18)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 8, sy + 8, 4.4, 1.9, -0.45, 0, Math.PI * 2); targetCtx.fill();
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 15, sy + 7, 3.2, 1.5, -0.18, 0, Math.PI * 2); targetCtx.fill();
+      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+      targetCtx.fillRect(sx + 2, sy + 20, 20, 3);
+      targetCtx.fillStyle = "#7d8780";
+      targetCtx.fillRect(sx, sy + 17, TILE, 5);
+      for (let bx = 0; bx < TILE; bx += 6) {
+        targetCtx.fillStyle = bx % 12 === 0 ? "#93a098" : "#6d7770";
+        targetCtx.fillRect(sx + bx, sy + 17, 5, 4);
+      }
+      targetCtx.fillStyle = "#2f5a24";
+      targetCtx.fillRect(sx, sy + 7, TILE, 10);
+      targetCtx.fillStyle = "#4e823a";
+      targetCtx.fillRect(sx + 1, sy + 5, TILE - 2, 8);
+      targetCtx.fillStyle = "#73b24f";
+      targetCtx.fillRect(sx + 3, sy + 7, 6, 2);
+      targetCtx.fillRect(sx + 11, sy + 6, 5, 2);
+      targetCtx.fillRect(sx + 17, sy + 8, 4, 2);
+      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+      targetCtx.fillRect(sx, sy + 13, TILE, 2);
     } else if (tile === 4) {
       targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 19, 9.2, 3.1, 0, 0, Math.PI * 2); targetCtx.fill();
-      cacheSoftLine(targetCtx, sx + 6, sy + 9, sx + 18, sy + 9, "rgba(255,255,255,0.10)", 1.0, 0.95);
-      cacheSoftLine(targetCtx, sx + 7, sy + 15, sx + 17, sy + 13, "rgba(72,62,54,0.18)", 1.0, 0.85);
+      targetCtx.fillRect(sx + 5, sy + 17, 14, 3);
+      targetCtx.fillStyle = "#818b83";
+      targetCtx.fillRect(sx + 4, sy + 8, 16, 10);
+      targetCtx.fillStyle = "#a8b0aa";
+      targetCtx.fillRect(sx + 6, sy + 6, 12, 6);
+      targetCtx.fillStyle = "rgba(255,255,255,0.20)";
+      targetCtx.fillRect(sx + 9, sy + 8, 4, 2);
     } else if (tile === 9) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-      targetCtx.beginPath(); targetCtx.ellipse(sx + 12, sy + 20, 8.7, 2.9, 0, 0, Math.PI * 2); targetCtx.fill();
-      cacheFillRoundedRect(targetCtx, sx + 4, sy + 4, 16, 3, 1.5, "rgba(255,255,255,0.06)");
-      cacheFillRoundedRect(targetCtx, sx + 5, sy + 17, 14, 2, 1, "rgba(0,0,0,0.12)");
-      cacheFillRoundedRect(targetCtx, sx + 7, sy + 8, 10, 6, 2, "rgba(255,255,255,0.03)");
+      targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+      targetCtx.fillRect(sx + 3, sy + 20, 18, 3);
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.fillRect(sx + 4, sy + 3, 16, 2);
     }
   }
 
@@ -3426,82 +3206,81 @@ function drawHouseRoofOverlays() {
     const south = y < area.height - 1 ? area.world[y + 1][x] : tile;
     const west = x > 0 ? area.world[y][x - 1] : tile;
     const east = x < area.width - 1 ? area.world[y][x + 1] : tile;
-    const nearWater = north === 2 || south === 2 || west === 2 || east === 2;
-    const nearPath = north === 3 || south === 3 || west === 3 || east === 3;
-    const nearStone = north === 7 || north === 8 || north === 12 || north === 14 || south === 7 || south === 8 || south === 12 || south === 14 || west === 7 || west === 8 || west === 12 || west === 14 || east === 7 || east === 8 || east === 12 || east === 14;
+    const palette = themeColors(area.theme);
+    const groundish = new Set([0,3,5,6,13,1,4]);
+    const raised = new Set([7,8,9,12,14,15,16]);
 
-    if ((tile === 0 || tile === 5 || tile === 6 || tile === 13) && nearPath) {
-      targetCtx.fillStyle = "rgba(109,84,46,0.08)";
-      if (north === 3) targetCtx.fillRect(sx, sy, TILE, 3);
-      if (south === 3) targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
-      if (west === 3) targetCtx.fillRect(sx, sy, 3, TILE);
-      if (east === 3) targetCtx.fillRect(sx + TILE - 3, sy, 3, TILE);
+    if (groundish.has(tile) && south === 2) {
+      targetCtx.fillStyle = palette.bank;
+      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 3);
+      targetCtx.fillStyle = "rgba(255,255,255,0.18)";
+      targetCtx.fillRect(sx + 1, sy + TILE - 5, TILE - 2, 1);
+      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    }
+    if (groundish.has(tile) && north === 2) {
+      targetCtx.fillStyle = "rgba(233,245,218,0.10)";
+      targetCtx.fillRect(sx + 1, sy, TILE - 2, 2);
+    }
+    if (groundish.has(tile) && (east === 2 || west === 2)) {
+      targetCtx.fillStyle = "rgba(121,161,99,0.28)";
+      if (east === 2) targetCtx.fillRect(sx + TILE - 3, sy + 1, 3, TILE - 2);
+      if (west === 2) targetCtx.fillRect(sx, sy + 1, 3, TILE - 2);
     }
 
-    if ((tile === 0 || tile === 5 || tile === 6 || tile === 13 || tile === 3) && nearWater) {
-      targetCtx.fillStyle = "rgba(223,242,255,0.10)";
-      if (north === 2) targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, 2);
-      if (west === 2) targetCtx.fillRect(sx + 1, sy + 1, 2, TILE - 2);
-      targetCtx.fillStyle = "rgba(18,58,79,0.10)";
-      if (south === 2) targetCtx.fillRect(sx + 1, sy + TILE - 3, TILE - 2, 2);
-      if (east === 2) targetCtx.fillRect(sx + TILE - 3, sy + 1, 2, TILE - 2);
+    if (raised.has(tile) && groundish.has(south)) {
+      targetCtx.fillStyle = palette.cliffA || "#5a7b42";
+      targetCtx.fillRect(sx, sy + TILE - 7, TILE, 7);
+      targetCtx.fillStyle = "rgba(255,255,255,0.18)";
+      targetCtx.fillRect(sx, sy + TILE - 8, TILE, 1);
+      targetCtx.fillStyle = palette.cliffB || "#3d592d";
+      targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
+      for (let bx = 2; bx < TILE - 2; bx += 6) {
+        targetCtx.fillStyle = "rgba(255,255,255,0.07)";
+        targetCtx.fillRect(sx + bx, sy + TILE - 7, 3, 2);
+      }
     }
-
-    if ((tile === 0 || tile === 5 || tile === 6 || tile === 13 || tile === 3) && nearStone) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.05)";
-      if (north === 7 || north === 8 || north === 12 || north === 14) targetCtx.fillRect(sx + 2, sy, TILE - 4, 2);
-      if (west === 7 || west === 8 || west === 12 || west === 14) targetCtx.fillRect(sx, sy + 2, 2, TILE - 4);
+    if (raised.has(tile) && groundish.has(east)) {
+      targetCtx.fillStyle = "rgba(0,0,0,0.10)";
+      targetCtx.fillRect(sx + TILE - 3, sy, 3, TILE);
+    }
+    if (raised.has(tile) && groundish.has(west)) {
+      targetCtx.fillStyle = "rgba(255,255,255,0.06)";
+      targetCtx.fillRect(sx, sy, 2, TILE);
     }
   }
 
   function drawMacroRelief(targetCtx, area) {
     const width = area.width * TILE;
     const height = area.height * TILE;
-    const palette = themeColors(area.theme);
-    const patches = Math.max(12, Math.floor((area.width * area.height) / 260));
-    for (let i = 0; i < patches; i += 1) {
-      const nx = seededNoise(i * 13 + area.width, i * 17 + area.height);
-      const ny = seededNoise(i * 19 + area.height, i * 23 + area.width);
-      const px = 40 + nx * (width - 80);
-      const py = 40 + ny * (height - 80);
-      const rx = 90 + seededNoise(i * 31, i * 37) * 150;
-      const ry = 55 + seededNoise(i * 41, i * 43) * 110;
-      const angle = (seededNoise(i * 47, i * 53) - 0.5) * 1.2;
+    const passes = Math.max(16, Math.floor((area.width * area.height) / 210));
+    for (let i = 0; i < passes; i += 1) {
+      const px = seededNoise(i * 59, i * 61) * width;
+      const py = seededNoise(i * 67, i * 71) * height;
+      const rx = 60 + seededNoise(i * 73, i * 79) * 160;
+      const ry = 28 + seededNoise(i * 83, i * 89) * 80;
       targetCtx.save();
       targetCtx.translate(px, py);
-      targetCtx.rotate(angle);
-      targetCtx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.026)" : "rgba(0,0,0,0.035)";
+      targetCtx.rotate((seededNoise(i * 97, i * 101) - 0.5) * 0.8);
+      targetCtx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.018)' : 'rgba(0,0,0,0.022)';
       targetCtx.beginPath();
       targetCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
       targetCtx.fill();
       targetCtx.restore();
     }
-
-    targetCtx.save();
-    targetCtx.globalAlpha = 0.12;
     const grad = targetCtx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, "rgba(255,255,255,0.28)");
-    grad.addColorStop(0.45, "rgba(255,255,255,0.00)");
-    grad.addColorStop(1, area.theme === "ember" ? "rgba(48,18,12,0.36)" : area.theme === "rootwood" ? "rgba(26,38,22,0.34)" : "rgba(28,22,14,0.26)");
+    grad.addColorStop(0, 'rgba(255,255,255,0.04)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.00)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.06)');
     targetCtx.fillStyle = grad;
     targetCtx.fillRect(0, 0, width, height);
-    targetCtx.restore();
-
-    for (let i = 0; i < Math.max(8, Math.floor(area.width / 12)); i += 1) {
-      const px = seededNoise(i * 59, i * 61) * width;
-      const py = seededNoise(i * 67, i * 71) * height;
-      targetCtx.fillStyle = area.theme === "ember" ? "rgba(255,180,128,0.035)" : area.theme === "rootwood" ? "rgba(167,212,151,0.03)" : "rgba(245,228,184,0.028)";
-      targetCtx.beginPath();
-      targetCtx.ellipse(px, py, 40 + seededNoise(i * 73, i * 79) * 55, 16 + seededNoise(i * 83, i * 89) * 26, 0, 0, Math.PI * 2);
-      targetCtx.fill();
-    }
   }
 
   function ensureAreaGroundCache(area) {
     if (!area || area.groundReady && area.groundCanvas) return;
     const canvas = getCacheCanvas(area.width * TILE, area.height * TILE);
     const targetCtx = canvas.getContext("2d");
-    targetCtx.imageSmoothingEnabled = true;
+    targetCtx.imageSmoothingEnabled = false;
     for (let y = 0; y < area.height; y += 1) {
       for (let x = 0; x < area.width; x += 1) {
         const sx = x * TILE;
@@ -3559,29 +3338,29 @@ function drawHouseRoofOverlays() {
 function themeColors(theme) {
   if (theme === "rootwood") {
     return {
-      grassA: "#536e46", grassB: "#6d8c59", dark: "#2b3d28", mid: "#89a96d", light: "#d2e2b5",
-      stoneA: "#5c6657", stoneB: "#73806b", pathA: "#74845f", pathB: "#87996c",
-      waterA: "#315d60", waterB: "#4a7f76", accent: "#c8eb9e"
+      grassA: "#5f7b48", grassB: "#75955a", dark: "#304126", mid: "#9fbe7a", light: "#d7e9af",
+      stoneA: "#6b7461", stoneB: "#87907a", pathA: "#8b8d78", pathB: "#a4a78d",
+      waterA: "#29586b", waterB: "#3b7f8b", accent: "#d3efaf", bank: "#90b06a", cliffA: "#4a5c3a", cliffB: "#314126"
     };
   }
   if (theme === "ember") {
     return {
-      grassA: "#7c4f39", grassB: "#966146", dark: "#41241b", mid: "#c7844c", light: "#f0bc7d",
-      stoneA: "#5f463f", stoneB: "#7a5a50", pathA: "#935e43", pathB: "#ac7252",
-      waterA: "#8e4d2d", waterB: "#bf6b39", accent: "#ffd0a2"
+      grassA: "#87553d", grassB: "#9f6548", dark: "#4b291d", mid: "#cc8e58", light: "#f4c07f",
+      stoneA: "#7b6157", stoneB: "#9a7c6f", pathA: "#a27958", pathB: "#be9370",
+      waterA: "#8e5d37", waterB: "#b87745", accent: "#ffd7ad", bank: "#b57f57", cliffA: "#6c4734", cliffB: "#4d2d21"
     };
   }
   if (theme === "ruins") {
     return {
-      grassA: "#8a826f", grassB: "#a19682", dark: "#51493d", mid: "#c5b89c", light: "#ece1c4",
-      stoneA: "#7b7264", stoneB: "#9a907f", pathA: "#b29269", pathB: "#cca97d",
-      waterA: "#4f6f7c", waterB: "#6f93a1", accent: "#fff0c7"
+      grassA: "#6e8b52", grassB: "#80a25f", dark: "#334028", mid: "#b4c78c", light: "#e7f0c6",
+      stoneA: "#9a8c6c", stoneB: "#b8a98b", pathA: "#c5d7bc", pathB: "#d7e6cf",
+      waterA: "#4a7287", waterB: "#6995a7", accent: "#fff2cb", bank: "#98bb7c", cliffA: "#786a4e", cliffB: "#61553f"
     };
   }
   return {
-    grassA: "#668f56", grassB: "#7fae67", dark: "#355231", mid: "#a6cb84", light: "#e3f0bf",
-    stoneA: "#6b7176", stoneB: "#889099", pathA: "#c9aa76", pathB: "#e0c08d",
-    waterA: "#3f83a6", waterB: "#63a8ca", accent: "#fff1ba"
+    grassA: "#5fa24d", grassB: "#68ab55", dark: "#2c5424", mid: "#8fcf73", light: "#dbf3ba",
+    stoneA: "#86907b", stoneB: "#a2ab98", pathA: "#caeccf", pathB: "#dff7df",
+    waterA: "#406e95", waterB: "#5f8eb1", accent: "#fff2ba", bank: "#96c675", cliffA: "#5a7b42", cliffB: "#3d592d"
   };
 }
 
@@ -3832,73 +3611,61 @@ function drawInteractables() {
         fillRoundedRect(sx + 5, sy + 3, 14, 10, 3, item.type === "townSign" ? "#f1ddb1" : "#ddbf82");
         softLine(sx + 8, sy + 7, sx + 16, sy + 7, "rgba(120,82,42,0.40)", 1.4, 1);
       } else if (item.type === "house") {
-        const roof = item.roof === "slate" ? ["#6b7b8f", "#a8b7c9", "#485667", "#2d3844"] : item.roof === "amber" ? ["#9c6041", "#d9a06a", "#734128", "#522a1e"] : ["#5e7f60", "#97bf8e", "#3f5b42", "#2d412e"];
-        const wallMain = "#d8c6a6";
-        const wallLight = "#efe2c6";
-        const wallShadow = "#b79f7d";
-        const wallDeep = "#947d5d";
-        const roofTop = sy + 12;
-        const roofBottom = sy + 34;
-        const wallTop = sy + 31;
-        const wallBottom = sy + item.h - 8;
-        const roofInset = 10;
-        const center = sx + item.w / 2;
-        ctx.fillStyle = "rgba(0,0,0,0.26)";
-        ctx.beginPath(); ctx.ellipse(sx + item.w / 2 + 2, sy + item.h - 2, (item.w - 6) / 2, 7, 0, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 8, wallTop, item.w - 16, wallBottom - wallTop, 10, wallMain);
-        fillRoundedRect(sx + 12, wallTop + 2, item.w - 24, wallBottom - wallTop - 4, 8, wallLight);
-        fillRoundedRect(sx + item.w - 18, wallTop + 1, 10, wallBottom - wallTop - 2, 5, wallShadow);
-        fillRoundedRect(sx + 8, wallBottom - 6, item.w - 16, 6, 4, wallDeep);
+        const roof = item.roof === "slate" ? ["#846b49", "#c3a474", "#5f472c", "#3b2b1a"] : item.roof === "amber" ? ["#8f6d45", "#d0ad78", "#6f5130", "#43301b"] : ["#7a6845", "#c1a36f", "#5f482c", "#3a2c1a"];
+        const wall = ["#caa978", "#e1c79a", "#9d7e56", "#7c623f"];
+        const roofY = sy + 10;
+        const wallY = sy + 28;
+        ctx.fillStyle = "rgba(0,0,0,0.18)";
+        ctx.fillRect(sx + 10, sy + item.h - 5, item.w - 18, 5);
         ctx.fillStyle = roof[3];
         ctx.beginPath();
-        ctx.moveTo(sx + 6, roofBottom);
-        ctx.lineTo(center, roofTop - 4);
-        ctx.lineTo(sx + item.w - 6, roofBottom);
-        ctx.lineTo(sx + item.w - 14, roofBottom + 8);
-        ctx.lineTo(sx + 14, roofBottom + 8);
+        ctx.moveTo(sx + 10, wallY);
+        ctx.lineTo(sx + 18, roofY + 4);
+        ctx.lineTo(sx + item.w - 18, roofY + 4);
+        ctx.lineTo(sx + item.w - 10, wallY);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = roof[0];
         ctx.beginPath();
-        ctx.moveTo(sx + roofInset, roofBottom - 6);
-        ctx.lineTo(center, roofTop);
-        ctx.lineTo(sx + item.w - roofInset, roofBottom - 6);
-        ctx.lineTo(sx + item.w - 16, roofBottom + 4);
-        ctx.lineTo(sx + 16, roofBottom + 4);
+        ctx.moveTo(sx + 14, wallY - 3);
+        ctx.lineTo(sx + 22, roofY + 6);
+        ctx.lineTo(sx + item.w - 22, roofY + 6);
+        ctx.lineTo(sx + item.w - 14, wallY - 3);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = roof[1];
-        ctx.beginPath();
-        ctx.moveTo(center - 6, roofTop + 2);
-        ctx.lineTo(center, roofTop);
-        ctx.lineTo(center + 18, roofBottom - 8);
-        ctx.lineTo(center + 6, roofBottom - 10);
-        ctx.closePath();
-        ctx.fill();
-        for (let stripe = 0; stripe < 4; stripe += 1) {
-          const yLine = roofTop + 7 + stripe * 4;
-          softLine(sx + 18, yLine, sx + item.w - 18, yLine + 1, "rgba(255,255,255,0.07)", 1.1, 0.9);
+        ctx.fillRect(sx + 20, roofY + 8, item.w - 40, 3);
+        for (let ry = roofY + 12; ry < wallY - 2; ry += 4) {
+          ctx.fillStyle = "rgba(255,255,255,0.08)";
+          ctx.fillRect(sx + 18, ry, item.w - 36, 1);
         }
-        softLine(center, roofTop + 1, center, roofBottom - 2, "rgba(255,255,255,0.10)", 1.2, 0.9);
-        fillRoundedRect(sx + 12, wallTop, 4, wallBottom - wallTop - 4, 3, "rgba(255,255,255,0.10)");
-        fillRoundedRect(sx + item.w - 16, wallTop + 2, 4, wallBottom - wallTop - 6, 3, "rgba(0,0,0,0.12)");
-        fillRoundedRect(center - 8, wallBottom - 24, 16, 18, 4, "#7a5637");
-        fillRoundedRect(center - 6, wallBottom - 22, 12, 14, 3, "#8e6340");
-        fillRoundedRect(center - 2, wallBottom - 16, 2, 6, 1, "rgba(255,243,208,0.22)");
-        fillRoundedRect(center - 10, wallBottom - 4, 20, 4, 2, "#82684d");
-        fillRoundedRect(center - 14, wallBottom - 2, 28, 3, 2, "rgba(0,0,0,0.14)");
-        fillRoundedRect(sx + 16, wallTop + 4, 14, 12, 4, "#7e9ebb");
-        fillRoundedRect(sx + item.w - 30, wallTop + 4, 14, 12, 4, "#7e9ebb");
-        fillRoundedRect(sx + 18, wallTop + 6, 10, 8, 3, "rgba(235,246,255,0.82)");
-        fillRoundedRect(sx + item.w - 28, wallTop + 6, 10, 8, 3, "rgba(235,246,255,0.82)");
-        softLine(sx + 23, wallTop + 4, sx + 23, wallTop + 16, "rgba(93,120,145,0.45)", 1.0, 0.9);
-        softLine(sx + item.w - 23, wallTop + 4, sx + item.w - 23, wallTop + 16, "rgba(93,120,145,0.45)", 1.0, 0.9);
-        if (item.w >= TILE * 10) {
-          fillRoundedRect(sx + item.w - 24, roofTop + 4, 6, 16, 2, "#72584b");
-          fillRoundedRect(sx + item.w - 22, roofTop + 2, 8, 4, 2, "#d0c1aa");
-          ctx.fillStyle = "rgba(0,0,0,0.10)";
-          ctx.beginPath(); ctx.ellipse(sx + item.w - 10, roofBottom + 5, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
-        }
+        ctx.fillStyle = wall[0];
+        ctx.fillRect(sx + 14, wallY - 1, item.w - 28, item.h - (wallY - sy) - 10);
+        ctx.fillStyle = wall[1];
+        ctx.fillRect(sx + 18, wallY + 3, item.w - 36, item.h - (wallY - sy) - 16);
+        ctx.fillStyle = wall[3];
+        ctx.fillRect(sx + 14, sy + item.h - 12, item.w - 28, 6);
+        ctx.fillStyle = wall[2];
+        ctx.fillRect(sx + item.w / 2 - 10, sy + item.h - 28, 20, 22);
+        ctx.fillStyle = "#1f241d";
+        ctx.fillRect(sx + item.w / 2 - 7, sy + item.h - 24, 14, 18);
+        ctx.fillStyle = "rgba(255,220,170,0.18)";
+        ctx.fillRect(sx + item.w / 2 - 1, sy + item.h - 19, 2, 6);
+        ctx.fillStyle = "#6b5336";
+        ctx.fillRect(sx + item.w / 2 - 12, sy + item.h - 6, 24, 3);
+        const wx1 = sx + 20;
+        const wx2 = sx + item.w - 34;
+        ctx.fillStyle = wall[2];
+        ctx.fillRect(wx1, wallY + 5, 14, 12);
+        ctx.fillRect(wx2, wallY + 5, 14, 12);
+        ctx.fillStyle = "#252c20";
+        ctx.fillRect(wx1 + 2, wallY + 7, 10, 8);
+        ctx.fillRect(wx2 + 2, wallY + 7, 10, 8);
+        ctx.fillStyle = "rgba(255,245,210,0.18)";
+        ctx.fillRect(wx1 + 3, wallY + 8, 3, 2);
+        ctx.fillRect(wx2 + 3, wallY + 8, 3, 2);
+        ctx.fillStyle = roof[2];
+        ctx.fillRect(sx + 18, wallY - 2, item.w - 36, 4);
       } else if (item.type === "well") {
         ctx.fillStyle = "rgba(0,0,0,0.18)";
         ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, (item.w - 8) / 2, 3.4, 0, 0, Math.PI * 2); ctx.fill();
@@ -4123,6 +3890,41 @@ function drawPlayer() {
     ctx.stroke();
     ctx.restore();
   }
+
+function drawForegroundOccluders() {
+  const area = currentArea();
+  const p = state.player;
+  if (!area || !p) return;
+  for (let y = Math.max(0, Math.floor(state.camera.y / TILE) - 1); y < Math.min(area.height, Math.ceil((state.camera.y + state.logicalHeight) / TILE) + 1); y += 1) {
+    for (let x = Math.max(0, Math.floor(state.camera.x / TILE) - 1); x < Math.min(area.width, Math.ceil((state.camera.x + state.logicalWidth) / TILE) + 1); x += 1) {
+      if (area.world[y][x] !== 1) continue;
+      const wx = x * TILE; const wy = y * TILE;
+      if (p.x > wx - 4 && p.x < wx + TILE + 4 && p.y < wy + 15 && p.y > wy + 2) {
+        const sx = wx - state.camera.x;
+        const sy = wy - state.camera.y;
+        ctx.fillStyle = 'rgba(47,90,36,0.88)';
+        ctx.fillRect(sx, sy + 6, TILE, 5);
+        ctx.fillStyle = 'rgba(115,178,79,0.65)';
+        ctx.fillRect(sx + 3, sy + 7, 5, 1);
+        ctx.fillRect(sx + 12, sy + 6, 4, 1);
+      }
+    }
+  }
+  for (const item of area.interactables) {
+    if (item.type !== 'house' || item.visible === false) continue;
+    if (p.x < item.x || p.x > item.x + item.w || p.y > item.y + 34 || p.y < item.y + 8) continue;
+    const sx = item.x - state.camera.x;
+    const sy = item.y - state.camera.y;
+    ctx.fillStyle = 'rgba(60,44,23,0.92)';
+    ctx.beginPath();
+    ctx.moveTo(sx + 14, sy + 28);
+    ctx.lineTo(sx + 22, sy + 16);
+    ctx.lineTo(sx + item.w - 22, sy + 16);
+    ctx.lineTo(sx + item.w - 14, sy + 28);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
 
 function drawEffects() {
   for (const projectile of state.projectiles) {
