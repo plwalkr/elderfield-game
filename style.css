@@ -86,7 +86,7 @@ h1 {
 }
 .story-seed span {
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 3px;
   background: rgba(13, 24, 18, 0.78);
   border: 1px solid rgba(255,255,255,0.06);
   color: #d6e5c4;
@@ -153,19 +153,18 @@ canvas {
 .status-pill,
 .build-watermark,
 .mini-badge {
-  background: rgba(6, 12, 8, 0.78);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10, 20, 18, 0.92);
+  border: 2px solid rgba(214, 193, 122, 0.46);
   box-shadow: 0 8px 24px rgba(0,0,0,0.28);
-  backdrop-filter: blur(10px);
 }
 
 .hud-chip {
-  min-height: 30px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 4px 9px;
-  border-radius: 999px;
+  border-radius: 4px;
 }
 .hearts-chip { padding-right: 12px; }
 .counter-chip { min-width: 66px; justify-content: center; }
@@ -234,13 +233,13 @@ canvas {
   align-items: center;
   gap: 5px;
   padding: 5px;
-  border-radius: 16px;
+  border-radius: 4px;
 }
 
 .slot {
   width: 30px;
   height: 30px;
-  border-radius: 12px;
+  border-radius: 3px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.05);
   position: relative;
@@ -298,7 +297,7 @@ canvas {
   bottom: 3px;
   width: 9px;
   height: 9px;
-  border-radius: 999px;
+  border-radius: 4px;
   background: #67e67f;
   box-shadow: 0 0 8px rgba(103,230,127,0.6);
 }
@@ -317,7 +316,7 @@ canvas {
 
 .build-watermark {
   padding: 5px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   color: #cfdec0;
@@ -328,7 +327,7 @@ canvas {
   align-items: center;
   gap: 6px;
   padding: 5px 8px;
-  border-radius: 999px;
+  border-radius: 4px;
   color: #f4f7e8;
   font-size: 0.66rem;
   letter-spacing: 0.08em;
@@ -352,7 +351,7 @@ canvas {
 .status-dot {
   width: 10px;
   height: 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   display: inline-block;
   box-shadow: 0 0 12px currentColor;
 }
@@ -399,7 +398,7 @@ canvas {
   bottom: 12px;
   min-height: 44px;
   padding: 9px 13px;
-  border-radius: 16px;
+  border-radius: 4px;
   background: linear-gradient(180deg, rgba(6, 10, 8, 0.82), rgba(11, 17, 13, 0.92));
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 14px 34px rgba(0,0,0,0.28);
@@ -459,7 +458,7 @@ canvas {
   align-items: center;
   gap: 5px;
   padding: 6px 10px;
-  border-radius: 999px;
+  border-radius: 4px;
   font-size: 0.72rem;
   color: #dce6cf;
 }
@@ -530,7 +529,7 @@ canvas {
 .action-btn {
   position: absolute;
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
+  border-radius: 4px;
   background: rgba(7, 14, 10, 0.72);
   color: #f2f6e9;
   backdrop-filter: blur(8px);
@@ -628,7 +627,7 @@ canvas {
 }
 .boss-bar {
   height: 12px;
-  border-radius: 999px;
+  border-radius: 4px;
   overflow: hidden;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.08);

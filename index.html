@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Elderfield — Tile Language Reset I</title>
+  <title>Elderfield — ALTTP Benchmark Reset</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,7 +13,7 @@
         <p class="eyebrow">Classic top-down high fantasy adventure</p>
         <h1>Elderfield</h1>
         <p class="subtitle">
-          A Zelda-inspired browser adventure now entering a visual reset arc. This pass focuses on crisper tile language, stronger cliff readability, blockier fantasy houses, and more sprite-like characters so Elderfield moves closer to that handcrafted 1996–2001 top-down adventure feel.
+          A Zelda-inspired browser adventure now entering a visual reset arc. This pass is a much harder Zelda-direction benchmark reset: brighter ALttP-like grass and path grammar, chunkier tree masses, more SNES/GBA-style house silhouettes, stronger little-fantasy-person sprites, and a real Esc pause state so the game starts feeling more like a deliberate adventure instead of a prototype.
         </p>
         <div class="story-seed" aria-label="Current lore foundations">
           <span><strong>Princess</strong> Elaria Vale</span>
@@ -27,9 +27,9 @@
         <span><strong>Move</strong> WASD / Arrows</span>
         <span><strong>Attack</strong> Click / Tap • Hold for advanced rapid fire</span>
         <span><strong>Run</strong> Shift / Ctrl while moving</span>
-        <span><strong>Interact</strong> Enter</span>
+        <span><strong>Interact</strong> Enter / right click</span>
         <span><strong>Switch Weapon</strong> Q / E or 1-3</span>
-        <span><strong>Debug</strong> F3 / ~ • Hitboxes F4</span>
+        <span><strong>Pause</strong> Esc • Debug F3 / ~ • Hitboxes F4</span>
         <span><strong>World</strong> Dawnrest • hidden caves • secret tablets • old Warden puzzles</span>
       </div>
     </section>
@@ -61,7 +61,7 @@
 
         <div class="hud-cluster hud-top-right">
           <div class="hud-meta">
-            <div class="build-watermark" id="buildWatermark">v3.12.0 • Thornroot Hollow Identity Pass</div>
+            <div class="build-watermark" id="buildWatermark">v3.14.0 • ALTTP Benchmark Reset</div>
             <div class="status-pill" id="statusPill" data-state="good">
               <span class="status-dot"></span>
               <span id="statusValue">GOOD</span>
@@ -79,7 +79,7 @@
           <strong id="areaBannerTitle">South Meadow</strong>
         </div>
 
-        <div class="message-box" id="messageBox">Explore the expanded field. Press Enter near shrines, signs, gates, and relic devices.</div>
+        <div class="message-box" id="messageBox">Esc pauses the road. Press Enter near shrines, signs, gates, and relic devices.</div>
 
         <aside class="debug-panel" id="debugPanel" hidden>
           <div class="debug-header">
@@ -90,7 +90,7 @@
             <button class="debug-copy-btn" id="copyDebugButton" type="button">Copy Debug Report</button>
           </div>
           <div class="debug-status-row">
-            <span class="mini-badge">Build <strong id="debugBuildValue">v3.12.0</strong></span>
+            <span class="mini-badge">Build <strong id="debugBuildValue">v3.14.0</strong></span>
             <span class="mini-badge mini-status" id="debugStatusBadge" data-state="good">GOOD</span>
             <span class="mini-badge mini-zone"><strong id="zoneValue">South Meadow</strong></span>
             <span class="mini-badge mini-objective"><span id="objectiveValue">Find a dungeon.</span></span>
@@ -101,7 +101,7 @@
         <div class="start-card" id="startCard">
           <h2>Elderfield</h2>
           <p>
-            Princess Elaria lies in the Thornglass Sleep while the Briar King gathers strength beneath the old kingdom. Walk the relic roads of the Dawn Wardens, find refuge in Dawnrest, hear what the people remember, and learn why the blood of Aurel has been called again.
+            Princess Elaria lies in the Thornglass Sleep while the Briar King gathers strength beneath the old kingdom. This benchmark reset pushes Elderfield much harder toward the legendary SNES adventure feel: brighter village screens, clearer houses and cliffs, stronger sprite bodies, and a truer pause-and-explore rhythm.
           </p>
           <div class="start-controls">
             <button id="startButton" class="primary-btn">Continue Adventure</button>
