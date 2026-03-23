@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.11.0";
+  const GAME_VERSION = "v3.12.0";
   const BUILD_DATE = "2026-03-23";
-  const BUILD_NAME = "Rootwood Screencraft Pass";
+  const BUILD_NAME = "Thornroot Hollow Identity Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Rootwood Screencraft Pass 3/4D";
+  const RENDER_STYLE = "Elderfield Thornroot Hollow Identity Pass 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -1834,6 +1834,76 @@ area.interactables.push({
     area.theme = meta.theme;
   }
 
+
+  function addProp(area, propKind, x, y, w, h, text, extra = {}) {
+    area.interactables.push(Object.assign({
+      type: "prop",
+      propKind,
+      x: x * TILE,
+      y: y * TILE,
+      w: w * TILE,
+      h: h * TILE,
+      text,
+    }, extra));
+  }
+
+  function applyRootwoodDungeonIdentity(area, roomIndex) {
+    if (roomIndex === 1) {
+      clearRect(area, 1, 1, area.width - 2, area.height - 2, 13);
+      fillRect(area, 6, 4, 4, 10, 9, true);
+      fillRect(area, 24, 4, 4, 10, 9, true);
+      fillRect(area, 13, 4, 8, 3, 14, false);
+      fillRect(area, 11, 9, 2, 5, 12, false);
+      fillRect(area, 21, 9, 2, 5, 12, false);
+      fillRect(area, 13, 7, 8, 9, 13, false);
+      clearRect(area, 1, 15, 4, 3, 10);
+      fillRect(area, 14, 0, 6, 2, 10, false);
+      area.solids[0][16] = false;
+      area.solids[1][16] = false;
+      addProp(area, "rootLantern", 12, 10, 1, 2, "A green-lit root lantern watches the vestibule with an old Warden patience.");
+      addProp(area, "rootLantern", 21, 10, 1, 2, "A second root lantern marks the spoor inward.");
+      addProp(area, "wardenIdol", 16, 4, 2, 3, "A little Warden idol stands at the mouth of Thornroot Hollow, carved where wood and oath were once one thing.");
+      addProp(area, "thornBramble", 7, 4, 2, 2, "A knot of old bramble has been trained aside instead of cut, as if the hall expects the wild to serve rather than rule.");
+      addProp(area, "thornBramble", 25, 4, 2, 2, "The roots here were bent into a warning screen long ago.");
+    } else if (roomIndex === 2) {
+      clearRect(area, 1, 1, area.width - 2, area.height - 2, 13);
+      fillRect(area, 9, 4, 2, 10, 9, true);
+      fillRect(area, 25, 4, 2, 10, 9, true);
+      fillRect(area, 13, 6, 10, 7, 12, false);
+      fillRect(area, 1, 8, area.width - 2, 4, 13, false);
+      fillRect(area, 15, 0, 6, 2, 10, false);
+      area.solids[0][17] = false;
+      area.solids[1][17] = false;
+      clearRect(area, 1, 15, 4, 3, 10);
+      addProp(area, "rootLantern", 13, 7, 1, 2, "A spoor-lantern hangs low, its green glass clouded by sap-smoke.");
+      addProp(area, "rootLantern", 21, 7, 1, 2, "The lantern flame pulls the eye toward the deeper seal.");
+      addProp(area, "rootLantern", 13, 13, 1, 2, "Someone once walked this chamber by ritual lantern-light alone.");
+      addProp(area, "rootLantern", 21, 13, 1, 2, "The lower lantern still burns like a remembered vow.");
+      addProp(area, "spearRack", 6, 9, 2, 2, "A spear rack stands ready for roadward hunters who never came back for their steel.");
+      addProp(area, "spearRack", 28, 9, 2, 2, "Hooked ash-shafts and leaf-bladed spearheads wait in the dark.");
+      addProp(area, "thornBramble", 16, 4, 2, 2, "A disciplined briar-knot frames the spoor-hall like a living heraldry.");
+      addProp(area, "thornBramble", 18, 4, 2, 2, "The bramble has been woven, not grown wild. Thornroot was built, not merely found.");
+    } else if (roomIndex === 3) {
+      clearRect(area, 1, 1, area.width - 2, area.height - 2, 13);
+      fillRect(area, 8, 4, 4, 13, 9, true);
+      fillRect(area, 26, 4, 4, 13, 9, true);
+      fillRect(area, 14, 4, 10, 3, 14, false);
+      fillRect(area, 14, 7, 10, 8, 12, false);
+      fillRect(area, 16, 0, 6, 2, 10, false);
+      area.solids[0][18] = false;
+      area.solids[1][18] = false;
+      clearRect(area, 1, 17, 5, 3, 10);
+      addProp(area, "wardenIdol", 12, 9, 2, 3, "A stern idol of the Thornroot wardens keeps its gaze on the oathhall floor.");
+      addProp(area, "wardenIdol", 24, 9, 2, 3, "Its twin idol is scarred by claw or root, but still unbowed.");
+      addProp(area, "rootLantern", 14, 6, 1, 2, "A root lantern casts a shrine-green halo over the altar steps.");
+      addProp(area, "rootLantern", 23, 6, 1, 2, "The second lantern burns opposite, balancing the oathhall like paired stars.");
+      addProp(area, "spearRack", 10, 17, 2, 2, "Spears once waited here for the last march into the briar war.");
+      addProp(area, "spearRack", 27, 17, 2, 2, "A final rack of oath-spears stands near the retreat stair, untouched for years.");
+      addProp(area, "thornBramble", 8, 5, 2, 2, "The side wall is half-eaten by disciplined thorn, as if the forest itself guards the oathhall.");
+      addProp(area, "thornBramble", 28, 5, 2, 2, "Even here the briars have not been allowed to overtake the center road.");
+    }
+  }
+
   function buildDungeonRoom1(dungeonId) {
     const meta = DUNGEONS[dungeonId];
     const area = makeArea(`${dungeonId}_1`, meta.names[0], 34, 20, dungeonId === "ember" ? 16 : 7, meta.theme, dungeonId, 1);
@@ -1893,7 +1963,7 @@ area.interactables.push({
       text: dungeonId === "ruins"
         ? "Inscription: Here the Dawn Wardens swore that the Aurel line would keep the crown roads sealed until thorn returned."
         : dungeonId === "rootwood"
-          ? "Moss script: Vaelor once watched these woods and answered only wardens who carried the old oath in their blood."
+          ? "Moss script: Vaelor watched this mouth in silver dawnfire and would only bow his neck to wardens who still carried the living oath of Aurel."
           : "Forge mark: In the red years, smith-priests chained sleeping flame to oath and named it Cinderwake.",
     });
 
@@ -1908,17 +1978,18 @@ area.interactables.push({
       taken: false,
     });
 
-    [[11, 6], [20, 6], [9, 14], [24, 14], [17, 12]].forEach((spot, idx) => {
+    (dungeonId === "rootwood" ? [[11, 6], [20, 6], [9, 14], [24, 14], [17, 12]] : [[11, 6], [20, 6], [9, 14], [24, 14], [17, 12]]).forEach((spot, idx) => {
       spawnEnemy(area, {
         x: (spot[0] + 0.5) * TILE,
         y: (spot[1] + 0.5) * TILE,
         speed: 58 + (idx % 2) * 10,
         chaseRadius: 150,
         health: idx === 4 ? 2 : 1,
-        tint: dungeonId === "ruins" ? "stone" : dungeonId === "rootwood" ? "moss" : "ember",
+        tint: dungeonId === "ruins" ? "stone" : dungeonId === "rootwood" ? (idx % 2 === 0 ? "vine" : "moss") : "ember",
       });
     });
 
+    if (dungeonId === "rootwood") applyRootwoodDungeonIdentity(area, 1);
     return area;
   }
 
@@ -1963,7 +2034,7 @@ area.interactables.push({
       text: dungeonId === "ruins"
         ? "Inscription: Princess Elaria was hidden not from death, but from waking shadow. The seal would hold only while the relic roads slept."
         : dungeonId === "rootwood"
-          ? "Moss script: The roots know true names. They bent aside from oathbreakers and toward the lost heir when the Briar King came."
+          ? "Moss script: The roots know true names. They turned from oathbreakers, but bent toward the lost heir when the Briar King first darkened the road."
           : "Forge mark: When the Briar King sought the princess, the last wardens sent her beneath sleeping flame and swore no tyrant would wake her.",
     });
 
@@ -1980,17 +2051,18 @@ area.interactables.push({
       text: "The deeper seal wants a key and a quiet room.",
     });
 
-    [[7, 6], [13, 9], [21, 9], [28, 6], [10, 14], [25, 14]].forEach((spot, idx) => {
+    (dungeonId === "rootwood" ? [[7, 6], [13, 9], [21, 9], [28, 6], [10, 14], [25, 14]] : [[7, 6], [13, 9], [21, 9], [28, 6], [10, 14], [25, 14]]).forEach((spot, idx) => {
       spawnEnemy(area, {
         x: (spot[0] + 0.5) * TILE,
         y: (spot[1] + 0.5) * TILE,
         speed: 60 + (idx % 3) * 8,
         chaseRadius: 160,
         health: idx % 3 === 0 ? 2 : 1,
-        tint: dungeonId === "ruins" ? "stone" : dungeonId === "rootwood" ? "moss" : "ember",
+        tint: dungeonId === "ruins" ? "stone" : dungeonId === "rootwood" ? (idx % 2 === 0 ? "vine" : "moss") : "ember",
       });
     });
 
+    if (dungeonId === "rootwood") applyRootwoodDungeonIdentity(area, 2);
     return area;
   }
 
@@ -2033,7 +2105,7 @@ area.interactables.push({
       text: dungeonId === "ruins"
         ? "Inscription: Should dragonfire fail and wardens fall, let the crest choose the hand that remembers."
         : dungeonId === "rootwood"
-          ? "Moss script: The spear was cut for the road between worlds, to pierce bramble, veil, and spell."
+          ? "Moss script: The Galespine was cut for the road between worlds, to pierce bramble, veil, spell, and every false gate laid before the blood of Aurel."
           : "Forge mark: Beware the black-wing Cindervane, for dragonfire may guard a kingdom or ruin it alike.",
     });
 
@@ -2078,6 +2150,7 @@ area.interactables.push({
       fireCooldown: dungeonId === "ruins" ? 99 : dungeonId === "rootwood" ? 1.9 : 1.5,
     });
 
+    if (dungeonId === "rootwood") applyRootwoodDungeonIdentity(area, 3);
     return area;
   }
 
@@ -4418,6 +4491,41 @@ function drawPropAsset(item, sx, sy) {
     softLine(sx + 10, sy + 12, sx + 4, sy + 5, "#385c2e", 1.8, 0.95);
     softLine(sx + item.w - 10, sy + 12, sx + item.w - 4, sy + 5, "#385c2e", 1.8, 0.95);
     softLine(sx + item.w / 2, sy + 11, sx + item.w / 2, sy + 4, "#8eb26b", 1.1, 0.75);
+  } else if (kind === "rootLantern") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 7, 3, 0, 0, Math.PI * 2); ctx.fill();
+    softLine(sx + item.w / 2, sy + 3, sx + item.w / 2, sy + item.h - 11, "#5d4127", 2.4, 1);
+    softLine(sx + item.w / 2, sy + 3, sx + item.w / 2 - 5, sy + 1, "#446938", 1.8, 0.95);
+    fillRoundedRect(sx + item.w / 2 - 4, sy + item.h - 15, 8, 9, 3, "#a99f72");
+    fillRoundedRect(sx + item.w / 2 - 2.5, sy + item.h - 13.5, 5, 6, 2, "rgba(197, 234, 157, 0.78)");
+    ctx.fillStyle = "rgba(174, 228, 154, 0.16)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 10, 14, 12, 0, 0, Math.PI * 2); ctx.fill();
+  } else if (kind === "spearRack") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 5, sy + item.h - 10, item.w - 10, 4, 2, "#6b472a");
+    fillRoundedRect(sx + 7, sy + 8, 3, item.h - 14, 2, "#7e5936");
+    fillRoundedRect(sx + item.w - 10, sy + 8, 3, item.h - 14, 2, "#7e5936");
+    softLine(sx + 10, sy + 7, sx + 15, sy + 2, "#d3d8df", 1.2, 0.95);
+    softLine(sx + 15, sy + item.h - 8, sx + 15, sy + 4, "#8c6a42", 1.5, 1);
+    softLine(sx + item.w - 10, sy + 7, sx + item.w - 15, sy + 2, "#d3d8df", 1.2, 0.95);
+    softLine(sx + item.w - 15, sy + item.h - 8, sx + item.w - 15, sy + 4, "#8c6a42", 1.5, 1);
+  } else if (kind === "wardenIdol") {
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + item.w / 2 - 7, sy + item.h - 10, 14, 8, 4, "#625c50");
+    fillRoundedRect(sx + item.w / 2 - 5, sy + 10, 10, item.h - 18, 4, "#877f71");
+    fillRoundedRect(sx + item.w / 2 - 4, sy + 4, 8, 9, 3, "#a59b89");
+    ctx.fillStyle = "#413c35"; ctx.beginPath(); ctx.arc(sx + item.w / 2 - 1.6, sy + 8.2, 0.8, 0, Math.PI * 2); ctx.arc(sx + item.w / 2 + 1.6, sy + 8.2, 0.8, 0, Math.PI * 2); ctx.fill();
+    softLine(sx + item.w / 2 - 3, sy + 15, sx + item.w / 2 + 3, sy + 15, "#d7c994", 1.0, 0.8);
+    softLine(sx + item.w / 2, sy + 18, sx + item.w / 2, sy + item.h - 6, "#d7c994", 1.2, 0.7);
+  } else if (kind === "thornBramble") {
+    ctx.fillStyle = "rgba(0,0,0,0.14)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 2, 9, 3, 0, 0, Math.PI * 2); ctx.fill();
+    softLine(sx + 6, sy + item.h - 6, sx + item.w - 6, sy + 6, "#3d5a31", 2.1, 0.95);
+    softLine(sx + item.w - 6, sy + item.h - 6, sx + 6, sy + 6, "#446938", 2.0, 0.92);
+    softLine(sx + item.w / 2, sy + item.h - 5, sx + item.w / 2, sy + 4, "#6f8f4a", 1.4, 0.8);
+    fillRoundedRect(sx + item.w / 2 - 2, sy + item.h / 2 - 2, 4, 4, 2, "#7a5a35");
   } else if (kind === "rootGate") {
     ctx.fillStyle = "rgba(0,0,0,0.18)";
     ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, item.w * 0.32, 5, 0, 0, Math.PI * 2); ctx.fill();

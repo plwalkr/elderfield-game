@@ -1,65 +1,43 @@
-# Elderfield — v3.11.0 Rootwood Screencraft Pass
+# Elderfield — v3.12.0 Thornroot Hollow Identity Pass
 
-A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
+This pass pushes the third relic road deeper into its own legend. Thornroot Hollow now reads less like a generic recolored dungeon and more like a root-guarded Warden sanctum built for the Galespine Spear.
 
-## New in v3.11.0
-- tightened the Rootwood March approach with stronger authored cliff/forest composition instead of only adding surface props
-- added darker region-specific Rootwood trees, warmer Dawnrest trees, Crownfall road trees, and scorched Cinderreach silhouettes across the overworld cache
-- added new Rootwood warning props: carved root totems and a thorny deadfall
-- made overworld enemy looks more region-aware, including a dedicated vine-touched Rootwood enemy palette
-- added subtle Rootwood canopy atmosphere so the march reads deeper and more oppressive without changing stable systems
+## New in v3.12.0
 
-## Save behavior
-- the game stores progress in your browser
-- saves include: hearts, rupees, relics, dungeon state, owned weapons, active weapon, sword level, area, and checkpoint
-- on reload, use **Continue Adventure** to resume
-- use **New Journey** to begin fresh
-- use **Delete Save** to wipe the stored run
+- rebuilt the **Rootwood dungeon room layouts** with stronger hall composition and a clearer sense of progression
+- added rootwood-specific interior props, including **root lanterns**, **spear racks**, **Warden idols**, and **thorn bramble screens**
+- gave the three Thornroot chambers more authored identity:
+  - **Rootwake Mouth** now feels like a guarded vestibule
+  - **Lantern Spoor** now reads like a ritual spoor-hall rather than a generic arena
+  - **Verdant Oathhall** now frames the Mirethorn Knight and Galespine reward with stronger sacred-hall composition
+- enriched the Rootwood lore tablet text so the third road feels more legendary and less placeholder
+- updated build strings/UI text to **v3.12.0 • Thornroot Hollow Identity Pass**
 
-## Story foundations currently in play
-- **Princess:** Elaria Vale
-- **Ancient Evil:** the Briar King
-- **Forgotten Order:** the Dawn Wardens
-- **Heroic Line:** the Aurel line
-- **Dragon Names:** Vaelor the High Wyrm, Cindervane
+## Files
 
-## Controls
-- **Move:** WASD or Arrow Keys
-- **Attack:** Click / tap
-- **Rapid attack:** Hold click / tap with rapid-fire advanced weapons
-- **Run:** Hold Shift or Ctrl while moving
-- **Interact / Continue:** Enter or right-click
-- **Switch weapon:** Q / E or 1 / 2 / 3
-- **Debug:** F3 or `~`
-- **Hitboxes:** F4
-- **Clear enemies:** F6
-- **Heal:** H
-- **Reset game:** F8
+Upload these to your GitHub Pages repo root:
 
-## Included files
 - `index.html`
 - `style.css`
 - `game.js`
-- `README.md`
 
-## GitHub Pages
-Upload the files to your repo root and enable GitHub Pages from the main branch root.
+## Controls
 
-## Verify the update worked
-Look for:
-- on-screen build badge: `v3.11.0 • Rootwood Screencraft Pass`
-- debug/build info showing **v3.11.0**
-- Rootwood March feeling more corridor-authored with stronger forest/cliff framing
-- darker Rootwood trees, Rootwood warning totems, and a deadfall on the lower approach
-- region-aware overworld creatures and no regressions in save/debug flow
+- move: `WASD` or arrow keys
+- sprint/run: hold `Shift` or `Ctrl` while moving
+- attack: left click / tap
+- interact: `Enter` or right click
+- debug: open the in-game debug panel and use the copy report feature
 
-## Prior notes
-### v3.10.0
-- Rootwood March gained a stronger roadside watch feel with a roadhold, palisades, lantern posts, and ranger gear props
-- Dawnrest gained more lived-in village detail with shrine braziers, road lanterns, and a supply cart
-- Crownfall's northern approach gained rune-cut obelisks
+## Notes
 
-### v3.9.0
-- Dawnrest became the first safe haven on the Warden road
-- named NPC foundations and side-thread hooks were added
-- secret caves, cracked walls, and heart fragment systems were brought online
+This is still a code-built browser game using a handcrafted-ish kit direction. It is **not final art**. The goal of this pass is stronger dungeon identity and screen composition without breaking the stable systems already working in the build.
+
+## Verify after upload
+
+- on-screen build badge: `v3.12.0 • Thornroot Hollow Identity Pass`
+- debug/build info showing **v3.12.0**
+- Thornroot Hollow rooms now feel more distinct and ceremonial
+- Rootwood-specific interior props appear in the third dungeon line
+- save/load/debug copy still work normally
+- no doorway or room progression is blocked
