@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.5.0";
+  const GAME_VERSION = "v3.6.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Character, Culture & Interiors Pass";
+  const BUILD_NAME = "Asset Foundation Pack";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Storybook Material Depth 3/4D";
+  const RENDER_STYLE = "Elderfield Handcrafted Asset Foundations 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -3836,6 +3836,178 @@ function drawFlower(x, y, color) {
     softLine(x + 3, y + 6, x + 3.4, y + 10, "#3b7f34", 1.2, 1);
   }
 
+
+
+function drawHumanoidFigure(x, y, opts = {}) {
+  const t = performance.now() / 1000;
+  const walk = opts.walk || 0;
+  const stride = Math.sin(walk * 7.4) * (opts.moving ? 1 : 0.2);
+  const armSwing = Math.sin(walk * 7.4 + Math.PI / 2) * (opts.moving ? 1 : 0.15);
+  const cloak = opts.cloak || "#566749";
+  const tunic = opts.tunic || "#c8c5af";
+  const trim = opts.trim || "#eadbb9";
+  const hair = opts.hair || "#705138";
+  const boots = opts.boots || "#6a4a2c";
+  const skin = opts.skin || "#ecd2b3";
+  const accent = opts.accent || "#9eb6d4";
+  const shadowW = opts.shadowW || 8;
+  const faceScale = opts.faceScale || 1;
+
+  ctx.fillStyle = "rgba(0,0,0,0.20)";
+  ctx.beginPath(); ctx.ellipse(x, y + 12, shadowW, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+
+  // back cloak and legs
+  fillRoundedRect(x - 7, y - 1, 14, 12, 5, cloak);
+  fillRoundedRect(x - 5.5, y + 8 + stride * 0.9, 3.5, 9, 2, boots);
+  fillRoundedRect(x + 2, y + 8 - stride * 0.9, 3.5, 9, 2, boots);
+  fillRoundedRect(x - 6.5, y + 1 + armSwing * 0.45, 2.5, 8, 2, cloak);
+  fillRoundedRect(x + 4, y + 1 - armSwing * 0.45, 2.5, 8, 2, cloak);
+
+  // torso and details
+  fillRoundedRect(x - 6, y - 3, 12, 12, 4, tunic);
+  fillRoundedRect(x - 6, y + 1, 12, 8, 4, cloak);
+  fillRoundedRect(x - 3, y - 1, 6, 7, 2, trim);
+  fillRoundedRect(x - 1, y - 2, 2, 10, 1, "rgba(90,55,28,0.55)");
+  fillRoundedRect(x - 7.5, y + 1, 2, 8, 2, accent);
+  if (opts.shield) fillRoundedRect(x - 10.5, y + 0, 4, 8, 3, opts.shieldColor || "#8796a8");
+  if (opts.lantern) {
+    fillRoundedRect(x + 7, y + 2, 2.5, 6, 1.5, "#6f4f2c");
+    fillRoundedRect(x + 6, y + 6, 5, 5, 2, "rgba(255,220,155,0.85)");
+    ctx.fillStyle = "rgba(255,216,140,0.20)";
+    ctx.beginPath(); ctx.ellipse(x + 8.5, y + 8, 9, 7, 0, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // head
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.ellipse(x, y - 6.6, 4.6 * faceScale, 5.0 * faceScale, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = hair;
+  ctx.beginPath();
+  ctx.arc(x, y - 8.4, 4.9 * faceScale, Math.PI, Math.PI * 2);
+  ctx.fill();
+  fillRoundedRect(x - 4.5, y - 10.2, 9, 2.4, 2, hair);
+  // face
+  ctx.fillStyle = "#241b16";
+  ctx.beginPath(); ctx.arc(x - 1.6, y - 6.9, 0.65, 0, Math.PI * 2); ctx.arc(x + 1.6, y - 6.9, 0.65, 0, Math.PI * 2); ctx.fill();
+  softLine(x - 1.2, y - 4.1, x + 1.2, y - 4.1, "#8b6040", 0.9, 0.8);
+  ctx.fillStyle = "rgba(255,255,255,0.18)";
+  ctx.beginPath(); ctx.ellipse(x - 1.6, y - 7.5, 0.5, 0.25, 0, 0, Math.PI * 2); ctx.ellipse(x + 1.4, y - 7.5, 0.45, 0.22, 0, 0, Math.PI * 2); ctx.fill();
+  if (opts.hood) fillRoundedRect(x - 6, y - 11, 12, 5, 3, cloak);
+}
+
+function drawHouseAsset(item, sx, sy) {
+  const roofMap = { slate: ["#736958", "#d5bf96", "#4e4334", "#2e2419"], amber: ["#8e6c47", "#e0be8d", "#684a2f", "#3b2919"], moss: ["#69734a", "#cfbc88", "#50603a", "#2e3d21"] };
+  const roof = roofMap[item.roof] || roofMap.moss;
+  const wall = ["#c9aa7e", "#eed9b8", "#9d7d58", "#6e5238"];
+  const roofTop = sy + 4;
+  const eaveY = sy + 24;
+  const wallY = sy + 27;
+  ctx.fillStyle = "rgba(0,0,0,0.24)";
+  ctx.beginPath(); ctx.ellipse(sx + item.w / 2 + 5, sy + item.h - 4, item.w * 0.34, 5, 0, 0, Math.PI * 2); ctx.fill();
+  // foundation
+  fillRoundedRect(sx + 8, sy + item.h - 14, item.w - 16, 9, 3, wall[3]);
+  // roof mass
+  ctx.fillStyle = roof[3];
+  ctx.beginPath();
+  ctx.moveTo(sx + 12, eaveY);
+  ctx.lineTo(sx + 22, roofTop + 9);
+  ctx.lineTo(sx + item.w / 2, roofTop - 9);
+  ctx.lineTo(sx + item.w - 22, roofTop + 9);
+  ctx.lineTo(sx + item.w - 12, eaveY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = roof[0];
+  ctx.beginPath();
+  ctx.moveTo(sx + 14, eaveY - 2);
+  ctx.lineTo(sx + 26, roofTop + 10);
+  ctx.lineTo(sx + item.w / 2, roofTop - 2);
+  ctx.lineTo(sx + item.w - 26, roofTop + 10);
+  ctx.lineTo(sx + item.w - 14, eaveY - 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = roof[1];
+  softLine(sx + 24, roofTop + 11, sx + item.w - 24, roofTop + 11, roof[1], 2.5, 0.9);
+  for (let ry = roofTop + 14; ry < eaveY - 2; ry += 4) softLine(sx + 20, ry, sx + item.w - 20, ry, "rgba(255,245,215,0.18)", 1.2, 0.8);
+  fillRoundedRect(sx + item.w - 19, roofTop + 5, 7, 13, 2, "#806040");
+  fillRoundedRect(sx + item.w - 18, roofTop + 4, 5, 2, 1, "#d9d1c6");
+  // wall plane
+  fillRoundedRect(sx + 12, wallY, item.w - 24, item.h - (wallY - sy) - 8, 4, wall[0]);
+  fillRoundedRect(sx + 16, wallY + 4, item.w - 32, item.h - (wallY - sy) - 13, 3, wall[1]);
+  // timber posts
+  fillRoundedRect(sx + 18, wallY + 2, 3, item.h - (wallY - sy) - 12, 1, wall[2]);
+  fillRoundedRect(sx + item.w - 21, wallY + 2, 3, item.h - (wallY - sy) - 12, 1, wall[2]);
+  // windows
+  [sx + 23, sx + item.w - 37].forEach(wx => {
+    fillRoundedRect(wx, wallY + 7, 12, 11, 2, wall[2]);
+    fillRoundedRect(wx + 2, wallY + 9, 8, 7, 1, "#253344");
+    ctx.fillStyle = "rgba(255,227,171,0.24)"; ctx.fillRect(wx + 3, wallY + 10, 3, 2);
+  });
+  // door + lantern
+  const doorX = sx + item.w / 2 - 10;
+  fillRoundedRect(doorX, sy + item.h - 31, 20, 25, 3, wall[2]);
+  fillRoundedRect(doorX + 2, sy + item.h - 27, 16, 19, 2, "#231b14");
+  ctx.fillStyle = "rgba(255,214,134,0.24)"; ctx.fillRect(doorX + 7, sy + item.h - 21, 2, 4);
+  fillRoundedRect(sx + item.w - 12, wallY + 12, 4, 10, 2, "#7d5c31");
+  ctx.fillStyle = "rgba(255,220,150,0.33)"; ctx.beginPath(); ctx.ellipse(sx + item.w - 10, wallY + 18, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+  // porch
+  ctx.fillStyle = "rgba(255,215,120,0.15)";
+  ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawNPCAsset(item, sx, sy) {
+  const palettes = {
+    merchant: { cloak: "#6b4a2b", tunic: "#4c7a47", trim: "#d8c18d", hair: "#714628", accent: "#c59e63" },
+    scholar: { cloak: "#4b5e77", tunic: "#9f8b69", trim: "#d7e5ef", hair: "#6c6043", accent: "#8fa7c7" },
+    guard: { cloak: "#33486a", tunic: "#6f7f8f", trim: "#d8e0ef", hair: "#7d6c51", accent: "#93a6b8" },
+    traveler: { cloak: "#5c4c73", tunic: "#6e5c46", trim: "#e4d7ef", hair: "#87553d", accent: "#b6a6d4" },
+    villager: { cloak: "#586249", tunic: "#8d7758", trim: "#eadbb9", hair: "#705138", accent: "#8aa182" },
+  };
+  const colors = palettes[item.palette || "villager"] || palettes.villager;
+  const walk = performance.now()/1000 + (item.x + item.y) * 0.002;
+  drawHumanoidFigure(sx + 12, sy + 11, {
+    walk, moving: true, cloak: colors.cloak, tunic: colors.tunic, trim: colors.trim, hair: colors.hair, boots: "#6b4b2d", accent: colors.accent, shield: item.role === "Guard", hood: item.role === "Scholar", lantern: item.role === "Traveler" || item.role === "Merchant"
+  });
+  if (item.role === "Guard") fillRoundedRect(sx + 16, sy + 1, 2.5, 16, 1.5, "#d7e0ef");
+}
+
+function drawMonsterAsset(enemy, sx, sy) {
+  const walk = performance.now()/1000 + enemy.x * 0.01;
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.beginPath(); ctx.ellipse(sx, sy + 11, enemy.isBoss ? 12 : 9, enemy.isBoss ? 4 : 3, 0, 0, Math.PI * 2); ctx.fill();
+  if (enemy.type === "knight") {
+    const palette = enemy.tint === "embersteel" ? {cloak:"#5c2f20", tunic:"#8d4f30", trim:"#dfbb86", hair:"#50362a", accent:"#b6c8df"} : enemy.tint === "vine" ? {cloak:"#2d4427", tunic:"#4a6a3c", trim:"#cae7aa", hair:"#4a3c29", accent:"#93b88b"} : {cloak:"#2f3e66", tunic:"#65759a", trim:"#e4efff", hair:"#5b5147", accent:"#b6c8df"};
+    drawHumanoidFigure(sx, sy + 1, {walk, moving:true, cloak:palette.cloak, tunic:palette.tunic, trim:palette.trim, hair:palette.hair, boots:"#4a3524", accent:palette.accent, shield:true, shieldColor:palette.accent, hood:false, faceScale:0.88, shadowW: enemy.isBoss ? 11 : 8});
+    fillRoundedRect(sx + 8, sy - 5, 3, 16, 2, palette.trim);
+  } else if (enemy.tint === "moss") {
+    fillRoundedRect(sx - 8, sy - 2, 16, 11, 5, enemy.hurt > 0 ? "#ffffff" : "#466b38");
+    fillRoundedRect(sx - 10, sy - 4, 4, 11, 2, "#2f4d26");
+    fillRoundedRect(sx + 6, sy - 3, 4, 11, 2, "#2f4d26");
+    fillRoundedRect(sx - 6, sy - 9, 12, 7, 4, "#85be71");
+    fillRoundedRect(sx - 4, sy - 1, 8, 5, 3, "#d8efb5");
+    ctx.fillStyle = "#18130f"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.9, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.9, 0, Math.PI*2); ctx.fill();
+    softLine(sx - 7, sy + 2, sx - 11, sy + 8, "#274120", 1.4, 1);
+    softLine(sx + 7, sy + 2, sx + 11, sy + 8, "#274120", 1.4, 1);
+    softLine(sx - 2, sy - 7, sx - 5, sy - 11, "#2e4b26", 1.1, 1);
+    softLine(sx + 2, sy - 7, sx + 5, sy - 11, "#2e4b26", 1.1, 1);
+  } else if (enemy.tint === "stone") {
+    fillRoundedRect(sx - 8, sy - 3, 16, 12, 5, enemy.hurt > 0 ? "#ffffff" : "#8e8678");
+    fillRoundedRect(sx - 9, sy - 5, 18, 4, 2, "#72685c");
+    fillRoundedRect(sx - 6, sy - 7, 12, 5, 3, "#dcd1bf");
+    fillRoundedRect(sx - 10, sy + 2, 4, 7, 2, "#5f554a");
+    fillRoundedRect(sx + 6, sy + 2, 4, 7, 2, "#5f554a");
+    ctx.fillStyle = "#231c15"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.85, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.85, 0, Math.PI*2); ctx.fill();
+    softLine(sx - 4, sy + 4, sx + 4, sy + 4, "#4e433a", 1.0, 0.9);
+  } else {
+    fillRoundedRect(sx - 8, sy - 2, 16, 11, 5, enemy.hurt > 0 ? "#ffffff" : "#8c482d");
+    fillRoundedRect(sx - 9, sy - 6, 18, 5, 3, "#66311f");
+    fillRoundedRect(sx - 5, sy - 7, 10, 5, 3, "#ffca94");
+    fillRoundedRect(sx - 10, sy + 2, 4, 7, 2, "#5a281a");
+    fillRoundedRect(sx + 6, sy + 2, 4, 7, 2, "#5a281a");
+    ctx.fillStyle = "#21160f"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.85, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.85, 0, Math.PI*2); ctx.fill();
+    softLine(sx - 5, sy - 8, sx - 9, sy - 12, "#ff9d52", 1.2, 1);
+    softLine(sx + 5, sy - 8, sx + 9, sy - 12, "#ff9d52", 1.2, 1);
+  }
+}
+
 function drawWorldObjects() {
   // Static tree/stone highlights are baked into the area ground cache for performance.
 }
@@ -3856,75 +4028,7 @@ function drawInteractables() {
         softLine(sx + 8, sy + 7, sx + 16, sy + 7, "rgba(120,82,42,0.40)", 1.4, 1);
 
 } else if (item.type === "house") {
-  const roof = item.roof === "slate" ? ["#6e604b", "#ccb184", "#534230", "#2f2418"] : item.roof === "amber" ? ["#8d7148", "#d6b27f", "#6f5637", "#3d2d1a"] : ["#68714b", "#c8ae77", "#596235", "#324123"];
-  const wall = ["#c3a47b", "#e9d4ae", "#9c7d58", "#735a3e"];
-  const roofY = sy + 10;
-  const wallY = sy + 31;
-  ctx.fillStyle = "rgba(0,0,0,0.22)";
-  ctx.fillRect(sx + 10, sy + item.h - 5, item.w - 20, 5);
-  ctx.fillStyle = roof[3];
-  ctx.beginPath();
-  ctx.moveTo(sx + 12, wallY + 1);
-  ctx.lineTo(sx + 22, roofY + 3);
-  ctx.lineTo(sx + item.w / 2, roofY - 8);
-  ctx.lineTo(sx + item.w - 22, roofY + 3);
-  ctx.lineTo(sx + item.w - 12, wallY + 1);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = roof[0];
-  ctx.beginPath();
-  ctx.moveTo(sx + 14, wallY - 2);
-  ctx.lineTo(sx + 26, roofY + 7);
-  ctx.lineTo(sx + item.w / 2, roofY - 3);
-  ctx.lineTo(sx + item.w - 26, roofY + 7);
-  ctx.lineTo(sx + item.w - 14, wallY - 2);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = roof[1];
-  ctx.fillRect(sx + 22, roofY + 9, item.w - 44, 3);
-  ctx.fillStyle = "rgba(255,255,255,0.10)";
-  for (let ry = roofY + 13; ry < wallY - 2; ry += 4) ctx.fillRect(sx + 20, ry, item.w - 40, 1);
-  ctx.fillStyle = wall[0];
-  ctx.fillRect(sx + 14, wallY, item.w - 28, item.h - (wallY - sy) - 10);
-  ctx.fillStyle = wall[1];
-  ctx.fillRect(sx + 18, wallY + 4, item.w - 36, item.h - (wallY - sy) - 16);
-  ctx.fillStyle = wall[3];
-  ctx.fillRect(sx + 14, sy + item.h - 12, item.w - 28, 7);
-  const doorX = sx + item.w / 2 - 11;
-  ctx.fillStyle = wall[2];
-  ctx.fillRect(doorX, sy + item.h - 29, 22, 23);
-  ctx.fillStyle = "#1d2118";
-  ctx.fillRect(doorX + 3, sy + item.h - 25, 16, 19);
-  ctx.fillStyle = "rgba(255,227,179,0.18)";
-  ctx.fillRect(doorX + 8, sy + item.h - 18, 2, 5);
-  ctx.fillStyle = roof[2];
-  ctx.fillRect(sx + 18, wallY - 2, item.w - 36, 4);
-  ctx.fillStyle = wall[2];
-  ctx.fillRect(sx + 19, wallY + 6, 15, 13);
-  ctx.fillRect(sx + item.w - 34, wallY + 6, 15, 13);
-  ctx.fillStyle = "#252b21";
-  ctx.fillRect(sx + 22, wallY + 8, 9, 9);
-  ctx.fillRect(sx + item.w - 31, wallY + 8, 9, 9);
-  ctx.fillStyle = "rgba(255,236,187,0.20)";
-  ctx.fillRect(sx + 23, wallY + 9, 3, 2);
-  ctx.fillRect(sx + item.w - 30, wallY + 9, 3, 2);
-  ctx.fillStyle = "#8c6f44";
-  ctx.fillRect(sx + item.w - 18, roofY + 2, 6, 12);
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
-  ctx.fillRect(sx + item.w - 18, roofY + 12, 6, 2);
-  ctx.fillStyle = "rgba(255,227,154,0.26)";
-  ctx.beginPath(); ctx.ellipse(sx + item.w - 10, wallY + 15, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
-  fillRoundedRect(sx + item.w - 12, wallY + 10, 4, 9, 2, "#7f5d31");
-  if (item.targetAreaId) {
-    ctx.fillStyle = "rgba(255,214,124,0.38)";
-    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
-  }
-  if (item.label) {
-    ctx.fillStyle = "#6f5135";
-    ctx.fillRect(sx + 8, sy + item.h - 22, 10, 6);
-    ctx.fillStyle = "#c9b37f";
-    ctx.fillRect(sx + 9, sy + item.h - 21, 8, 4);
-  }
+  drawHouseAsset(item, sx, sy);
 } else if (item.type === "well") {
 
         ctx.fillStyle = "rgba(0,0,0,0.18)";
@@ -3938,40 +4042,7 @@ function drawInteractables() {
         softLine(sx + 7, sy + 12, sx + item.w - 7, sy + 12, "rgba(255,255,255,0.16)", 1.3, 0.85);
 
 } else if (item.type === "npc") {
-  const palettes = {
-    merchant: { cloak: "#6b4a2b", tunic: "#4c7a47", trim: "#d8c18d", hair: "#714628" },
-    scholar: { cloak: "#4b5e77", tunic: "#9f8b69", trim: "#d7e5ef", hair: "#6c6043" },
-    guard: { cloak: "#33486a", tunic: "#6f7f8f", trim: "#d8e0ef", hair: "#7d6c51" },
-    traveler: { cloak: "#5c4c73", tunic: "#6e5c46", trim: "#e4d7ef", hair: "#87553d" },
-    villager: { cloak: "#586249", tunic: "#8d7758", trim: "#eadbb9", hair: "#705138" },
-  };
-  const colors = palettes[item.palette || "villager"] || palettes.villager;
-  ctx.fillStyle = "rgba(0,0,0,0.19)";
-  ctx.beginPath(); ctx.ellipse(sx + 12, sy + 21, 8, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = colors.cloak;
-  ctx.beginPath();
-  ctx.moveTo(sx + 4, sy + 20);
-  ctx.lineTo(sx + 7, sy + 10);
-  ctx.lineTo(sx + 17, sy + 10);
-  ctx.lineTo(sx + 20, sy + 20);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = colors.tunic;
-  fillRoundedRect(sx + 7, sy + 11, 10, 10, 4, colors.tunic);
-  fillRoundedRect(sx + 5, sy + 12, 2, 8, 2, colors.cloak);
-  fillRoundedRect(sx + 17, sy + 12, 2, 8, 2, colors.cloak);
-  ctx.fillStyle = colors.trim;
-  fillRoundedRect(sx + 9, sy + 13, 6, 5, 2, colors.trim);
-  ctx.fillStyle = "#f0d8bb";
-  ctx.beginPath(); ctx.arc(sx + 12, sy + 8, 4.7, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = colors.hair;
-  ctx.beginPath(); ctx.arc(sx + 12, sy + 6.3, 4.9, Math.PI, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#2a201a";
-  ctx.beginPath(); ctx.arc(sx + 10.5, sy + 8, 0.8, 0, Math.PI * 2); ctx.arc(sx + 13.5, sy + 8, 0.8, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,0.16)";
-  ctx.fillRect(sx + 7, sy + 12, 2, 7);
-  if (item.role === "Guard") { fillRoundedRect(sx + 17, sy + 10, 3, 12, 2, "#c9d7ef"); fillRoundedRect(sx + 2, sy + 11, 4, 8, 3, "#93a6b8"); }
-  if (item.role === "Merchant") { fillRoundedRect(sx + 4, sy + 14, 3, 7, 2, "#a37a49"); fillRoundedRect(sx + 18, sy + 6, 2, 8, 2, "#d2a76a"); }
+  drawNPCAsset(item, sx, sy);
 } else if (item.type === "crackedWall") {
 
         fillRoundedRect(sx + 4, sy + 5, item.w - 8, item.h - 10, 5, "#7f7468");
@@ -4082,50 +4153,7 @@ function drawEnemies() {
     if (enemy.dead) continue;
     const sx = enemy.x - state.camera.x;
     const sy = enemy.y - state.camera.y;
-    ctx.fillStyle = "rgba(0,0,0,0.22)";
-    ctx.beginPath(); ctx.ellipse(sx, sy + 11, enemy.isBoss ? 12 : 9, enemy.isBoss ? 4 : 3, 0, 0, Math.PI * 2); ctx.fill();
-
-    if (enemy.type === "knight") {
-      const armor = enemy.hurt > 0 ? "#ffffff" : enemy.tint === "embersteel" ? "#8d4f30" : enemy.tint === "vine" ? "#4a6a3c" : "#65759a";
-      const trim = enemy.tint === "embersteel" ? "#dfbb86" : enemy.tint === "vine" ? "#cae7aa" : "#e4efff";
-      const cloak = enemy.tint === "embersteel" ? "#5c2f20" : enemy.tint === "vine" ? "#2d4427" : "#2f3e66";
-      fillRoundedRect(sx - 8, sy - 9, 16, 18, 5, armor);
-      fillRoundedRect(sx - 10, sy - 2, 4, 10, 3, "#9aa8ba");
-      fillRoundedRect(sx - 6, sy - 6, 12, 8, 3, trim);
-      fillRoundedRect(sx - 7, sy + 4, 14, 8, 4, cloak);
-      ctx.fillStyle = "#ecd5b0";
-      ctx.beginPath(); ctx.arc(sx, sy - 10, 3.6, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#2a2118";
-      ctx.beginPath(); ctx.arc(sx - 1.5, sy - 10, 0.7, 0, Math.PI * 2); ctx.arc(sx + 1.5, sy - 10, 0.7, 0, Math.PI * 2); ctx.fill();
-      fillRoundedRect(sx + 8, sy - 5, 3, 15, 2, trim);
-      fillRoundedRect(sx - 11, sy - 3, 4, 12, 3, "#b6c8df");
-    } else if (enemy.tint === "moss") {
-      fillRoundedRect(sx - 8, sy - 5, 16, 12, 5, enemy.hurt > 0 ? "#ffffff" : "#4c7f43");
-      fillRoundedRect(sx - 10, sy - 3, 3, 8, 2, "#30502a");
-      fillRoundedRect(sx - 6, sy - 8, 12, 6, 4, "#7fbf6c");
-      fillRoundedRect(sx - 4, sy - 1, 8, 6, 3, "#d4efb3");
-      ctx.fillStyle = "#191511";
-      ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.9, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.9, 0, Math.PI * 2); ctx.fill();
-      softLine(sx - 8, sy + 2, sx - 11, sy + 8, "#274120", 1.4, 1);
-      softLine(sx + 8, sy + 1, sx + 11, sy + 8, "#274120", 1.4, 1);
-    } else if (enemy.tint === "stone") {
-      fillRoundedRect(sx - 8, sy - 6, 16, 14, 5, enemy.hurt > 0 ? "#ffffff" : "#918a7c");
-      fillRoundedRect(sx - 10, sy - 4, 3, 9, 2, "#6b655d");
-      fillRoundedRect(sx - 5, sy - 4, 10, 7, 4, "#d8ccbb");
-      ctx.fillStyle = "#2a2118";
-      ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.fill();
-      fillRoundedRect(sx - 7, sy + 4, 3, 4, 1, "#4c4238");
-      fillRoundedRect(sx + 4, sy + 4, 3, 4, 1, "#4c4238");
-    } else {
-      fillRoundedRect(sx - 8, sy - 6, 16, 14, 5, enemy.hurt > 0 ? "#ffffff" : "#8e4c31");
-      fillRoundedRect(sx - 10, sy - 4, 3, 9, 2, "#5b2c1f");
-      fillRoundedRect(sx - 6, sy - 4, 12, 7, 4, "#ffc693");
-      ctx.fillStyle = "#2a2118";
-      ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.fill();
-      softLine(sx - 7, sy - 6, sx - 10, sy - 10, "#ff9d52", 1.2, 1);
-      softLine(sx + 7, sy - 6, sx + 10, sy - 10, "#ff9d52", 1.2, 1);
-    }
-
+    drawMonsterAsset(enemy, sx, sy);
     if (enemy.health > 1) {
       const ratio = clamp(enemy.health / Math.max(1, enemy.maxHealth), 0, 1);
       const width = enemy.isBoss ? 28 : enemy.type === "knight" ? 16 : 10;
@@ -4141,31 +4169,15 @@ function drawPlayer() {
   const sy = p.y - state.camera.y;
   const blink = p.invuln > 0 && Math.floor(p.invuln * 14) % 2 === 0;
   if (!blink) {
-    ctx.fillStyle = "rgba(0,0,0,0.20)";
-    ctx.beginPath(); ctx.ellipse(sx, sy + 11, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
-
-    ctx.fillStyle = "#ebd2b3";
-    ctx.beginPath(); ctx.arc(sx, sy - 3, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#7d5d36";
-    ctx.beginPath(); ctx.arc(sx, sy - 5.4, 5.4, Math.PI, Math.PI * 2); ctx.fill();
-    fillRoundedRect(sx - 8, sy - 12, 16, 6, 4, "#517042");
-    fillRoundedRect(sx - 6, sy - 10, 12, 3, 2, "rgba(255,255,255,0.12)");
-    fillRoundedRect(sx - 7, sy - 2, 14, 10, 4, "#dfebc7");
-    fillRoundedRect(sx - 8, sy + 1, 16, 9, 5, "#406f43");
-    fillRoundedRect(sx - 9, sy + 1, 3, 8, 2, "#d8e3f2");
-    fillRoundedRect(sx - 11, sy + 1, 2, 7, 2, "#4f6478");
-    fillRoundedRect(sx - 6, sy + 9, 4, 8, 2, "#8d6a39");
-    fillRoundedRect(sx + 2, sy + 9, 4, 8, 2, "#8d6a39");
-    ctx.fillStyle = "#2b2118";
-    ctx.beginPath(); ctx.arc(sx - 1.6, sy - 3.1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 1.6, sy - 3.1, 0.8, 0, Math.PI * 2); ctx.fill();
-    fillRoundedRect(sx + 6, sy - 1, 3, 12, 2, "#9c7a46");
-    fillRoundedRect(sx - 2, sy + 1, 4, 2, 1, "#8f5e36");
-
-    const weapon = activeWeaponData();
+    const walk = performance.now()/1000 + (p.x + p.y) * 0.002;
+    drawHumanoidFigure(sx, sy + 2, {
+      walk, moving: p.isMoving, cloak: "#4e6c40", tunic: "#dfe7cc", trim: "#f1e2b8", hair: "#77552f", boots: "#8b6739", accent: "#8ca5bf", shield: true, shieldColor: "#9baab9", hood: false, faceScale: 1
+    });
     if (p.isRunning) {
       ctx.fillStyle = "rgba(255, 248, 202, 0.28)";
-      ctx.beginPath(); ctx.ellipse(sx, sy + 3, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(sx, sy + 4, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
     }
+    const weapon = activeWeaponData();
     const weaponColor = weapon.id === "wand" ? "#ffbf6c" : "#d7e8ff";
     if (Math.abs(p.lastDir.x) > Math.abs(p.lastDir.y)) {
       fillRoundedRect(sx + (p.lastDir.x > 0 ? 8 : -11), sy - 1, weapon.id === "spear" ? 10 : 7, 3, 2, weaponColor);
