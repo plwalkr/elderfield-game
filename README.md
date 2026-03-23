@@ -1,17 +1,20 @@
-# Elderfield — v3.12.0 Thornroot Hollow Identity Pass
+# Elderfield — v3.13.0 Tile Language Reset I
 
-This pass pushes the third relic road deeper into its own legend. Thornroot Hollow now reads less like a generic recolored dungeon and more like a root-guarded Warden sanctum built for the Galespine Spear.
+This pass is a visual reset, not a content expansion pass.
 
-## New in v3.12.0
+The goal is to move Elderfield away from smooth procedural-shape rendering and closer to a more handcrafted late-90s / early-2000s top-down fantasy feel: crisper tile surfaces, stronger cliff faces, blockier tree masses, less modern gradient softness, and more sprite-like character bodies.
 
-- rebuilt the **Rootwood dungeon room layouts** with stronger hall composition and a clearer sense of progression
-- added rootwood-specific interior props, including **root lanterns**, **spear racks**, **Warden idols**, and **thorn bramble screens**
-- gave the three Thornroot chambers more authored identity:
-  - **Rootwake Mouth** now feels like a guarded vestibule
-  - **Lantern Spoor** now reads like a ritual spoor-hall rather than a generic arena
-  - **Verdant Oathhall** now frames the Mirethorn Knight and Galespine reward with stronger sacred-hall composition
-- enriched the Rootwood lore tablet text so the third road feels more legendary and less placeholder
-- updated build strings/UI text to **v3.12.0 • Thornroot Hollow Identity Pass**
+## New in v3.13.0
+
+- switched the main canvas render path to **no smoothing** so the core image stays crisper
+- rebuilt the **ground tile language** to use tighter, more square, less painted-looking grass/path/stone patterns
+- strengthened **raised ground / cliff face readability** with clearer caps, faces, and stratified ledge shading
+- replaced the softer macro terrain wash with much subtler **screen-scale banding / relief accents**
+- rebuilt the cached **tree silhouettes** into more blocky, tile-authored canopy masses with region-specific color identity
+- rebuilt **houses** into a more square, readable fantasy sprite/tile style instead of rounded vector-like forms
+- rebuilt the shared **humanoid figure language** so the player, NPCs, and knight family read more like little fantasy sprites
+- gave the non-knight enemy bodies a more angular pixel-shape treatment
+- updated build strings/UI text to **v3.13.0 • Tile Language Reset I**
 
 ## Files
 
@@ -31,13 +34,14 @@ Upload these to your GitHub Pages repo root:
 
 ## Notes
 
-This is still a code-built browser game using a handcrafted-ish kit direction. It is **not final art**. The goal of this pass is stronger dungeon identity and screen composition without breaking the stable systems already working in the build.
+This is a **visual language reset foundation**. It is not final art, and it is not the whole answer by itself. The point of this pass is to change the rendering grammar so future authored screens, buildings, cliffs, and sprites can move in the right direction instead of piling more detail onto the old one.
 
 ## Verify after upload
 
-- on-screen build badge: `v3.12.0 • Thornroot Hollow Identity Pass`
-- debug/build info showing **v3.12.0**
-- Thornroot Hollow rooms now feel more distinct and ceremonial
-- Rootwood-specific interior props appear in the third dungeon line
+- on-screen build badge: `v3.13.0 • Tile Language Reset I`
+- debug/build info showing **v3.13.0**
+- the overworld grass/path/stone surfaces look less soft/painted and more deliberate
+- trees read more like chunky tile masses instead of smooth canopy blobs
+- houses feel more square and SNES/GBA-like in silhouette
+- player/NPC/knight bodies feel more sprite-like
 - save/load/debug copy still work normally
-- no doorway or room progression is blocked

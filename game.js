@@ -2,7 +2,7 @@
 (() => {
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingEnabled = false;
 
   const canvasWrap = document.getElementById("canvasWrap");
   const messageBox = document.getElementById("messageBox");
@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.12.0";
+  const GAME_VERSION = "v3.13.0";
   const BUILD_DATE = "2026-03-23";
-  const BUILD_NAME = "Thornroot Hollow Identity Pass";
+  const BUILD_NAME = "Tile Language Reset I";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Thornroot Hollow Identity Pass 3/4D";
+  const RENDER_STYLE = "Elderfield Tile Language Reset I 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -911,7 +911,7 @@
     canvas.width = Math.floor(state.logicalWidth * dpr);
     canvas.height = Math.floor(state.logicalHeight * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingEnabled = false;
   }
 
   function make2DArray(w, h, fill) {
@@ -3503,397 +3503,311 @@ function drawAtmosphere() {
     targetCtx.stroke();
   }
 
-  function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
-    const palette = themeColors(theme);
-    const n1 = seededNoise(Math.floor(x / 2), Math.floor(y / 2));
-    const n2 = seededNoise(x * 13 + 7, y * 17 + 11);
-    const n3 = seededNoise(x * 23 + 13, y * 29 + 5);
-    const grassBase = n1 > 0.52 ? palette.grassB : palette.grassA;
+  
+function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
+  const palette = themeColors(theme);
+  const n1 = seededNoise(Math.floor(x / 2), Math.floor(y / 2));
+  const n2 = seededNoise(x * 13 + 7, y * 17 + 11);
+  const grassBase = n1 > 0.5 ? palette.grassB : palette.grassA;
 
-    if (tile === 0 || tile === 1 || tile === 4 || tile === 5 || tile === 6 || tile === 13) {
-      targetCtx.fillStyle = grassBase;
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = palette.mid;
-      for (let py = 2; py < TILE; py += 6) {
-        for (let px = 1; px < TILE; px += 6) {
-          const wobble = seededNoise(x * 41 + px, y * 37 + py);
-          if (wobble > 0.52) targetCtx.fillRect(sx + px, sy + py, 2, 1);
-        }
-      }
-      targetCtx.fillStyle = "rgba(255,255,255,0.05)";
-      targetCtx.fillRect(sx, sy, TILE, 2);
-      targetCtx.fillStyle = "rgba(0,0,0,0.05)";
-      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
-      if (n2 > 0.72) {
-        targetCtx.fillStyle = "rgba(32,66,24,0.18)";
-        targetCtx.fillRect(sx + 5, sy + 12, 2, 1);
-        targetCtx.fillRect(sx + 14, sy + 8, 2, 1);
-        targetCtx.fillRect(sx + 18, sy + 16, 1, 1);
-      }
-      if (tile === 5) {
-        drawFlowerCached(targetCtx, sx + 7, sy + 7, "#ffd86e");
-        drawFlowerCached(targetCtx, sx + 15, sy + 14, "#fff5a8");
-      } else if (tile === 6) {
-        drawFlowerCached(targetCtx, sx + 8, sy + 6, "#e9d3ff");
-        drawFlowerCached(targetCtx, sx + 14, sy + 14, "#ffd2ea");
-      } else if (tile === 13) {
-        targetCtx.fillStyle = "#345b2b";
-        targetCtx.fillRect(sx + 5, sy + 7, 2, 10);
-        targetCtx.fillRect(sx + 12, sy + 9, 2, 8);
-        targetCtx.fillRect(sx + 17, sy + 6, 2, 9);
-      }
-      return;
-    }
-    if (tile === 2) {
-      targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-      targetCtx.fillRect(sx + 2, sy + 3, 10, 1);
-      targetCtx.fillRect(sx + 11, sy + 9, 8, 1);
-      targetCtx.fillRect(sx + 5, sy + 16, 12, 1);
-      targetCtx.fillStyle = "rgba(0,0,0,0.10)";
-      targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
-      return;
-    }
-    if (tile === 3) {
-      const a = palette.pathA, b = palette.pathB;
-      targetCtx.fillStyle = a;
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = b;
-      targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, TILE - 2);
-      targetCtx.fillStyle = "rgba(124,146,120,0.55)";
-      targetCtx.fillRect(sx + 0, sy + 0, TILE, 1);
-      targetCtx.fillRect(sx + 0, sy + 0, 1, TILE);
-      targetCtx.fillStyle = "rgba(101,122,96,0.35)";
-      targetCtx.fillRect(sx + TILE - 1, sy + 1, 1, TILE - 1);
-      targetCtx.fillRect(sx + 1, sy + TILE - 1, TILE - 1, 1);
-      targetCtx.strokeStyle = "rgba(145,170,139,0.55)";
-      targetCtx.lineWidth = 1;
-      targetCtx.beginPath();
-      targetCtx.moveTo(sx + 8.5, sy + 1);
-      targetCtx.lineTo(sx + 8.5, sy + TILE - 1);
-      targetCtx.moveTo(sx + 16.5, sy + 1);
-      targetCtx.lineTo(sx + 16.5, sy + TILE - 1);
-      targetCtx.moveTo(sx + 1, sy + 8.5);
-      targetCtx.lineTo(sx + TILE - 1, sy + 8.5);
-      targetCtx.moveTo(sx + 1, sy + 16.5);
-      targetCtx.lineTo(sx + TILE - 1, sy + 16.5);
-      targetCtx.stroke();
-      if (n3 > 0.58) {
-        targetCtx.fillStyle = "rgba(255,255,255,0.18)";
-        targetCtx.fillRect(sx + 4, sy + 4, 3, 2);
-        targetCtx.fillRect(sx + 13, sy + 13, 3, 2);
-      }
-      return;
-    }
-    if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
-      const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
-      const topColor = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
-      targetCtx.fillStyle = topColor;
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.12)";
-      targetCtx.fillRect(sx, sy, TILE, 2);
-      targetCtx.fillStyle = "rgba(0,0,0,0.10)";
-      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
-      targetCtx.strokeStyle = "rgba(95,88,77,0.40)";
-      targetCtx.lineWidth = 1;
-      targetCtx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
-      if (tile === 8 || tile === 14) {
-        targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-        targetCtx.fillRect(sx + 5, sy + 5, 10, 3);
-      }
-      if (tile === 12) {
-        targetCtx.strokeStyle = "rgba(255,255,255,0.10)";
-        targetCtx.beginPath();
-        targetCtx.moveTo(sx + 4.5, sy + 7.5);
-        targetCtx.lineTo(sx + 11.5, sy + 13.5);
-        targetCtx.lineTo(sx + 17.5, sy + 9.5);
-        targetCtx.stroke();
-      }
-      return;
-    }
-    if (tile === 9) {
-      targetCtx.fillStyle = theme === "rootwood" ? "#435d41" : theme === "ember" ? "#5e4036" : "#6e786d";
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-      targetCtx.fillRect(sx, sy, TILE, 2);
-      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 5);
-      for (let bx = 2; bx < TILE - 2; bx += 7) {
-        targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-        targetCtx.fillRect(sx + bx, sy + 5, 5, 4);
-        targetCtx.fillStyle = "rgba(0,0,0,0.08)";
-        targetCtx.fillRect(sx + bx + 1, sy + 13, 5, 4);
-      }
-      return;
-    }
-    if (tile === 10) {
-      targetCtx.fillStyle = "#1a2231";
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "#6fb7ff";
-      targetCtx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
-      targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
-      targetCtx.fillStyle = "rgba(180,220,255,0.20)";
-      targetCtx.fillRect(sx + 6, sy + 6, 12, 12);
-      return;
-    }
-    if (tile === 15) {
-      targetCtx.fillStyle = (x + y) % 2 === 0 ? "#7e4b32" : "#92553a";
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,178,110,0.10)";
-      targetCtx.fillRect(sx + 3, sy + 4, 6, 2);
-      targetCtx.fillRect(sx + 12, sy + 10, 5, 2);
-      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
-      return;
-    }
-    if (tile === 16) {
-      targetCtx.fillStyle = seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6a3a2a" : "#7b4330";
-      targetCtx.fillRect(sx, sy, TILE, TILE);
-      targetCtx.fillStyle = "rgba(255,210,146,0.08)";
-      targetCtx.fillRect(sx + 5, sy + 14, 10, 2);
-      targetCtx.fillRect(sx + 12, sy + 6, 7, 1);
-      return;
-    }
-    targetCtx.fillStyle = "magenta";
+  if (tile === 0 || tile === 1 || tile === 4 || tile === 5 || tile === 6 || tile === 13) {
+    targetCtx.fillStyle = grassBase;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-  }
-
-  function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
-    if (tile === 1) {
-      const region = area.id === "overworld"
-        ? overworldRegionAtTile(area, x, y)
-        : area.theme === "rootwood"
-          ? "Rootwood March"
-          : area.theme === "ember"
-            ? "Cinderreach"
-            : area.theme === "ruins"
-              ? "Crownfall Ruins"
-              : area.name;
-      targetCtx.fillStyle = "rgba(0,0,0,0.24)";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 12, sy + 22, 11, 3.2, 0, 0, Math.PI * 2);
-      targetCtx.fill();
-      if (region === "Rootwood March") {
-        targetCtx.fillStyle = "#4d3320";
-        targetCtx.fillRect(sx + 10, sy + 11, 4, 11);
-        targetCtx.fillStyle = "#2a1a12";
-        targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
-        targetCtx.fillRect(sx + 8, sy + 18, 2, 4);
-        targetCtx.fillRect(sx + 14, sy + 18, 2, 4);
-        targetCtx.fillStyle = "#1f3d1e";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 10, 10.8, 6.2, -0.10, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 7.5, sy + 13, 7.8, 5.2, -0.18, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 16.5, sy + 13, 7.6, 5.0, 0.18, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = "#355f2f";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 7.2, 8.4, 4.2, -0.10, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 6.3, sy + 10.0, 5.8, 3.8, -0.22, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 17.4, sy + 10.0, 5.6, 3.6, 0.18, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.strokeStyle = "rgba(124, 173, 98, 0.26)";
-        targetCtx.lineWidth = 1;
-        targetCtx.beginPath();
-        targetCtx.moveTo(sx + 6, sy + 16);
-        targetCtx.lineTo(sx + 3, sy + 20);
-        targetCtx.moveTo(sx + 18, sy + 16);
-        targetCtx.lineTo(sx + 21, sy + 20);
-        targetCtx.moveTo(sx + 11, sy + 12);
-        targetCtx.lineTo(sx + 11, sy + 3);
-        targetCtx.stroke();
-      } else if (region === "Crownfall Ruins") {
-        targetCtx.fillStyle = "#5a4030";
-        targetCtx.fillRect(sx + 10, sy + 11, 4, 11);
-        targetCtx.fillStyle = "#334128";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 12, sy + 9, 7.2, 4.0, 0, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 8, sy + 13, 6.4, 3.8, -0.15, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 16, sy + 13, 6.0, 3.6, 0.15, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = "#607d4a";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 12, sy + 6.5, 5.4, 2.6, 0, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.strokeStyle = "rgba(196, 188, 146, 0.24)";
-        targetCtx.lineWidth = 1;
-        targetCtx.beginPath();
-        targetCtx.moveTo(sx + 10, sy + 5);
-        targetCtx.lineTo(sx + 8, sy + 1);
-        targetCtx.moveTo(sx + 14, sy + 5);
-        targetCtx.lineTo(sx + 16, sy + 1);
-        targetCtx.stroke();
-      } else if (region === "Cinderreach") {
-        targetCtx.fillStyle = "#5f3927";
-        targetCtx.fillRect(sx + 10, sy + 11, 4, 11);
-        targetCtx.fillStyle = "#4b261c";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 11, 9.6, 5.4, -0.08, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 7, sy + 14, 6.8, 4.0, -0.16, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 17, sy + 14, 6.8, 4.0, 0.16, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = "#865037";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 8, 7.2, 3.1, -0.06, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.strokeStyle = "rgba(255, 171, 98, 0.28)";
-        targetCtx.lineWidth = 1;
-        targetCtx.beginPath();
-        targetCtx.moveTo(sx + 8, sy + 7);
-        targetCtx.lineTo(sx + 5, sy + 3);
-        targetCtx.moveTo(sx + 16, sy + 7);
-        targetCtx.lineTo(sx + 19, sy + 3);
-        targetCtx.stroke();
-      } else if (region === "Dawnrest") {
-        targetCtx.fillStyle = "#6b482b";
-        targetCtx.fillRect(sx + 10, sy + 12, 4, 10);
-        targetCtx.fillStyle = "#315426";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 11, 10.4, 6.2, -0.08, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 8, sy + 13, 7.8, 4.9, -0.16, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 16, sy + 13, 7.5, 4.7, 0.16, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = "#6da355";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 8, sy + 8, 3.8, 1.9, 0, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 16, sy + 8, 3.4, 1.7, 0, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 12, sy + 6.8, 2.8, 1.2, 0, 0, Math.PI * 2);
-        targetCtx.fill();
-      } else {
-        targetCtx.fillStyle = "#5c3f25";
-        targetCtx.fillRect(sx + 10, sy + 12, 4, 10);
-        targetCtx.fillStyle = "#3f2c1a";
-        targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
-        targetCtx.fillRect(sx + 9, sy + 19, 2, 3);
-        targetCtx.fillRect(sx + 13, sy + 19, 2, 3);
-        targetCtx.fillStyle = "#24471c";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 11, 11, 6.5, -0.10, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 8, sy + 14, 8.5, 5.4, -0.18, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 16, sy + 14, 8, 5.2, 0.20, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = "#35672a";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 11, sy + 8, 9, 4.8, -0.08, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 6.5, sy + 11, 6.5, 4.4, -0.18, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 17.5, sy + 11, 6.3, 4.1, 0.16, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = "#5e9a49";
-        targetCtx.beginPath();
-        targetCtx.ellipse(sx + 8, sy + 8, 3.6, 1.8, 0, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 16, sy + 8, 3.1, 1.5, 0, 0, Math.PI * 2);
-        targetCtx.ellipse(sx + 12, sy + 6.5, 2.5, 1.1, 0, 0, Math.PI * 2);
-        targetCtx.fill();
-        targetCtx.strokeStyle = "rgba(140, 198, 108, 0.35)";
-        targetCtx.lineWidth = 1;
-        targetCtx.beginPath();
-        targetCtx.moveTo(sx + 6, sy + 16);
-        targetCtx.lineTo(sx + 4, sy + 19);
-        targetCtx.moveTo(sx + 18, sy + 16);
-        targetCtx.lineTo(sx + 20, sy + 19);
-        targetCtx.stroke();
+    targetCtx.fillStyle = palette.dark;
+    if ((x + y) % 2 === 0) targetCtx.fillRect(sx, sy, TILE, 1);
+    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    targetCtx.fillStyle = palette.mid;
+    for (let py = 3; py < TILE - 2; py += 5) {
+      for (let px0 = 2; px0 < TILE - 2; px0 += 5) {
+        if (seededNoise(x * 37 + px0, y * 31 + py) > 0.56) targetCtx.fillRect(sx + px0, sy + py, 2, 1);
       }
-    } else if (tile === 4) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 12, sy + 19, 8, 3, 0, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.fillStyle = "#757d75";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 12, sy + 13, 9, 6, -0.2, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.fillStyle = "#a8b0aa";
-      targetCtx.beginPath();
-      targetCtx.ellipse(sx + 10, sy + 10, 6, 3, -0.25, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.fillStyle = "rgba(255,255,255,0.16)";
-      targetCtx.fillRect(sx + 9, sy + 9, 4, 1);
-    } else if (tile === 9) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-      targetCtx.fillRect(sx + 3, sy + 20, 18, 3);
+    }
+    targetCtx.fillStyle = palette.light;
+    if ((x + y) % 3 === 0) {
+      targetCtx.fillRect(sx + 3, sy + 4, 3, 1);
+      targetCtx.fillRect(sx + 15, sy + 8, 2, 1);
+    }
+    if (n2 > 0.7) {
+      targetCtx.fillStyle = "rgba(25,38,18,0.20)";
+      targetCtx.fillRect(sx + 8, sy + 15, 2, 2);
+      targetCtx.fillRect(sx + 18, sy + 12, 1, 1);
+    }
+    if (tile === 5) {
+      drawFlowerCached(targetCtx, sx + 7, sy + 7, "#ffd86e");
+      drawFlowerCached(targetCtx, sx + 15, sy + 14, "#fff5a8");
+    } else if (tile === 6) {
+      drawFlowerCached(targetCtx, sx + 8, sy + 6, "#e9d3ff");
+      drawFlowerCached(targetCtx, sx + 14, sy + 14, "#ffd2ea");
+    } else if (tile === 13) {
+      targetCtx.fillStyle = "#345b2b";
+      targetCtx.fillRect(sx + 5, sy + 7, 2, 10);
+      targetCtx.fillRect(sx + 12, sy + 9, 2, 8);
+      targetCtx.fillRect(sx + 17, sy + 6, 2, 9);
+    }
+    return;
+  }
+  if (tile === 2) {
+    targetCtx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = "rgba(255,255,255,0.16)";
+    targetCtx.fillRect(sx + 3, sy + 4, 8, 1);
+    targetCtx.fillRect(sx + 13, sy + 9, 6, 1);
+    targetCtx.fillRect(sx + 6, sy + 15, 11, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
+    targetCtx.fillStyle = "rgba(160,220,255,0.08)";
+    targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, 1);
+    return;
+  }
+  if (tile === 3) {
+    targetCtx.fillStyle = palette.pathA;
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = palette.pathB;
+    targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, TILE - 2);
+    targetCtx.fillStyle = "rgba(96,74,45,0.20)";
+    targetCtx.fillRect(sx + 1, sy + TILE - 2, TILE - 2, 1);
+    targetCtx.fillRect(sx + TILE - 2, sy + 1, 1, TILE - 2);
+    targetCtx.fillStyle = "rgba(214,201,164,0.20)";
+    targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, 1);
+    targetCtx.fillRect(sx + 1, sy + 1, 1, TILE - 2);
+    targetCtx.fillStyle = "rgba(120,90,52,0.18)";
+    targetCtx.fillRect(sx + 5, sy + 7, 2, 2);
+    targetCtx.fillRect(sx + 14, sy + 13, 3, 2);
+    targetCtx.fillRect(sx + 10, sy + 4, 2, 1);
+    return;
+  }
+  if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
+    const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
+    const topColor = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
+    targetCtx.fillStyle = topColor;
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = "rgba(255,255,255,0.14)";
+    targetCtx.fillRect(sx, sy, TILE, 2);
+    targetCtx.fillRect(sx, sy, 2, TILE);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
+    targetCtx.strokeStyle = "rgba(95,88,77,0.32)";
+    targetCtx.lineWidth = 1;
+    targetCtx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
+    targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+    targetCtx.fillRect(sx + 5, sy + 5, 7, 2);
+    targetCtx.fillStyle = "rgba(70,58,48,0.28)";
+    targetCtx.fillRect(sx + 12, sy + 13, 5, 2);
+    if (tile === 12) {
       targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-      targetCtx.fillRect(sx + 4, sy + 3, 16, 2);
-      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-      targetCtx.fillRect(sx + 4, sy + 17, 16, 2);
+      targetCtx.fillRect(sx + 5, sy + 8, 2, 1);
+      targetCtx.fillRect(sx + 11, sy + 13, 2, 1);
+      targetCtx.fillRect(sx + 16, sy + 10, 2, 1);
     }
+    return;
+  }
+  if (tile === 9) {
+    targetCtx.fillStyle = theme === "rootwood" ? "#435d41" : theme === "ember" ? "#5e4036" : "#6e786d";
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+    targetCtx.fillRect(sx, sy, TILE, 2);
+    targetCtx.fillRect(sx, sy, 2, TILE);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx, sy + TILE - 4, TILE, 4);
+    targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
+    for (let bx = 2; bx < TILE - 2; bx += 7) {
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.fillRect(sx + bx, sy + 5, 4, 2);
+      targetCtx.fillStyle = "rgba(0,0,0,0.08)";
+      targetCtx.fillRect(sx + bx + 1, sy + 12, 4, 2);
+    }
+    return;
+  }
+  if (tile === 10) {
+    targetCtx.fillStyle = "#1a2231";
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = "#6fb7ff";
+    targetCtx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
+    targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
+    targetCtx.fillStyle = "rgba(180,220,255,0.20)";
+    targetCtx.fillRect(sx + 6, sy + 6, 12, 12);
+    return;
+  }
+  if (tile === 15) {
+    targetCtx.fillStyle = (x + y) % 2 === 0 ? "#7e4b32" : "#92553a";
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = "rgba(255,178,110,0.12)";
+    targetCtx.fillRect(sx + 3, sy + 4, 6, 2);
+    targetCtx.fillRect(sx + 12, sy + 10, 5, 2);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    return;
+  }
+  if (tile === 16) {
+    targetCtx.fillStyle = seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6a3a2a" : "#7b4330";
+    targetCtx.fillRect(sx, sy, TILE, TILE);
+    targetCtx.fillStyle = "rgba(255,210,146,0.10)";
+    targetCtx.fillRect(sx + 5, sy + 14, 10, 2);
+    targetCtx.fillRect(sx + 12, sy + 6, 7, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    return;
+  }
+  targetCtx.fillStyle = "magenta";
+  targetCtx.fillRect(sx, sy, TILE, TILE);
+}
+
+
+  
+function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
+  if (tile === 1) {
+    const region = area.id === "overworld"
+      ? overworldRegionAtTile(area, x, y)
+      : area.theme === "rootwood"
+        ? "Rootwood March"
+        : area.theme === "ember"
+          ? "Cinderreach"
+          : area.theme === "ruins"
+            ? "Crownfall Ruins"
+            : area.name;
+    let trunk = "#5c3f25";
+    let canopyDark = "#24471c";
+    let canopyMid = "#35672a";
+    let canopyHi = "#5e9a49";
+    if (region === "Rootwood March") {
+      trunk = "#4d3320";
+      canopyDark = "#1f3d1e";
+      canopyMid = "#355f2f";
+      canopyHi = "#7faa5b";
+    } else if (region === "Crownfall Ruins") {
+      trunk = "#5a4030";
+      canopyDark = "#334128";
+      canopyMid = "#607d4a";
+      canopyHi = "#a8c27d";
+    } else if (region === "Cinderreach") {
+      trunk = "#5f3927";
+      canopyDark = "#4b261c";
+      canopyMid = "#865037";
+      canopyHi = "#d58b59";
+    } else if (region === "Dawnrest") {
+      trunk = "#6b482b";
+      canopyDark = "#315426";
+      canopyMid = "#5f8b47";
+      canopyHi = "#86bb69";
+    }
+    targetCtx.fillStyle = "rgba(0,0,0,0.20)";
+    targetCtx.fillRect(sx + 4, sy + 20, 16, 2);
+    targetCtx.fillStyle = trunk;
+    targetCtx.fillRect(sx + 10, sy + 11, 4, 10);
+    targetCtx.fillRect(sx + 8, sy + 17, 8, 2);
+    targetCtx.fillRect(sx + 8, sy + 19, 2, 2);
+    targetCtx.fillRect(sx + 14, sy + 19, 2, 2);
+    targetCtx.fillStyle = canopyDark;
+    targetCtx.fillRect(sx + 4, sy + 8, 16, 4);
+    targetCtx.fillRect(sx + 2, sy + 11, 20, 4);
+    targetCtx.fillRect(sx + 4, sy + 15, 16, 3);
+    targetCtx.fillStyle = canopyMid;
+    targetCtx.fillRect(sx + 6, sy + 6, 12, 3);
+    targetCtx.fillRect(sx + 4, sy + 10, 16, 3);
+    targetCtx.fillRect(sx + 6, sy + 13, 12, 3);
+    targetCtx.fillStyle = canopyHi;
+    targetCtx.fillRect(sx + 7, sy + 7, 4, 1);
+    targetCtx.fillRect(sx + 14, sy + 8, 3, 1);
+    targetCtx.fillRect(sx + 11, sy + 11, 3, 1);
+    if (region === "Rootwood March") {
+      targetCtx.fillStyle = "rgba(145,193,107,0.26)";
+      targetCtx.fillRect(sx + 3, sy + 18, 1, 3);
+      targetCtx.fillRect(sx + 20, sy + 18, 1, 3);
+    }
+  } else if (tile === 4) {
+    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+    targetCtx.fillRect(sx + 5, sy + 18, 14, 2);
+    targetCtx.fillStyle = "#757d75";
+    targetCtx.fillRect(sx + 6, sy + 10, 11, 7);
+    targetCtx.fillRect(sx + 8, sy + 8, 7, 3);
+    targetCtx.fillStyle = "#a8b0aa";
+    targetCtx.fillRect(sx + 9, sy + 9, 4, 1);
+    targetCtx.fillStyle = "rgba(255,255,255,0.16)";
+    targetCtx.fillRect(sx + 10, sy + 9, 2, 1);
+  } else if (tile === 9) {
+    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+    targetCtx.fillRect(sx + 4, sy + 3, 16, 2);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx + 4, sy + 17, 16, 2);
+  }
+}
+
+
+  
+function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
+  const tile = area.world[y][x];
+  const north = y > 0 ? area.world[y - 1][x] : tile;
+  const south = y < area.height - 1 ? area.world[y + 1][x] : tile;
+  const west = x > 0 ? area.world[y][x - 1] : tile;
+  const east = x < area.width - 1 ? area.world[y][x + 1] : tile;
+  const palette = themeColors(area.theme);
+  const groundish = new Set([0,3,5,6,13,1,4]);
+  const raised = new Set([7,8,9,12,14,15,16]);
+
+  if (groundish.has(tile) && south === 2) {
+    targetCtx.fillStyle = palette.bank;
+    targetCtx.fillRect(sx, sy + TILE - 5, TILE, 3);
+    targetCtx.fillStyle = "rgba(255,255,255,0.20)";
+    targetCtx.fillRect(sx + 1, sy + TILE - 5, TILE - 2, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+  }
+  if (groundish.has(tile) && north === 2) {
+    targetCtx.fillStyle = "rgba(233,245,218,0.12)";
+    targetCtx.fillRect(sx + 1, sy, TILE - 2, 2);
+  }
+  if (groundish.has(tile) && (east === 2 || west === 2)) {
+    targetCtx.fillStyle = "rgba(121,161,99,0.30)";
+    if (east === 2) targetCtx.fillRect(sx + TILE - 3, sy + 1, 3, TILE - 2);
+    if (west === 2) targetCtx.fillRect(sx, sy + 1, 3, TILE - 2);
   }
 
-  function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
-    const tile = area.world[y][x];
-    const north = y > 0 ? area.world[y - 1][x] : tile;
-    const south = y < area.height - 1 ? area.world[y + 1][x] : tile;
-    const west = x > 0 ? area.world[y][x - 1] : tile;
-    const east = x < area.width - 1 ? area.world[y][x + 1] : tile;
-    const palette = themeColors(area.theme);
-    const groundish = new Set([0,3,5,6,13,1,4]);
-    const raised = new Set([7,8,9,12,14,15,16]);
-
-    if (groundish.has(tile) && south === 2) {
-      targetCtx.fillStyle = palette.bank;
-      targetCtx.fillRect(sx, sy + TILE - 5, TILE, 3);
-      targetCtx.fillStyle = "rgba(255,255,255,0.18)";
-      targetCtx.fillRect(sx + 1, sy + TILE - 5, TILE - 2, 1);
-      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-      targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
-    }
-    if (groundish.has(tile) && north === 2) {
-      targetCtx.fillStyle = "rgba(233,245,218,0.10)";
-      targetCtx.fillRect(sx + 1, sy, TILE - 2, 2);
-    }
-    if (groundish.has(tile) && (east === 2 || west === 2)) {
-      targetCtx.fillStyle = "rgba(121,161,99,0.28)";
-      if (east === 2) targetCtx.fillRect(sx + TILE - 3, sy + 1, 3, TILE - 2);
-      if (west === 2) targetCtx.fillRect(sx, sy + 1, 3, TILE - 2);
-    }
-
-    if (raised.has(tile) && groundish.has(south)) {
-      targetCtx.fillStyle = palette.cliffA || "#5a7b42";
-      targetCtx.fillRect(sx, sy + TILE - 7, TILE, 7);
-      targetCtx.fillStyle = "rgba(255,255,255,0.18)";
-      targetCtx.fillRect(sx, sy + TILE - 8, TILE, 1);
-      targetCtx.fillStyle = palette.cliffB || "#3d592d";
-      targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
-      for (let bx = 2; bx < TILE - 2; bx += 6) {
-        targetCtx.fillStyle = "rgba(255,255,255,0.07)";
-        targetCtx.fillRect(sx + bx, sy + TILE - 7, 3, 2);
-      }
-    }
-    if (raised.has(tile) && groundish.has(east)) {
+  if (raised.has(tile) && groundish.has(south)) {
+    targetCtx.fillStyle = "rgba(245,236,195,0.22)";
+    targetCtx.fillRect(sx, sy + TILE - 9, TILE, 1);
+    targetCtx.fillStyle = palette.cliffA || "#5a7b42";
+    targetCtx.fillRect(sx, sy + TILE - 8, TILE, 8);
+    targetCtx.fillStyle = palette.cliffB || "#3d592d";
+    targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
+    for (let bx = 2; bx < TILE - 2; bx += 6) {
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.fillRect(sx + bx, sy + TILE - 7, 3, 1);
       targetCtx.fillStyle = "rgba(0,0,0,0.10)";
-      targetCtx.fillRect(sx + TILE - 3, sy, 3, TILE);
-    }
-    if (raised.has(tile) && groundish.has(west)) {
-      targetCtx.fillStyle = "rgba(255,255,255,0.06)";
-      targetCtx.fillRect(sx, sy, 2, TILE);
+      targetCtx.fillRect(sx + bx + 1, sy + TILE - 4, 3, 1);
     }
   }
+  if (raised.has(tile) && groundish.has(east)) {
+    targetCtx.fillStyle = "rgba(0,0,0,0.10)";
+    targetCtx.fillRect(sx + TILE - 3, sy, 3, TILE);
+  }
+  if (raised.has(tile) && groundish.has(west)) {
+    targetCtx.fillStyle = "rgba(255,255,255,0.06)";
+    targetCtx.fillRect(sx, sy, 2, TILE);
+  }
+}
 
-  function drawMacroRelief(targetCtx, area) {
-    const width = area.width * TILE;
-    const height = area.height * TILE;
-    const passes = Math.max(16, Math.floor((area.width * area.height) / 210));
-    for (let i = 0; i < passes; i += 1) {
-      const px = seededNoise(i * 59, i * 61) * width;
-      const py = seededNoise(i * 67, i * 71) * height;
-      const rx = 60 + seededNoise(i * 73, i * 79) * 160;
-      const ry = 28 + seededNoise(i * 83, i * 89) * 80;
-      targetCtx.save();
-      targetCtx.translate(px, py);
-      targetCtx.rotate((seededNoise(i * 97, i * 101) - 0.5) * 0.8);
-      targetCtx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.018)' : 'rgba(0,0,0,0.022)';
-      targetCtx.beginPath();
-      targetCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-      targetCtx.fill();
-      targetCtx.restore();
-    }
-    const grad = targetCtx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, 'rgba(255,255,255,0.04)');
-    grad.addColorStop(0.5, 'rgba(255,255,255,0.00)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.06)');
-    targetCtx.fillStyle = grad;
-    targetCtx.fillRect(0, 0, width, height);
+
+  
+function drawMacroRelief(targetCtx, area) {
+  const width = area.width * TILE;
+  const height = area.height * TILE;
+  for (let y = 24; y < height; y += 72) {
+    targetCtx.fillStyle = "rgba(255,255,255,0.010)";
+    targetCtx.fillRect(0, y, width, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.012)";
+    targetCtx.fillRect(0, y + 36, width, 1);
   }
+  const passes = Math.max(12, Math.floor((area.width * area.height) / 340));
+  for (let i = 0; i < passes; i += 1) {
+    const px0 = Math.floor(seededNoise(i * 59, i * 61) * (width - 48));
+    const py0 = Math.floor(seededNoise(i * 67, i * 71) * (height - 24));
+    const rw = 24 + Math.floor(seededNoise(i * 73, i * 79) * 44);
+    targetCtx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.010)' : 'rgba(0,0,0,0.014)';
+    targetCtx.fillRect(px0, py0, rw, 2);
+  }
+}
+
 
   function ensureAreaGroundCache(area) {
     if (!area || area.groundReady && area.groundCanvas) return;
@@ -4290,11 +4204,11 @@ function drawFlower(x, y, color) {
 
 
 
+
 function drawHumanoidFigure(x, y, opts = {}) {
-  const t = performance.now() / 1000;
   const walk = opts.walk || 0;
-  const stride = Math.sin(walk * 7.4) * (opts.moving ? 1 : 0.2);
-  const armSwing = Math.sin(walk * 7.4 + Math.PI / 2) * (opts.moving ? 1 : 0.15);
+  const stride = Math.round(Math.sin(walk * 7.2) * (opts.moving ? 1.6 : 0.4));
+  const armSwing = Math.round(Math.sin(walk * 7.2 + Math.PI / 2) * (opts.moving ? 1.2 : 0.3));
   const cloak = opts.cloak || "#566749";
   const tunic = opts.tunic || "#c8c5af";
   const trim = opts.trim || "#eadbb9";
@@ -4302,109 +4216,108 @@ function drawHumanoidFigure(x, y, opts = {}) {
   const boots = opts.boots || "#6a4a2c";
   const skin = opts.skin || "#ecd2b3";
   const accent = opts.accent || "#9eb6d4";
-  const shadowW = opts.shadowW || 8;
-  const faceScale = opts.faceScale || 1;
+  const shieldColor = opts.shieldColor || "#8796a8";
 
-  ctx.fillStyle = "rgba(0,0,0,0.20)";
-  ctx.beginPath(); ctx.ellipse(x, y + 12, shadowW, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+  px(x - 6, y + 12, 12, 2, "rgba(0,0,0,0.22)");
+  px(x - 5, y + 8 + stride, 3, 7, boots);
+  px(x + 2, y + 8 - stride, 3, 7, boots);
+  px(x - 6, y + 3 + armSwing, 2, 6, cloak);
+  px(x + 4, y + 3 - armSwing, 2, 6, cloak);
+  px(x - 6, y + 1, 12, 8, cloak);
+  px(x - 4, y, 8, 8, tunic);
+  px(x - 4, y + 6, 8, 2, cloak);
+  px(x - 3, y + 2, 6, 3, trim);
+  px(x - 4, y + 5, 8, 1, "rgba(70,42,24,0.70)");
+  px(x - 1, y - 1, 2, 10, "rgba(88,62,38,0.42)");
+  px(x - 5, y + 8, 2, 2, cloak);
+  px(x + 3, y + 8, 2, 2, cloak);
 
-  // back cloak and legs
-  fillRoundedRect(x - 7, y - 1, 14, 12, 5, cloak);
-  fillRoundedRect(x - 5.5, y + 8 + stride * 0.9, 3.5, 9, 2, boots);
-  fillRoundedRect(x + 2, y + 8 - stride * 0.9, 3.5, 9, 2, boots);
-  fillRoundedRect(x - 6.5, y + 1 + armSwing * 0.45, 2.5, 8, 2, cloak);
-  fillRoundedRect(x + 4, y + 1 - armSwing * 0.45, 2.5, 8, 2, cloak);
-
-  // torso and details
-  fillRoundedRect(x - 6, y - 3, 12, 12, 4, tunic);
-  fillRoundedRect(x - 6, y + 1, 12, 8, 4, cloak);
-  fillRoundedRect(x - 3, y - 1, 6, 7, 2, trim);
-  fillRoundedRect(x - 1, y - 2, 2, 10, 1, "rgba(90,55,28,0.55)");
-  fillRoundedRect(x - 7.5, y + 1, 2, 8, 2, accent);
-  if (opts.shield) fillRoundedRect(x - 10.5, y + 0, 4, 8, 3, opts.shieldColor || "#8796a8");
+  if (opts.shield) {
+    px(x - 10, y + 2, 4, 7, shieldColor);
+    px(x - 9, y + 3, 2, 5, "rgba(255,255,255,0.18)");
+    px(x - 10, y + 9, 4, 1, "rgba(0,0,0,0.18)");
+  }
   if (opts.lantern) {
-    fillRoundedRect(x + 7, y + 2, 2.5, 6, 1.5, "#6f4f2c");
-    fillRoundedRect(x + 6, y + 6, 5, 5, 2, "rgba(255,220,155,0.85)");
-    ctx.fillStyle = "rgba(255,216,140,0.20)";
-    ctx.beginPath(); ctx.ellipse(x + 8.5, y + 8, 9, 7, 0, 0, Math.PI * 2); ctx.fill();
+    px(x + 7, y + 3, 2, 6, "#6f4f2c");
+    px(x + 6, y + 7, 4, 4, "#d9b879");
+    px(x + 7, y + 8, 2, 2, "#fff0bc");
+    px(x + 4, y + 10, 8, 1, "rgba(255,222,150,0.20)");
   }
 
-  // head
-  ctx.fillStyle = skin;
-  ctx.beginPath(); ctx.ellipse(x, y - 6.6, 4.6 * faceScale, 5.0 * faceScale, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = hair;
-  ctx.beginPath();
-  ctx.arc(x, y - 8.4, 4.9 * faceScale, Math.PI, Math.PI * 2);
-  ctx.fill();
-  fillRoundedRect(x - 4.5, y - 10.2, 9, 2.4, 2, hair);
-  // face
-  ctx.fillStyle = "#241b16";
-  ctx.beginPath(); ctx.arc(x - 1.6, y - 6.9, 0.65, 0, Math.PI * 2); ctx.arc(x + 1.6, y - 6.9, 0.65, 0, Math.PI * 2); ctx.fill();
-  softLine(x - 1.2, y - 4.1, x + 1.2, y - 4.1, "#8b6040", 0.9, 0.8);
-  ctx.fillStyle = "rgba(255,255,255,0.18)";
-  ctx.beginPath(); ctx.ellipse(x - 1.6, y - 7.5, 0.5, 0.25, 0, 0, Math.PI * 2); ctx.ellipse(x + 1.4, y - 7.5, 0.45, 0.22, 0, 0, Math.PI * 2); ctx.fill();
-  if (opts.hood) fillRoundedRect(x - 6, y - 11, 12, 5, 3, cloak);
+  px(x - 4, y - 8, 8, 7, skin);
+  px(x - 5, y - 10, 10, 3, hair);
+  px(x - 4, y - 7, 8, 2, hair);
+  px(x - 3, y - 4, 1, 1, "#241b16");
+  px(x + 2, y - 4, 1, 1, "#241b16");
+  px(x - 1, y - 2, 2, 1, "#8b6040");
+  px(x - 4, y - 1, 8, 1, "rgba(255,255,255,0.10)");
+  if (opts.hood) {
+    px(x - 5, y - 9, 10, 2, cloak);
+    px(x - 5, y - 7, 2, 5, cloak);
+    px(x + 3, y - 7, 2, 5, cloak);
+  }
 }
 
+
+
 function drawHouseAsset(item, sx, sy) {
-  const roofMap = { slate: ["#736958", "#d5bf96", "#4e4334", "#2e2419"], amber: ["#8e6c47", "#e0be8d", "#684a2f", "#3b2919"], moss: ["#69734a", "#cfbc88", "#50603a", "#2e3d21"], green: ["#5f7148", "#d7c894", "#485534", "#29321f"] };
+  const roofMap = {
+    slate: ["#6e6657", "#8f856f", "#4a4236", "#d9c7a1"],
+    amber: ["#876345", "#a37a55", "#593d26", "#efcf96"],
+    moss: ["#66734b", "#7d8c60", "#415032", "#dacc9d"],
+    green: ["#556949", "#6b7f5a", "#36442d", "#d7c794"]
+  };
   const roof = roofMap[item.roof] || roofMap.moss;
-  const wall = ["#c9aa7e", "#eed9b8", "#9d7d58", "#6e5238"];
-  const roofTop = sy + 4;
-  const eaveY = sy + 24;
-  const wallY = sy + 27;
-  ctx.fillStyle = "rgba(0,0,0,0.24)";
-  ctx.beginPath(); ctx.ellipse(sx + item.w / 2 + 5, sy + item.h - 4, item.w * 0.34, 5, 0, 0, Math.PI * 2); ctx.fill();
-  fillRoundedRect(sx + 8, sy + item.h - 14, item.w - 16, 9, 3, wall[3]);
-  fillRoundedRect(sx + 12, sy + item.h - 18, item.w - 24, 5, 2, "#847261");
-  ctx.fillStyle = roof[3];
-  ctx.beginPath();
-  ctx.moveTo(sx + 12, eaveY);
-  ctx.lineTo(sx + 22, roofTop + 9);
-  ctx.lineTo(sx + item.w / 2, roofTop - 9);
-  ctx.lineTo(sx + item.w - 22, roofTop + 9);
-  ctx.lineTo(sx + item.w - 12, eaveY);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = roof[0];
-  ctx.beginPath();
-  ctx.moveTo(sx + 14, eaveY - 2);
-  ctx.lineTo(sx + 26, roofTop + 10);
-  ctx.lineTo(sx + item.w / 2, roofTop - 2);
-  ctx.lineTo(sx + item.w - 26, roofTop + 10);
-  ctx.lineTo(sx + item.w - 14, eaveY - 2);
-  ctx.closePath();
-  ctx.fill();
-  fillRoundedRect(sx + item.w / 2 - 4, roofTop - 8, 8, 5, 2, roof[1]);
-  softLine(sx + 24, roofTop + 11, sx + item.w - 24, roofTop + 11, roof[1], 2.5, 0.9);
-  for (let ry = roofTop + 14; ry < eaveY - 2; ry += 4) softLine(sx + 20, ry, sx + item.w - 20, ry, "rgba(255,245,215,0.18)", 1.2, 0.8);
-  fillRoundedRect(sx + item.w - 19, roofTop + 5, 7, 13, 2, "#806040");
-  fillRoundedRect(sx + item.w - 18, roofTop + 4, 5, 2, 1, "#d9d1c6");
-  fillRoundedRect(sx + 12, wallY, item.w - 24, item.h - (wallY - sy) - 8, 4, wall[0]);
-  fillRoundedRect(sx + 16, wallY + 4, item.w - 32, item.h - (wallY - sy) - 13, 3, wall[1]);
-  fillRoundedRect(sx + 18, wallY + 2, 3, item.h - (wallY - sy) - 12, 1, wall[2]);
-  fillRoundedRect(sx + item.w - 21, wallY + 2, 3, item.h - (wallY - sy) - 12, 1, wall[2]);
-  fillRoundedRect(sx + item.w / 2 - 1, wallY + 2, 2, item.h - (wallY - sy) - 12, 1, "rgba(120, 86, 56, 0.85)");
-  [sx + 23, sx + item.w - 37].forEach(wx => {
-    fillRoundedRect(wx, wallY + 7, 12, 11, 2, wall[2]);
-    fillRoundedRect(wx + 2, wallY + 9, 8, 7, 1, "#253344");
-    fillRoundedRect(wx - 2, wallY + 8, 2, 9, 1, "#74583d");
-    fillRoundedRect(wx + 12, wallY + 8, 2, 9, 1, "#74583d");
-    ctx.fillStyle = "rgba(255,227,171,0.24)"; ctx.fillRect(wx + 3, wallY + 10, 3, 2);
-    fillRoundedRect(wx + 1, wallY + 18, 10, 2, 1, "#7d6042");
+  const wallA = "#c6a57a";
+  const wallB = "#ead7b6";
+  const beam = "#765538";
+  const door = "#32251b";
+  const doorGlow = "rgba(255,220,156,0.18)";
+  const baseY = sy + item.h - 8;
+  const roofY = sy + 8;
+  const wallY = sy + 28;
+  const w = item.w;
+
+  px(sx + 10, baseY, w - 20, 3, "rgba(0,0,0,0.22)");
+  px(sx + 14, sy + item.h - 12, w - 28, 6, "#6f5841");
+
+  px(sx + 12, roofY + 10, w - 24, 14, roof[2]);
+  px(sx + 16, roofY + 6, w - 32, 16, roof[0]);
+  px(sx + 20, roofY + 2, w - 40, 14, roof[1]);
+  for (let rx = sx + 18; rx < sx + w - 18; rx += 8) {
+    px(rx, roofY + 8, 6, 1, roof[3]);
+    px(rx + 2, roofY + 12, 6, 1, "rgba(0,0,0,0.16)");
+  }
+  px(sx + 22, roofY + 1, w - 44, 2, roof[3]);
+  px(sx + 14, roofY + 22, w - 28, 4, roof[2]);
+
+  px(sx + 14, wallY, w - 28, item.h - (wallY - sy) - 10, wallA);
+  px(sx + 18, wallY + 3, w - 36, item.h - (wallY - sy) - 16, wallB);
+  px(sx + 16, wallY, 3, item.h - (wallY - sy) - 10, beam);
+  px(sx + w - 19, wallY, 3, item.h - (wallY - sy) - 10, beam);
+  px(sx + Math.floor(w / 2) - 1, wallY, 2, item.h - (wallY - sy) - 10, beam);
+  px(sx + 16, wallY + 2, w - 32, 2, "rgba(255,255,255,0.16)");
+
+  const doorX = sx + Math.floor(w / 2) - 9;
+  px(doorX, sy + item.h - 31, 18, 23, beam);
+  px(doorX + 2, sy + item.h - 28, 14, 19, door);
+  px(doorX + 6, sy + item.h - 21, 2, 3, doorGlow);
+  px(doorX - 8, sy + item.h - 21, 4, 13, beam);
+  px(doorX + 22, sy + item.h - 21, 4, 13, beam);
+  px(doorX - 8, sy + item.h - 23, 34, 3, "#8b6a46");
+
+  [sx + 23, sx + w - 35].forEach((wx) => {
+    px(wx, wallY + 8, 10, 11, beam);
+    px(wx + 2, wallY + 10, 6, 7, "#253344");
+    px(wx + 2, wallY + 10, 6, 1, "rgba(255,220,164,0.18)");
+    px(wx + 4, wallY + 13, 1, 4, "rgba(255,255,255,0.14)");
+    px(wx, wallY + 19, 10, 2, "#7d6042");
   });
-  const doorX = sx + item.w / 2 - 10;
-  fillRoundedRect(doorX, sy + item.h - 31, 20, 25, 3, wall[2]);
-  fillRoundedRect(doorX + 2, sy + item.h - 27, 16, 19, 2, "#231b14");
-  fillRoundedRect(doorX - 10, sy + item.h - 20, 4, 14, 2, wall[2]);
-  fillRoundedRect(doorX + 26, sy + item.h - 20, 4, 14, 2, wall[2]);
-  fillRoundedRect(doorX - 10, sy + item.h - 22, 40, 3, 2, "#8a6944");
-  ctx.fillStyle = "rgba(255,214,134,0.24)"; ctx.fillRect(doorX + 7, sy + item.h - 21, 2, 4);
-  fillRoundedRect(sx + item.w - 12, wallY + 12, 4, 10, 2, "#7d5c31");
-  ctx.fillStyle = "rgba(255,220,150,0.33)"; ctx.beginPath(); ctx.ellipse(sx + item.w - 10, wallY + 18, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "rgba(255,215,120,0.15)";
-  ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+  px(sx + w - 13, wallY + 12, 4, 10, "#7d5c31");
+  px(sx + w - 14, wallY + 22, 6, 1, "rgba(255,214,134,0.22)");
 }
+
 
 function drawPropAsset(item, sx, sy) {
   const kind = item.propKind || "lanternPost";
@@ -4562,57 +4475,56 @@ function drawNPCAsset(item, sx, sy) {
   if (item.role === "Guard") fillRoundedRect(sx + 16, sy + 1, 2.5, 16, 1.5, "#d7e0ef");
 }
 
+
 function drawMonsterAsset(enemy, sx, sy) {
   const walk = performance.now()/1000 + enemy.x * 0.01;
-  ctx.fillStyle = "rgba(0,0,0,0.22)";
-  ctx.beginPath(); ctx.ellipse(sx, sy + 11, enemy.isBoss ? 12 : 9, enemy.isBoss ? 4 : 3, 0, 0, Math.PI * 2); ctx.fill();
+  px(sx - (enemy.isBoss ? 11 : 8), sy + 11, enemy.isBoss ? 22 : 16, 2, "rgba(0,0,0,0.22)");
   if (enemy.type === "knight") {
-    const palette = enemy.tint === "embersteel" ? {cloak:"#5c2f20", tunic:"#8d4f30", trim:"#dfbb86", hair:"#50362a", accent:"#b6c8df"} : enemy.tint === "vine" ? {cloak:"#2d4427", tunic:"#4a6a3c", trim:"#cae7aa", hair:"#4a3c29", accent:"#93b88b"} : {cloak:"#2f3e66", tunic:"#65759a", trim:"#e4efff", hair:"#5b5147", accent:"#b6c8df"};
-    drawHumanoidFigure(sx, sy + 1, {walk, moving:true, cloak:palette.cloak, tunic:palette.tunic, trim:palette.trim, hair:palette.hair, boots:"#4a3524", accent:palette.accent, shield:true, shieldColor:palette.accent, hood:false, faceScale:0.88, shadowW: enemy.isBoss ? 11 : 8});
-    fillRoundedRect(sx + 8, sy - 5, 3, 16, 2, palette.trim);
-  } else if (enemy.tint === "moss") {
-    fillRoundedRect(sx - 8, sy - 2, 16, 11, 5, enemy.hurt > 0 ? "#ffffff" : "#466b38");
-    fillRoundedRect(sx - 10, sy - 4, 4, 11, 2, "#2f4d26");
-    fillRoundedRect(sx + 6, sy - 3, 4, 11, 2, "#2f4d26");
-    fillRoundedRect(sx - 6, sy - 9, 12, 7, 4, "#85be71");
-    fillRoundedRect(sx - 4, sy - 1, 8, 5, 3, "#d8efb5");
-    ctx.fillStyle = "#18130f"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.9, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.9, 0, Math.PI*2); ctx.fill();
-    softLine(sx - 7, sy + 2, sx - 11, sy + 8, "#274120", 1.4, 1);
-    softLine(sx + 7, sy + 2, sx + 11, sy + 8, "#274120", 1.4, 1);
-    softLine(sx - 2, sy - 7, sx - 5, sy - 11, "#2e4b26", 1.1, 1);
-    softLine(sx + 2, sy - 7, sx + 5, sy - 11, "#2e4b26", 1.1, 1);
-  } else if (enemy.tint === "vine") {
-    fillRoundedRect(sx - 8, sy - 2, 16, 11, 5, enemy.hurt > 0 ? "#ffffff" : "#36562c");
-    fillRoundedRect(sx - 10, sy - 4, 4, 11, 2, "#26411f");
-    fillRoundedRect(sx + 6, sy - 3, 4, 11, 2, "#26411f");
-    fillRoundedRect(sx - 6, sy - 9, 12, 7, 4, "#6d9b54");
-    fillRoundedRect(sx - 4, sy - 1, 8, 5, 3, "#bfe0a0");
-    ctx.fillStyle = "#18130f"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.9, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.9, 0, Math.PI*2); ctx.fill();
-    softLine(sx - 8, sy + 1, sx - 12, sy + 8, "#20361a", 1.6, 1);
-    softLine(sx + 8, sy + 1, sx + 12, sy + 8, "#20361a", 1.6, 1);
-    softLine(sx - 4, sy - 7, sx - 9, sy - 11, "#335226", 1.2, 1);
-    softLine(sx + 4, sy - 7, sx + 9, sy - 11, "#335226", 1.2, 1);
-    softLine(sx - 6, sy - 4, sx - 11, sy - 1, "#86b065", 1.0, 0.8);
-    softLine(sx + 6, sy - 4, sx + 11, sy - 1, "#86b065", 1.0, 0.8);
+    const palette = enemy.tint === "embersteel"
+      ? {cloak:"#5c2f20", tunic:"#8d4f30", trim:"#dfbb86", hair:"#50362a", accent:"#b6c8df"}
+      : enemy.tint === "vine"
+        ? {cloak:"#2d4427", tunic:"#4a6a3c", trim:"#cae7aa", hair:"#4a3c29", accent:"#93b88b"}
+        : {cloak:"#2f3e66", tunic:"#65759a", trim:"#e4efff", hair:"#5b5147", accent:"#b6c8df"};
+    drawHumanoidFigure(sx, sy + 1, {walk, moving:true, cloak:palette.cloak, tunic:palette.tunic, trim:palette.trim, hair:palette.hair, boots:"#4a3524", accent:palette.accent, shield:true, shieldColor:palette.accent, hood:false});
+    px(sx + 8, sy - 6, 3, 17, palette.trim);
+  } else if (enemy.tint === "moss" || enemy.tint === "vine") {
+    const body = enemy.tint === "vine" ? "#36562c" : "#466b38";
+    const limb = enemy.tint === "vine" ? "#26411f" : "#2f4d26";
+    const cap = enemy.tint === "vine" ? "#6d9b54" : "#85be71";
+    const face = enemy.tint === "vine" ? "#bfe0a0" : "#d8efb5";
+    px(sx - 8, sy - 2, 16, 11, enemy.hurt > 0 ? "#ffffff" : body);
+    px(sx - 10, sy - 3, 4, 11, limb);
+    px(sx + 6, sy - 3, 4, 11, limb);
+    px(sx - 6, sy - 8, 12, 5, cap);
+    px(sx - 4, sy - 1, 8, 4, face);
+    px(sx - 3, sy, 1, 1, "#18130f");
+    px(sx + 2, sy, 1, 1, "#18130f");
+    px(sx - 8, sy + 3, 2, 5, limb);
+    px(sx + 6, sy + 3, 2, 5, limb);
+    px(sx - 6, sy - 9, 2, 2, cap);
+    px(sx + 4, sy - 9, 2, 2, cap);
   } else if (enemy.tint === "stone") {
-    fillRoundedRect(sx - 8, sy - 3, 16, 12, 5, enemy.hurt > 0 ? "#ffffff" : "#8e8678");
-    fillRoundedRect(sx - 9, sy - 5, 18, 4, 2, "#72685c");
-    fillRoundedRect(sx - 6, sy - 7, 12, 5, 3, "#dcd1bf");
-    fillRoundedRect(sx - 10, sy + 2, 4, 7, 2, "#5f554a");
-    fillRoundedRect(sx + 6, sy + 2, 4, 7, 2, "#5f554a");
-    ctx.fillStyle = "#231c15"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.85, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.85, 0, Math.PI*2); ctx.fill();
-    softLine(sx - 4, sy + 4, sx + 4, sy + 4, "#4e433a", 1.0, 0.9);
+    px(sx - 8, sy - 3, 16, 12, enemy.hurt > 0 ? "#ffffff" : "#8e8678");
+    px(sx - 9, sy - 5, 18, 4, "#72685c");
+    px(sx - 6, sy - 7, 12, 4, "#dcd1bf");
+    px(sx - 10, sy + 2, 4, 7, "#5f554a");
+    px(sx + 6, sy + 2, 4, 7, "#5f554a");
+    px(sx - 3, sy - 1, 1, 1, "#231c15");
+    px(sx + 2, sy - 1, 1, 1, "#231c15");
+    px(sx - 4, sy + 4, 8, 1, "#4e433a");
   } else {
-    fillRoundedRect(sx - 8, sy - 2, 16, 11, 5, enemy.hurt > 0 ? "#ffffff" : "#8c482d");
-    fillRoundedRect(sx - 9, sy - 6, 18, 5, 3, "#66311f");
-    fillRoundedRect(sx - 5, sy - 7, 10, 5, 3, "#ffca94");
-    fillRoundedRect(sx - 10, sy + 2, 4, 7, 2, "#5a281a");
-    fillRoundedRect(sx + 6, sy + 2, 4, 7, 2, "#5a281a");
-    ctx.fillStyle = "#21160f"; ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.85, 0, Math.PI*2); ctx.arc(sx + 2, sy - 1, 0.85, 0, Math.PI*2); ctx.fill();
-    softLine(sx - 5, sy - 8, sx - 9, sy - 12, "#ff9d52", 1.2, 1);
-    softLine(sx + 5, sy - 8, sx + 9, sy - 12, "#ff9d52", 1.2, 1);
+    px(sx - 8, sy - 2, 16, 11, enemy.hurt > 0 ? "#ffffff" : "#8c482d");
+    px(sx - 9, sy - 6, 18, 4, "#66311f");
+    px(sx - 5, sy - 7, 10, 4, "#ffca94");
+    px(sx - 10, sy + 2, 4, 7, "#5a281a");
+    px(sx + 6, sy + 2, 4, 7, "#5a281a");
+    px(sx - 3, sy - 1, 1, 1, "#21160f");
+    px(sx + 2, sy - 1, 1, 1, "#21160f");
+    px(sx - 6, sy - 9, 2, 2, "#ff9d52");
+    px(sx + 4, sy - 9, 2, 2, "#ff9d52");
   }
 }
+
 
 function drawWorldObjects() {
   // Static tree/stone highlights are baked into the area ground cache for performance.
