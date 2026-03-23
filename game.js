@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.7.1";
+  const GAME_VERSION = "v3.8.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Interior Exit Hotfix";
+  const BUILD_NAME = "ALttP Structure Pivot I";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Handcrafted World Kit 3/4D";
+  const RENDER_STYLE = "Elderfield ALttP Structure Pivot 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
