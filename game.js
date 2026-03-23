@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.3.0";
+  const GAME_VERSION = "v3.4.0";
   const BUILD_DATE = "2026-03-22";
-  const BUILD_NAME = "Tile Art Foundation Pass";
+  const BUILD_NAME = "Character, Culture & Interiors Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Storybook Tilework 3/4D";
+  const RENDER_STYLE = "Elderfield Storybook Culture 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -954,6 +954,14 @@
     }
   }
 
+  function decorateInteriorWalls(area, x, y, w, h, theme = "home") {
+    ring(area, x, y, w, h, theme === "shop" ? 14 : 8, true);
+    clearRect(area, x + 1, y + 1, w - 2, h - 2, theme === "shop" ? 3 : 7);
+    for (let ix = x + 1; ix < x + w - 1; ix += 1) {
+      if (ix % 2 === 0) area.world[y + 1][ix] = theme === "shop" ? 14 : 12;
+    }
+  }
+
   function ring(area, x, y, w, h, tile, solid) {
     for (let iy = y; iy < y + h; iy += 1) {
       for (let ix = x; ix < x + w; ix += 1) {
@@ -1411,10 +1419,39 @@ area.interactables.push({
       text: "Hidden Stone: Where the wardens feared thieves or kings, they hid small mercies in the walls — silver, heart-stone, and songs of return.",
     });
 
+    const marketHouse = area.interactables.find((item) => item.type === "house" && item.label === "Lantern Market");
+    if (marketHouse) {
+      marketHouse.targetAreaId = "lantern_market_int";
+      marketHouse.targetSpawn = "entry";
+      marketHouse.enterText = "You duck beneath warm lantern light and enter the market house.";
+    }
+    const hallHouse = area.interactables.find((item) => item.type === "house" && item.label === "Warden Hall");
+    if (hallHouse) {
+      hallHouse.targetAreaId = "wardens_hall_int";
+      hallHouse.targetSpawn = "entry";
+      hallHouse.enterText = "The old Warden Hall door opens with a stern creak.";
+    }
+    const bakerHouse = area.interactables.find((item) => item.type === "house" && item.label === "Baker's Hearth");
+    if (bakerHouse) {
+      bakerHouse.targetAreaId = "bakers_hearth_int";
+      bakerHouse.targetSpawn = "entry";
+      bakerHouse.enterText = "You step into the heat and bread-scent of the baker's hearth.";
+    }
+    const scholarHouse = area.interactables.find((item) => item.type === "house" && item.label === "Scholar's Loft");
+    if (scholarHouse) {
+      scholarHouse.targetAreaId = "scholars_loft_int";
+      scholarHouse.targetSpawn = "entry";
+      scholarHouse.enterText = "The scholar's loft smells of vellum, candle smoke, and old roads.";
+    }
+
     area.spawns.start = { x: 80.5 * TILE, y: 88.5 * TILE };
     area.spawns.fromRuins = { x: 78.5 * TILE, y: 18.5 * TILE };
     area.spawns.fromRootwood = { x: 128.5 * TILE, y: 35.5 * TILE };
     area.spawns.fromEmber = { x: 26.5 * TILE, y: 35.5 * TILE };
+    area.spawns.dawnrestMarketDoor = { x: 100.5 * TILE, y: 77.6 * TILE };
+    area.spawns.dawnrestHallDoor = { x: 116.5 * TILE, y: 77.8 * TILE };
+    area.spawns.dawnrestBakerDoor = { x: 101.5 * TILE, y: 84.0 * TILE };
+    area.spawns.dawnrestScholarDoor = { x: 118.0 * TILE, y: 84.0 * TILE };
 
     const enemySpots = [
       [42, 65], [54, 58], [62, 74], [95, 63], [107, 79], [117, 42], [131, 26], [134, 47],
@@ -1817,6 +1854,83 @@ area.interactables.push({
     return area;
   }
 
+function buildLanternMarketInterior() {
+  const area = makeArea("lantern_market_int", "Lantern Market", 24, 16, 7, "ruins");
+  decorateInteriorWalls(area, 0, 0, area.width, area.height, "shop");
+  carvePath(area, 10, 13, 13, 15, 3);
+  area.solids[15][11] = false;
+  area.solids[15][12] = false;
+  area.interactables.push(
+    { type: "interiorExit", x: 10 * TILE, y: 14 * TILE, w: TILE * 3, h: TILE * 2, targetAreaId: "overworld", targetSpawn: "dawnrestMarketDoor", text: "You step back into the lantern-lit street of Dawnrest." },
+    { type: "counter", x: 5 * TILE, y: 4 * TILE, w: TILE * 8, h: TILE * 2, label: "Trader's Counter" },
+    { type: "shelf", x: 15 * TILE, y: 3 * TILE, w: TILE * 3, h: TILE * 6, label: "Lantern Shelves" },
+    { type: "lantern", x: 6 * TILE, y: 2 * TILE, w: TILE, h: TILE },
+    { type: "lantern", x: 17 * TILE, y: 2 * TILE, w: TILE, h: TILE },
+    { type: "weaponChest", x: 17 * TILE, y: 10 * TILE, w: TILE * 2, h: TILE * 2, chestId: "marketChest", rewardName: "Roadwarden Buckler", text: "Inside lies a roadwarden's buckler with oak-and-star engraving. It is mostly a story prize now, but it looks like it belonged to someone worth remembering." },
+    { type: "npc", x: 8 * TILE, y: 9 * TILE, w: TILE, h: TILE, name: "Mara of the Lantern Market", role: "Merchant", palette: "merchant", text: "Mara: Lantern oil, field hooks, patched cloaks, a few knives, and one very bad joke for every customer. Elderfield may be half-ruin, but commerce still has a pulse." },
+    { type: "npc", x: 15 * TILE, y: 11 * TILE, w: TILE, h: TILE, name: "Tob", role: "Porter", palette: "villager", text: "Tob: Mara says this crate is spice. I say it smells like a dwarf punched a pine tree and called it soup." },
+  );
+  area.spawns.entry = { x: 11.5 * TILE, y: 13.2 * TILE };
+  return area;
+}
+
+function buildBakersHearthInterior() {
+  const area = makeArea("bakers_hearth_int", "Baker's Hearth", 20, 14, 7, "ruins");
+  decorateInteriorWalls(area, 0, 0, area.width, area.height, "home");
+  carvePath(area, 8, 11, 11, 13, 3);
+  area.solids[13][9] = false;
+  area.solids[13][10] = false;
+  area.interactables.push(
+    { type: "interiorExit", x: 8 * TILE, y: 12 * TILE, w: TILE * 3, h: TILE * 2, targetAreaId: "overworld", targetSpawn: "dawnrestBakerDoor", text: "Warm bread-smoke follows you out into Dawnrest." },
+    { type: "table", x: 12 * TILE, y: 6 * TILE, w: TILE * 4, h: TILE * 3, label: "Old Table" },
+    { type: "lantern", x: 4 * TILE, y: 2 * TILE, w: TILE, h: TILE },
+    { type: "npc", x: 6 * TILE, y: 8 * TILE, w: TILE, h: TILE, name: "Bram", role: "Baker", palette: "villager", text: "Bram: The kingdom may be flirting with doom, but bread still rises. That's either hope or stubbornness. I bake in both philosophies." },
+    { type: "npc", x: 13 * TILE, y: 9 * TILE, w: TILE, h: TILE, name: "Lysa", role: "Neighbor", palette: "traveler", text: "Lysa: Rowan acts like a wall with a beard. Good wall, though. Better than some kings, from what my mother says." },
+  );
+  area.spawns.entry = { x: 9.5 * TILE, y: 11.3 * TILE };
+  return area;
+}
+
+function buildScholarsLoftInterior() {
+  const area = makeArea("scholars_loft_int", "Scholar's Loft", 22, 15, 7, "ruins");
+  decorateInteriorWalls(area, 0, 0, area.width, area.height, "home");
+  carvePath(area, 9, 12, 12, 14, 3);
+  area.solids[14][10] = false;
+  area.solids[14][11] = false;
+  area.interactables.push(
+    { type: "interiorExit", x: 9 * TILE, y: 13 * TILE, w: TILE * 3, h: TILE * 2, targetAreaId: "overworld", targetSpawn: "dawnrestScholarDoor", text: "Ink and dust cling to you as you step back outside." },
+    { type: "shelf", x: 3 * TILE, y: 3 * TILE, w: TILE * 3, h: TILE * 7, label: "Book Shelves" },
+    { type: "shelf", x: 16 * TILE, y: 3 * TILE, w: TILE * 3, h: TILE * 7, label: "Map Shelves" },
+    { type: "table", x: 8 * TILE, y: 5 * TILE, w: TILE * 6, h: TILE * 3, label: "Map Table" },
+    { type: "lantern", x: 10 * TILE, y: 2 * TILE, w: TILE, h: TILE },
+    { type: "npc", x: 10 * TILE, y: 9 * TILE, w: TILE, h: TILE, name: "Oren Valewright", role: "Scholar", palette: "scholar", text: "Oren: The wardens built roads like promises. Strong at first, then expensive, then forgotten. Kingdoms rot exactly the way doors do — from neglect at the hinge." },
+    { type: "loreTablet", x: 6 * TILE, y: 10 * TILE, w: TILE * 2, h: TILE * 2, text: "Map Scrap: Greenhollow once sat beneath silver banners. The people there still nail lanterns to old hooks as if wardens might ride home by dusk." },
+  );
+  area.spawns.entry = { x: 10.5 * TILE, y: 12.3 * TILE };
+  return area;
+}
+
+function buildWardensHallInterior() {
+  const area = makeArea("wardens_hall_int", "Warden Hall", 26, 16, 8, "ruins");
+  decorateInteriorWalls(area, 0, 0, area.width, area.height, "home");
+  carvePath(area, 11, 13, 14, 15, 3);
+  area.solids[15][12] = false;
+  area.solids[15][13] = false;
+  area.interactables.push(
+    { type: "interiorExit", x: 11 * TILE, y: 14 * TILE, w: TILE * 3, h: TILE * 2, targetAreaId: "overworld", targetSpawn: "dawnrestHallDoor", text: "You leave the old hall, and the lantern wind of Dawnrest greets you again." },
+    { type: "banner", x: 5 * TILE, y: 2 * TILE, w: TILE * 2, h: TILE * 4, label: "Warden Banner" },
+    { type: "banner", x: 18 * TILE, y: 2 * TILE, w: TILE * 2, h: TILE * 4, label: "Warden Banner" },
+    { type: "table", x: 8 * TILE, y: 7 * TILE, w: TILE * 10, h: TILE * 3, label: "War Table" },
+    { type: "lantern", x: 7 * TILE, y: 3 * TILE, w: TILE, h: TILE },
+    { type: "lantern", x: 18 * TILE, y: 3 * TILE, w: TILE, h: TILE },
+    { type: "npc", x: 13 * TILE, y: 10 * TILE, w: TILE, h: TILE, name: "Ser Rowan Ashmere", role: "Guard", palette: "guard", text: "Rowan: A roadwarden carried shield, bell, and oath. Only one of those still hangs easy on the arm. The other two grow heavier by the year." },
+    { type: "weaponChest", x: 20 * TILE, y: 11 * TILE, w: TILE * 2, h: TILE * 2, chestId: "hallChest", rewardName: "Ashmere's Practice Blade", text: "A blunted practice blade rests in velvet dust. Rowan snorts and says it taught three pages humility and one nobleman mercy." },
+  );
+  area.spawns.entry = { x: 12.5 * TILE, y: 13.2 * TILE };
+  return area;
+}
+
+
   function scatterDungeonColumns(area, x, y, w, h) {
     fillRect(area, x, y, w, h, 9, true);
   }
@@ -1824,6 +1938,10 @@ area.interactables.push({
   function buildAreas() {
     return {
       overworld: buildOverworld(),
+      lantern_market_int: buildLanternMarketInterior(),
+      bakers_hearth_int: buildBakersHearthInterior(),
+      scholars_loft_int: buildScholarsLoftInterior(),
+      wardens_hall_int: buildWardensHallInterior(),
       whisper_grotto: buildWhisperGrotto(),
       bridge_cache: buildBridgeCache(),
       ruins_1: buildDungeonRoom1("ruins"),
@@ -2405,8 +2523,42 @@ function onAreaEnemiesCleared(area) {
         return;
       }
 
-      if (item.type === "house" || item.type === "well") {
+      if (item.type === "house") {
+        if (item.targetAreaId) {
+          beginTransition(item.targetAreaId, item.targetSpawn || "entry", item.enterText || item.text || "You step inside.");
+          return;
+        }
         setMessage(item.text || item.label || "An old place of the road.", 4.2);
+        return;
+      }
+
+      if (item.type === "well") {
+        setMessage(item.text || item.label || "An old place of the road.", 4.2);
+        return;
+      }
+
+      if (item.type === "interiorExit") {
+        beginTransition(item.targetAreaId, item.targetSpawn || "start", item.text || "You step outside.");
+        return;
+      }
+
+      if (item.type === "weaponChest") {
+        if (item.opened) {
+          setMessage(`${item.rewardName || "The old prize"} is already claimed.`, 2.2);
+          return;
+        }
+        item.opened = true;
+        state.rupees += 6;
+        burst(item.x + item.w / 2, item.y + item.h / 2, ["#f4d28a", "#fff4d8", "#b1d9ff"]);
+        showAreaBanner(item.rewardName || "Old Weapon", currentArea().name, 2.0);
+        setMessage(item.text || `You claim ${item.rewardName || "an old roadward weapon"} and a few forgotten rupees.`, 4.8);
+        updateHud();
+        saveGame("weapon-chest", true);
+        return;
+      }
+
+      if (item.type === "counter" || item.type === "shelf" || item.type === "table" || item.type === "lantern" || item.type === "banner") {
+        setMessage(item.label || item.text || "A detail from an older, gentler age.", 3.0);
         return;
       }
 
@@ -3610,63 +3762,72 @@ function drawInteractables() {
         fillRoundedRect(sx + 10, sy + 10, 4, 10, 2, item.type === "townSign" ? "#7d5935" : "#926238");
         fillRoundedRect(sx + 5, sy + 3, 14, 10, 3, item.type === "townSign" ? "#f1ddb1" : "#ddbf82");
         softLine(sx + 8, sy + 7, sx + 16, sy + 7, "rgba(120,82,42,0.40)", 1.4, 1);
-      } else if (item.type === "house") {
-        const roof = item.roof === "slate" ? ["#846b49", "#c3a474", "#5f472c", "#3b2b1a"] : item.roof === "amber" ? ["#8f6d45", "#d0ad78", "#6f5130", "#43301b"] : ["#7a6845", "#c1a36f", "#5f482c", "#3a2c1a"];
-        const wall = ["#caa978", "#e1c79a", "#9d7e56", "#7c623f"];
-        const roofY = sy + 10;
-        const wallY = sy + 28;
-        ctx.fillStyle = "rgba(0,0,0,0.18)";
-        ctx.fillRect(sx + 10, sy + item.h - 5, item.w - 18, 5);
-        ctx.fillStyle = roof[3];
-        ctx.beginPath();
-        ctx.moveTo(sx + 10, wallY);
-        ctx.lineTo(sx + 18, roofY + 4);
-        ctx.lineTo(sx + item.w - 18, roofY + 4);
-        ctx.lineTo(sx + item.w - 10, wallY);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = roof[0];
-        ctx.beginPath();
-        ctx.moveTo(sx + 14, wallY - 3);
-        ctx.lineTo(sx + 22, roofY + 6);
-        ctx.lineTo(sx + item.w - 22, roofY + 6);
-        ctx.lineTo(sx + item.w - 14, wallY - 3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = roof[1];
-        ctx.fillRect(sx + 20, roofY + 8, item.w - 40, 3);
-        for (let ry = roofY + 12; ry < wallY - 2; ry += 4) {
-          ctx.fillStyle = "rgba(255,255,255,0.08)";
-          ctx.fillRect(sx + 18, ry, item.w - 36, 1);
-        }
-        ctx.fillStyle = wall[0];
-        ctx.fillRect(sx + 14, wallY - 1, item.w - 28, item.h - (wallY - sy) - 10);
-        ctx.fillStyle = wall[1];
-        ctx.fillRect(sx + 18, wallY + 3, item.w - 36, item.h - (wallY - sy) - 16);
-        ctx.fillStyle = wall[3];
-        ctx.fillRect(sx + 14, sy + item.h - 12, item.w - 28, 6);
-        ctx.fillStyle = wall[2];
-        ctx.fillRect(sx + item.w / 2 - 10, sy + item.h - 28, 20, 22);
-        ctx.fillStyle = "#1f241d";
-        ctx.fillRect(sx + item.w / 2 - 7, sy + item.h - 24, 14, 18);
-        ctx.fillStyle = "rgba(255,220,170,0.18)";
-        ctx.fillRect(sx + item.w / 2 - 1, sy + item.h - 19, 2, 6);
-        ctx.fillStyle = "#6b5336";
-        ctx.fillRect(sx + item.w / 2 - 12, sy + item.h - 6, 24, 3);
-        const wx1 = sx + 20;
-        const wx2 = sx + item.w - 34;
-        ctx.fillStyle = wall[2];
-        ctx.fillRect(wx1, wallY + 5, 14, 12);
-        ctx.fillRect(wx2, wallY + 5, 14, 12);
-        ctx.fillStyle = "#252c20";
-        ctx.fillRect(wx1 + 2, wallY + 7, 10, 8);
-        ctx.fillRect(wx2 + 2, wallY + 7, 10, 8);
-        ctx.fillStyle = "rgba(255,245,210,0.18)";
-        ctx.fillRect(wx1 + 3, wallY + 8, 3, 2);
-        ctx.fillRect(wx2 + 3, wallY + 8, 3, 2);
-        ctx.fillStyle = roof[2];
-        ctx.fillRect(sx + 18, wallY - 2, item.w - 36, 4);
-      } else if (item.type === "well") {
+
+} else if (item.type === "house") {
+  const roof = item.roof === "slate" ? ["#6e604b", "#ccb184", "#534230", "#2f2418"] : item.roof === "amber" ? ["#8d7148", "#d6b27f", "#6f5637", "#3d2d1a"] : ["#68714b", "#c8ae77", "#596235", "#324123"];
+  const wall = ["#c3a47b", "#e9d4ae", "#9c7d58", "#735a3e"];
+  const roofY = sy + 10;
+  const wallY = sy + 31;
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.fillRect(sx + 10, sy + item.h - 5, item.w - 20, 5);
+  ctx.fillStyle = roof[3];
+  ctx.beginPath();
+  ctx.moveTo(sx + 12, wallY + 1);
+  ctx.lineTo(sx + 22, roofY + 3);
+  ctx.lineTo(sx + item.w / 2, roofY - 8);
+  ctx.lineTo(sx + item.w - 22, roofY + 3);
+  ctx.lineTo(sx + item.w - 12, wallY + 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = roof[0];
+  ctx.beginPath();
+  ctx.moveTo(sx + 14, wallY - 2);
+  ctx.lineTo(sx + 26, roofY + 7);
+  ctx.lineTo(sx + item.w / 2, roofY - 3);
+  ctx.lineTo(sx + item.w - 26, roofY + 7);
+  ctx.lineTo(sx + item.w - 14, wallY - 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = roof[1];
+  ctx.fillRect(sx + 22, roofY + 9, item.w - 44, 3);
+  ctx.fillStyle = "rgba(255,255,255,0.10)";
+  for (let ry = roofY + 13; ry < wallY - 2; ry += 4) ctx.fillRect(sx + 20, ry, item.w - 40, 1);
+  ctx.fillStyle = wall[0];
+  ctx.fillRect(sx + 14, wallY, item.w - 28, item.h - (wallY - sy) - 10);
+  ctx.fillStyle = wall[1];
+  ctx.fillRect(sx + 18, wallY + 4, item.w - 36, item.h - (wallY - sy) - 16);
+  ctx.fillStyle = wall[3];
+  ctx.fillRect(sx + 14, sy + item.h - 12, item.w - 28, 7);
+  const doorX = sx + item.w / 2 - 11;
+  ctx.fillStyle = wall[2];
+  ctx.fillRect(doorX, sy + item.h - 29, 22, 23);
+  ctx.fillStyle = "#1d2118";
+  ctx.fillRect(doorX + 3, sy + item.h - 25, 16, 19);
+  ctx.fillStyle = "rgba(255,227,179,0.18)";
+  ctx.fillRect(doorX + 8, sy + item.h - 18, 2, 5);
+  ctx.fillStyle = roof[2];
+  ctx.fillRect(sx + 18, wallY - 2, item.w - 36, 4);
+  ctx.fillStyle = wall[2];
+  ctx.fillRect(sx + 19, wallY + 6, 15, 13);
+  ctx.fillRect(sx + item.w - 34, wallY + 6, 15, 13);
+  ctx.fillStyle = "#252b21";
+  ctx.fillRect(sx + 22, wallY + 8, 9, 9);
+  ctx.fillRect(sx + item.w - 31, wallY + 8, 9, 9);
+  ctx.fillStyle = "rgba(255,236,187,0.20)";
+  ctx.fillRect(sx + 23, wallY + 9, 3, 2);
+  ctx.fillRect(sx + item.w - 30, wallY + 9, 3, 2);
+  if (item.targetAreaId) {
+    ctx.fillStyle = "rgba(255,214,124,0.38)";
+    ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  if (item.label) {
+    ctx.fillStyle = "#6f5135";
+    ctx.fillRect(sx + 8, sy + item.h - 22, 10, 6);
+    ctx.fillStyle = "#c9b37f";
+    ctx.fillRect(sx + 9, sy + item.h - 21, 8, 4);
+  }
+} else if (item.type === "well") {
+
         ctx.fillStyle = "rgba(0,0,0,0.18)";
         ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, (item.w - 8) / 2, 3.4, 0, 0, Math.PI * 2); ctx.fill();
         fillRoundedRect(sx + 3, sy + 7, item.w - 6, item.h - 10, 7, "#8d958d");
@@ -3676,18 +3837,42 @@ function drawInteractables() {
         fillRoundedRect(sx + item.w - 8, sy + 2, 3, 11, 2, "#6b4728");
         fillRoundedRect(sx + 6, sy + 2, item.w - 12, 3, 2, "#87633b");
         softLine(sx + 7, sy + 12, sx + item.w - 7, sy + 12, "rgba(255,255,255,0.16)", 1.3, 0.85);
-      } else if (item.type === "npc") {
-        const colors = item.palette === "merchant" ? ["#845431","#dec28d","#5a9b57"] : item.palette === "scholar" ? ["#50617a","#d7e2ed","#af9c73"] : item.palette === "guard" ? ["#5c6675","#d5dee8","#7598b0"] : item.palette === "traveler" ? ["#6c5b80","#e2d7ef","#8d785d"] : ["#66604a","#eadbb9","#8abf7d"];
-        ctx.fillStyle = "rgba(0,0,0,0.18)";
-        ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 3, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 7, sy + 10, 10, 11, 4, colors[0]);
-        ctx.fillStyle = colors[1];
-        ctx.beginPath(); ctx.arc(sx + 12, sy + 8, 4.5, 0, Math.PI * 2); ctx.fill();
-        fillRoundedRect(sx + 5, sy + 12, 4, 8, 2, colors[2]);
-        fillRoundedRect(sx + 15, sy + 12, 4, 8, 2, colors[2]);
-        ctx.fillStyle = "rgba(255,255,255,0.20)";
-        ctx.beginPath(); ctx.arc(sx + 10.6, sy + 6.8, 0.9, 0, Math.PI * 2); ctx.arc(sx + 13.6, sy + 6.8, 0.9, 0, Math.PI * 2); ctx.fill();
-      } else if (item.type === "crackedWall") {
+
+} else if (item.type === "npc") {
+  const palettes = {
+    merchant: { cloak: "#6b4a2b", tunic: "#4c7a47", trim: "#d8c18d", hair: "#714628" },
+    scholar: { cloak: "#4b5e77", tunic: "#9f8b69", trim: "#d7e5ef", hair: "#6c6043" },
+    guard: { cloak: "#33486a", tunic: "#6f7f8f", trim: "#d8e0ef", hair: "#7d6c51" },
+    traveler: { cloak: "#5c4c73", tunic: "#6e5c46", trim: "#e4d7ef", hair: "#87553d" },
+    villager: { cloak: "#586249", tunic: "#8d7758", trim: "#eadbb9", hair: "#705138" },
+  };
+  const colors = palettes[item.palette || "villager"] || palettes.villager;
+  ctx.fillStyle = "rgba(0,0,0,0.19)";
+  ctx.beginPath(); ctx.ellipse(sx + 12, sy + 21, 8, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = colors.cloak;
+  ctx.beginPath();
+  ctx.moveTo(sx + 4, sy + 20);
+  ctx.lineTo(sx + 7, sy + 10);
+  ctx.lineTo(sx + 17, sy + 10);
+  ctx.lineTo(sx + 20, sy + 20);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = colors.tunic;
+  fillRoundedRect(sx + 7, sy + 11, 10, 10, 4, colors.tunic);
+  ctx.fillStyle = colors.trim;
+  fillRoundedRect(sx + 9, sy + 13, 6, 5, 2, colors.trim);
+  ctx.fillStyle = "#f0d8bb";
+  ctx.beginPath(); ctx.arc(sx + 12, sy + 8, 4.7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = colors.hair;
+  ctx.beginPath(); ctx.arc(sx + 12, sy + 6.3, 4.9, Math.PI, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#2a201a";
+  ctx.beginPath(); ctx.arc(sx + 10.5, sy + 8, 0.8, 0, Math.PI * 2); ctx.arc(sx + 13.5, sy + 8, 0.8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  ctx.fillRect(sx + 7, sy + 12, 2, 7);
+  if (item.role === "Guard") fillRoundedRect(sx + 17, sy + 10, 3, 12, 2, "#c9d7ef");
+  if (item.role === "Merchant") fillRoundedRect(sx + 4, sy + 14, 3, 7, 2, "#a37a49");
+} else if (item.type === "crackedWall") {
+
         fillRoundedRect(sx + 4, sy + 5, item.w - 8, item.h - 10, 5, "#7f7468");
         softLine(sx + 10, sy + 10, sx + item.w - 10, sy + item.h - 10, "#ded3bf", 1.3, 1);
         softLine(sx + item.w - 12, sy + 11, sx + 11, sy + item.h - 12, "#c8b48d", 1.1, 1);
@@ -3789,81 +3974,100 @@ function drawInteractables() {
     }
   }
 
+
 function drawEnemies() {
   const area = currentArea();
   for (const enemy of area.enemies) {
     if (enemy.dead) continue;
     const sx = enemy.x - state.camera.x;
     const sy = enemy.y - state.camera.y;
-    ctx.fillStyle = "rgba(0,0,0,0.20)";
-    ctx.beginPath(); ctx.ellipse(sx, sy + 10, enemy.isBoss ? 12 : 9, enemy.isBoss ? 4 : 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath(); ctx.ellipse(sx, sy + 11, enemy.isBoss ? 12 : 9, enemy.isBoss ? 4 : 3, 0, 0, Math.PI * 2); ctx.fill();
 
     if (enemy.type === "knight") {
-      const armor = enemy.hurt > 0 ? "#ffffff" : enemy.tint === "embersteel" ? "#9b5436" : enemy.tint === "vine" ? "#557849" : "#7280a4";
-      const trim = enemy.tint === "embersteel" ? "#dfb07d" : enemy.tint === "vine" ? "#c9eca5" : "#e4efff";
-      const cape = enemy.tint === "embersteel" ? "#65301f" : enemy.tint === "vine" ? "#2d4926" : "#33406a";
-      fillRoundedRect(sx - 9, sy - 8, 18, 18, 6, armor);
-      fillRoundedRect(sx - 6, sy - 5, 12, 8, 4, trim);
-      fillRoundedRect(sx - 8, sy + 4, 16, 8, 4, cape);
-      ctx.fillStyle = "#f0d987";
-      ctx.beginPath(); ctx.arc(sx, sy - 10, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#161616";
-      ctx.beginPath(); ctx.arc(sx - 2.2, sy - 2.3, 0.9, 0, Math.PI * 2); ctx.arc(sx + 2.2, sy - 2.3, 0.9, 0, Math.PI * 2); ctx.fill();
-      fillRoundedRect(sx + 8, sy - 5, 3, 14, 2, trim);
+      const armor = enemy.hurt > 0 ? "#ffffff" : enemy.tint === "embersteel" ? "#8d4f30" : enemy.tint === "vine" ? "#4a6a3c" : "#65759a";
+      const trim = enemy.tint === "embersteel" ? "#dfbb86" : enemy.tint === "vine" ? "#cae7aa" : "#e4efff";
+      const cloak = enemy.tint === "embersteel" ? "#5c2f20" : enemy.tint === "vine" ? "#2d4427" : "#2f3e66";
+      fillRoundedRect(sx - 8, sy - 9, 16, 18, 5, armor);
+      fillRoundedRect(sx - 6, sy - 6, 12, 8, 3, trim);
+      fillRoundedRect(sx - 7, sy + 4, 14, 8, 4, cloak);
+      ctx.fillStyle = "#ecd5b0";
+      ctx.beginPath(); ctx.arc(sx, sy - 10, 3.6, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#2a2118";
+      ctx.beginPath(); ctx.arc(sx - 1.5, sy - 10, 0.7, 0, Math.PI * 2); ctx.arc(sx + 1.5, sy - 10, 0.7, 0, Math.PI * 2); ctx.fill();
+      fillRoundedRect(sx + 8, sy - 5, 3, 15, 2, trim);
+      fillRoundedRect(sx - 11, sy - 3, 4, 12, 3, "#b6c8df");
+    } else if (enemy.tint === "moss") {
+      fillRoundedRect(sx - 8, sy - 5, 16, 12, 5, enemy.hurt > 0 ? "#ffffff" : "#4c7f43");
+      fillRoundedRect(sx - 6, sy - 8, 12, 6, 4, "#7fbf6c");
+      fillRoundedRect(sx - 4, sy - 1, 8, 6, 3, "#d4efb3");
+      ctx.fillStyle = "#191511";
+      ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.9, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.9, 0, Math.PI * 2); ctx.fill();
+      softLine(sx - 8, sy + 2, sx - 11, sy + 8, "#274120", 1.4, 1);
+      softLine(sx + 8, sy + 1, sx + 11, sy + 8, "#274120", 1.4, 1);
+    } else if (enemy.tint === "stone") {
+      fillRoundedRect(sx - 8, sy - 6, 16, 14, 5, enemy.hurt > 0 ? "#ffffff" : "#918a7c");
+      fillRoundedRect(sx - 5, sy - 4, 10, 7, 4, "#d8ccbb");
+      ctx.fillStyle = "#2a2118";
+      ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.fill();
+      fillRoundedRect(sx - 7, sy + 4, 3, 4, 1, "#4c4238");
+      fillRoundedRect(sx + 4, sy + 4, 3, 4, 1, "#4c4238");
     } else {
-      const main = enemy.tint === "moss" ? "#74c96b" : enemy.tint === "stone" ? "#b0a896" : "#e28f4d";
-      const alt = enemy.tint === "moss" ? "#c6f6a9" : enemy.tint === "stone" ? "#ede2d2" : "#ffe0af";
-      const hurtFlash = enemy.hurt > 0 ? "#ffffff" : main;
-      fillRoundedRect(sx - 8, sy - 6, 16, 14, 6, hurtFlash);
-      fillRoundedRect(sx - 5, sy - 3, 10, 7, 4, alt);
-      ctx.fillStyle = "#161616";
-      ctx.beginPath(); ctx.arc(sx - 2.2, sy - 0.5, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2.2, sy - 0.5, 0.8, 0, Math.PI * 2); ctx.fill();
-      fillRoundedRect(sx - 6, sy + 4, 2, 3, 1, "#161616");
-      fillRoundedRect(sx + 4, sy + 4, 2, 3, 1, "#161616");
+      fillRoundedRect(sx - 8, sy - 6, 16, 14, 5, enemy.hurt > 0 ? "#ffffff" : "#8e4c31");
+      fillRoundedRect(sx - 6, sy - 4, 12, 7, 4, "#ffc693");
+      ctx.fillStyle = "#2a2118";
+      ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.fill();
+      softLine(sx - 7, sy - 6, sx - 10, sy - 10, "#ff9d52", 1.2, 1);
+      softLine(sx + 7, sy - 6, sx + 10, sy - 10, "#ff9d52", 1.2, 1);
     }
 
     if (enemy.health > 1) {
       const ratio = clamp(enemy.health / Math.max(1, enemy.maxHealth), 0, 1);
       const width = enemy.isBoss ? 28 : enemy.type === "knight" ? 16 : 10;
-      fillRoundedRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 19 : 13), width, 4, 2, "rgba(0,0,0,0.40)");
-      fillRoundedRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 19 : 13), Math.max(1, Math.floor(width * ratio)), 4, 2, enemy.isBoss ? "#ffb25f" : "#fff6c2");
+      fillRoundedRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 20 : 13), width, 4, 2, "rgba(0,0,0,0.40)");
+      fillRoundedRect(sx - Math.floor(width / 2), sy - (enemy.isBoss ? 20 : 13), Math.max(1, Math.floor(width * ratio)), 4, 2, enemy.isBoss ? "#ffb25f" : "#fff6c2");
     }
   }
 }
 
 function drawPlayer() {
-    const p = state.player;
-    const sx = p.x - state.camera.x;
-    const sy = p.y - state.camera.y;
-    const blink = p.invuln > 0 && Math.floor(p.invuln * 14) % 2 === 0;
-    if (!blink) {
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      ctx.beginPath(); ctx.ellipse(sx, sy + 10, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+  const p = state.player;
+  const sx = p.x - state.camera.x;
+  const sy = p.y - state.camera.y;
+  const blink = p.invuln > 0 && Math.floor(p.invuln * 14) % 2 === 0;
+  if (!blink) {
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.beginPath(); ctx.ellipse(sx, sy + 11, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
 
-      ctx.fillStyle = "#f2d3ab";
-      ctx.beginPath(); ctx.arc(sx, sy - 2, 5.4, 0, Math.PI * 2); ctx.fill();
-      fillRoundedRect(sx - 8, sy - 12, 16, 7, 4, "#2c744c");
-      fillRoundedRect(sx - 7, sy + 0, 14, 11, 5, "#e7f0cb");
-      fillRoundedRect(sx - 6, sy + 9, 4, 8, 2, "#9d6c2e");
-      fillRoundedRect(sx + 2, sy + 9, 4, 8, 2, "#9d6c2e");
-      ctx.fillStyle = "#523625";
-      ctx.beginPath(); ctx.arc(sx - 2.2, sy - 2.2, 0.9, 0, Math.PI * 2); ctx.arc(sx + 2.2, sy - 2.2, 0.9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ebd2b3";
+    ctx.beginPath(); ctx.arc(sx, sy - 3, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#7d5d36";
+    ctx.beginPath(); ctx.arc(sx, sy - 5.4, 5.4, Math.PI, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx - 8, sy - 12, 16, 6, 4, "#517042");
+    fillRoundedRect(sx - 7, sy - 2, 14, 10, 4, "#dfebc7");
+    fillRoundedRect(sx - 8, sy + 1, 16, 9, 5, "#406f43");
+    fillRoundedRect(sx - 9, sy + 1, 3, 8, 2, "#d8e3f2");
+    fillRoundedRect(sx - 6, sy + 9, 4, 8, 2, "#8d6a39");
+    fillRoundedRect(sx + 2, sy + 9, 4, 8, 2, "#8d6a39");
+    ctx.fillStyle = "#2b2118";
+    ctx.beginPath(); ctx.arc(sx - 1.6, sy - 3.1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 1.6, sy - 3.1, 0.8, 0, Math.PI * 2); ctx.fill();
+    fillRoundedRect(sx + 6, sy - 1, 3, 12, 2, "#9c7a46");
 
-      const weapon = activeWeaponData();
-      if (p.isRunning) {
-        ctx.fillStyle = "rgba(255, 248, 202, 0.28)";
-        ctx.beginPath(); ctx.ellipse(sx, sy + 2, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
-      }
-      const weaponColor = weapon.id === "wand" ? "#ffbf6c" : "#d7e8ff";
-      if (Math.abs(p.lastDir.x) > Math.abs(p.lastDir.y)) {
-        fillRoundedRect(sx + (p.lastDir.x > 0 ? 7 : -10), sy - 1, weapon.id === "spear" ? 10 : 7, 3, 2, weaponColor);
-      } else {
-        fillRoundedRect(sx - 1, sy + (p.lastDir.y > 0 ? 8 : -12), 3, weapon.id === "spear" ? 12 : 8, 2, weaponColor);
-      }
+    const weapon = activeWeaponData();
+    if (p.isRunning) {
+      ctx.fillStyle = "rgba(255, 248, 202, 0.28)";
+      ctx.beginPath(); ctx.ellipse(sx, sy + 3, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
     }
-
-    if (p.attackTimer > 0) drawSlashEffect(sx, sy, p.attackDir, p.attackTimer / currentAttackWeaponData().attackTime);
+    const weaponColor = weapon.id === "wand" ? "#ffbf6c" : "#d7e8ff";
+    if (Math.abs(p.lastDir.x) > Math.abs(p.lastDir.y)) {
+      fillRoundedRect(sx + (p.lastDir.x > 0 ? 8 : -11), sy - 1, weapon.id === "spear" ? 10 : 7, 3, 2, weaponColor);
+    } else {
+      fillRoundedRect(sx - 1, sy + (p.lastDir.y > 0 ? 9 : -12), 3, weapon.id === "spear" ? 12 : 8, 2, weaponColor);
+    }
   }
+
+  if (p.attackTimer > 0) drawSlashEffect(sx, sy, p.attackDir, p.attackTimer / currentAttackWeaponData().attackTime);
+}
 
   function drawSlashEffect(sx, sy, dir, t) {
     const alpha = clamp(t, 0, 1);

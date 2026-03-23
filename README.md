@@ -1,10 +1,10 @@
-# Elderfield v3.3.0 — Tile Art Foundation Pass
+# Elderfield v3.4.0 — Tile Art Foundation Pass
 
-# Elderfield — v3.3.0 Relief & Landmark Pass
+# Elderfield — v3.4.0 Relief & Landmark Pass
 
 A browser-playable top-down fantasy adventure built with plain HTML, CSS, and JavaScript.
 
-## New in v3.3.0
+## New in v3.4.0
 - hidden caves and cracked-wall secrets in the overworld
 - rune-plate and push-block style environmental puzzles
 - optional secret rewards, including Heart Fragments and Elowen's silver-token thread
@@ -52,30 +52,37 @@ Upload the files to your repo root and enable GitHub Pages from the main branch 
 
 ## Verify the update worked
 Look for:
-- on-screen build badge: `v3.3.0 • Town & NPC Foundations • Performance Hotfix`
+- on-screen build badge: `v3.4.0 • Town & NPC Foundations • Performance Hotfix`
 - the build badge now living in the **top-right**
 - start card buttons for **Continue Adventure / New Journey / Delete Save**
 - debug report including a **Save** section
 - progress returning after refresh when a save exists
 
 
-## v3.3.0 notes
+## v3.4.0 notes
 
 - Added Dawnrest, the first safe haven on the Warden road
 - Added named NPC foundations and early side-quest hooks
 - Shifted toward a softer painterly fantasy 2D presentation
 
 
-## v3.3.0 notes
+## v3.4.0 notes
 
 - Fixed low-FPS regression from the initial painterly pass
 - Static terrain is now cached instead of being fully repainted every frame
 - Vignette overlay is cached instead of regenerated each draw
 
 
-## v3.3.0 notes
+## v3.4.0 notes
 
 - Added Whisperroot Grotto and Bridge-Stone Cache
 - Added cracked wall reveals in Crownfall and Greenhollow
 - Added secret chests, Heart Fragments, and an Elowen heirloom payoff
 - Added rune-plate and push-block puzzle hooks for future expansion
+
+
+## v3.4.0 Notes
+- Improved human-like player/NPC silhouettes
+- More defined monsters by region
+- Dawnrest homes and shops are now enterable
+- Added interior props, weapon chests, lanterns, and more LOTR-style village detail
