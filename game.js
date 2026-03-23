@@ -42,7 +42,7 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.4.0";
+  const GAME_VERSION = "v3.5.0";
   const BUILD_DATE = "2026-03-22";
   const BUILD_NAME = "Character, Culture & Interiors Pass";
   const SAVE_KEY = "elderfield-save-v2_7";
@@ -50,7 +50,7 @@
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Storybook Culture 3/4D";
+  const RENDER_STYLE = "Elderfield Storybook Material Depth 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -3317,38 +3317,53 @@ function drawAtmosphere() {
 
   function drawCachedWorldObject(targetCtx, tile, sx, sy) {
     if (tile === 1) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-      targetCtx.fillRect(sx + 2, sy + 20, 20, 3);
-      targetCtx.fillStyle = "#7d8780";
-      targetCtx.fillRect(sx, sy + 17, TILE, 5);
-      for (let bx = 0; bx < TILE; bx += 6) {
-        targetCtx.fillStyle = bx % 12 === 0 ? "#93a098" : "#6d7770";
-        targetCtx.fillRect(sx + bx, sy + 17, 5, 4);
-      }
+      targetCtx.fillStyle = "rgba(0,0,0,0.22)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 12, sy + 22, 10, 3, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.fillStyle = "#6a492b";
+      targetCtx.fillRect(sx + 10, sy + 13, 4, 9);
+      targetCtx.fillStyle = "#4a331f";
+      targetCtx.fillRect(sx + 8, sy + 16, 8, 2);
       targetCtx.fillStyle = "#2f5a24";
-      targetCtx.fillRect(sx, sy + 7, TILE, 10);
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 11, sy + 10, 10, 6, -0.12, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 8, sy + 14, 8, 5, -0.2, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 16, sy + 14, 7, 5, 0.22, 0, Math.PI * 2);
+      targetCtx.fill();
       targetCtx.fillStyle = "#4e823a";
-      targetCtx.fillRect(sx + 1, sy + 5, TILE - 2, 8);
-      targetCtx.fillStyle = "#73b24f";
-      targetCtx.fillRect(sx + 3, sy + 7, 6, 2);
-      targetCtx.fillRect(sx + 11, sy + 6, 5, 2);
-      targetCtx.fillRect(sx + 17, sy + 8, 4, 2);
-      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.fillRect(sx, sy + 13, TILE, 2);
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 10, sy + 8, 8, 4.5, -0.1, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 7, sy + 12, 6, 4, -0.2, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 17, sy + 12, 5, 4, 0.18, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.fillStyle = "#86c86a";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 7, sy + 8, 3, 1.6, 0, 0, Math.PI * 2);
+      targetCtx.ellipse(sx + 16, sy + 8, 3, 1.4, 0, 0, Math.PI * 2);
+      targetCtx.fill();
     } else if (tile === 4) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-      targetCtx.fillRect(sx + 5, sy + 17, 14, 3);
-      targetCtx.fillStyle = "#818b83";
-      targetCtx.fillRect(sx + 4, sy + 8, 16, 10);
+      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 12, sy + 19, 8, 3, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.fillStyle = "#757d75";
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 12, sy + 13, 9, 6, -0.2, 0, Math.PI * 2);
+      targetCtx.fill();
       targetCtx.fillStyle = "#a8b0aa";
-      targetCtx.fillRect(sx + 6, sy + 6, 12, 6);
-      targetCtx.fillStyle = "rgba(255,255,255,0.20)";
-      targetCtx.fillRect(sx + 9, sy + 8, 4, 2);
+      targetCtx.beginPath();
+      targetCtx.ellipse(sx + 10, sy + 10, 6, 3, -0.25, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.fillStyle = "rgba(255,255,255,0.16)";
+      targetCtx.fillRect(sx + 9, sy + 9, 4, 1);
     } else if (tile === 9) {
-      targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+      targetCtx.fillStyle = "rgba(0,0,0,0.18)";
       targetCtx.fillRect(sx + 3, sy + 20, 18, 3);
-      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
       targetCtx.fillRect(sx + 4, sy + 3, 16, 2);
+      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+      targetCtx.fillRect(sx + 4, sy + 17, 16, 2);
     }
   }
 
@@ -3552,23 +3567,50 @@ function softLine(x1, y1, x2, y2, color, width = 1.25, alpha = 1) {
 }
 
 function drawGrassTile(sx, sy, x, y, palette) {
-  const base = seededNoise(x * 2, y * 3) > 0.56 ? palette.grassB : palette.grassA;
+  const n1 = seededNoise(x * 2, y * 3);
+  const n2 = seededNoise(x * 11 + 3, y * 13 + 7);
+  const n3 = seededNoise(x * 17 + 9, y * 5 + 4);
+  const base = n1 > 0.56 ? palette.grassB : palette.grassA;
   ctx.fillStyle = base;
   ctx.fillRect(sx, sy, TILE, TILE);
-  ctx.fillStyle = "rgba(255,255,255,0.08)";
-  ctx.fillRect(sx, sy, TILE, 8);
-  ctx.fillStyle = "rgba(0,0,0,0.06)";
-  ctx.fillRect(sx, sy + 15, TILE, 9);
+
+  const topGrad = ctx.createLinearGradient(sx, sy, sx, sy + TILE);
+  topGrad.addColorStop(0, "rgba(255,255,255,0.12)");
+  topGrad.addColorStop(0.45, "rgba(255,255,255,0.02)");
+  topGrad.addColorStop(1, "rgba(0,0,0,0.08)");
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(sx, sy, TILE, TILE);
+
+  ctx.fillStyle = "rgba(255,255,255,0.06)";
+  ctx.beginPath();
+  ctx.ellipse(sx + 6, sy + 7, 7, 3, -0.22, 0, Math.PI * 2);
+  ctx.ellipse(sx + 18, sy + 17, 5, 2.5, 0.24, 0, Math.PI * 2);
+  ctx.fill();
+
   ctx.fillStyle = palette.mid;
   ctx.beginPath();
-  ctx.ellipse(sx + 7, sy + 16, 5, 3, -0.25, 0, Math.PI * 2);
-  ctx.ellipse(sx + 17, sy + 9, 4, 2.5, 0.35, 0, Math.PI * 2);
+  ctx.ellipse(sx + 8, sy + 16, 5, 3, -0.25, 0, Math.PI * 2);
+  ctx.ellipse(sx + 17, sy + 9, 4, 2.2, 0.35, 0, Math.PI * 2);
   ctx.fill();
-  softLine(sx + 5, sy + 18, sx + 6, sy + 10, palette.dark, 1.3, 0.7);
-  softLine(sx + 10, sy + 17, sx + 12, sy + 7, palette.dark, 1.1, 0.62);
-  softLine(sx + 16, sy + 18, sx + 19, sy + 8, palette.light, 1.2, 0.58);
-  if (seededNoise(x * 13, y * 17) > 0.78) {
-    ctx.fillStyle = "rgba(255,255,255,0.16)";
+
+  for (let i = 0; i < 6; i += 1) {
+    const gx = sx + 3 + ((i * 3 + Math.floor(n2 * 7)) % 17);
+    const gy = sy + 8 + ((i * 5 + Math.floor(n3 * 9)) % 12);
+    const len = 4 + ((i + x + y) % 3);
+    softLine(gx, gy + len, gx + (i % 2 === 0 ? 1 : -1), gy, palette.dark, 1.05, 0.42);
+    softLine(gx + 1, gy + len - 1, gx + 1, gy + 1, palette.light, 0.75, 0.25);
+  }
+
+  if (n2 > 0.74) {
+    ctx.fillStyle = "rgba(55,77,41,0.20)";
+    ctx.beginPath();
+    ctx.arc(sx + 7, sy + 18, 1.2, 0, Math.PI * 2);
+    ctx.arc(sx + 13, sy + 20, 1.1, 0, Math.PI * 2);
+    ctx.arc(sx + 18, sy + 15, 1.0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (n3 > 0.79) {
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
     ctx.beginPath();
     ctx.arc(sx + 15, sy + 6, 1.2, 0, Math.PI * 2);
     ctx.fill();
@@ -3576,58 +3618,108 @@ function drawGrassTile(sx, sy, x, y, palette) {
 }
 
 function drawPathTile(sx, sy, x, y, palette) {
-  ctx.fillStyle = (x + y) % 2 === 0 ? palette.pathA : palette.pathB;
+  const base = (x + y) % 2 === 0 ? palette.pathA : palette.pathB;
+  ctx.fillStyle = base;
   ctx.fillRect(sx, sy, TILE, TILE);
+
+  const grad = ctx.createLinearGradient(sx, sy, sx, sy + TILE);
+  grad.addColorStop(0, "rgba(255,250,226,0.10)");
+  grad.addColorStop(1, "rgba(96,68,39,0.10)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(sx, sy, TILE, TILE);
+
   ctx.fillStyle = "rgba(255,246,214,0.10)";
   ctx.beginPath();
   ctx.ellipse(sx + 8, sy + 7, 5, 2.5, -0.3, 0, Math.PI * 2);
   ctx.ellipse(sx + 17, sy + 15, 4, 2.2, 0.2, 0, Math.PI * 2);
   ctx.fill();
-  softLine(sx + 4, sy + 19, sx + 18, sy + 6, "rgba(116,86,49,0.26)", 1.2, 1);
-  if (seededNoise(x * 5, y * 9) > 0.65) {
-    ctx.fillStyle = "rgba(105,74,44,0.22)";
+
+  for (let i = 0; i < 3; i += 1) {
+    const ox = 5 + ((x * 7 + y * 5 + i * 6) % 13);
+    const oy = 7 + ((x * 3 + y * 11 + i * 4) % 10);
+    ctx.fillStyle = i === 1 ? "rgba(105,74,44,0.18)" : "rgba(255,255,255,0.08)";
     ctx.beginPath();
-    ctx.arc(sx + 13, sy + 12, 1.6, 0, Math.PI * 2);
-    ctx.arc(sx + 8, sy + 17, 1.2, 0, Math.PI * 2);
+    ctx.ellipse(sx + ox, sy + oy, 1.8, 1.0, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+  softLine(sx + 4, sy + 19, sx + 18, sy + 6, "rgba(116,86,49,0.22)", 1.1, 1);
+  softLine(sx + 7, sy + 4, sx + 20, sy + 16, "rgba(255,248,235,0.16)", 0.9, 0.8);
 }
 
 function drawWaterTile(sx, sy, x, y, palette) {
-  ctx.fillStyle = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
+  const base = (x + y) % 2 === 0 ? palette.waterA : palette.waterB;
+  ctx.fillStyle = base;
   ctx.fillRect(sx, sy, TILE, TILE);
-  ctx.fillStyle = "rgba(255,255,255,0.10)";
+
+  const grad = ctx.createLinearGradient(sx, sy, sx, sy + TILE);
+  grad.addColorStop(0, "rgba(255,255,255,0.10)");
+  grad.addColorStop(0.45, "rgba(255,255,255,0.02)");
+  grad.addColorStop(1, "rgba(0,0,0,0.14)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(sx, sy, TILE, TILE);
+
+  for (let i = 0; i < 3; i += 1) {
+    const oy = 6 + i * 6 + ((x + y + i) % 2);
+    softLine(sx + 3 + i, sy + oy, sx + 10 + i, sy + oy, "rgba(225,247,255,0.16)", 1.0, 1);
+    softLine(sx + 13 - i, sy + oy + 2, sx + 21 - i, sy + oy + 2, "rgba(165,214,255,0.10)", 0.9, 1);
+  }
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
   ctx.beginPath();
-  ctx.ellipse(sx + 7, sy + 6, 5, 1.6, 0, 0, Math.PI * 2);
-  ctx.ellipse(sx + 16, sy + 13, 6, 1.8, 0, 0, Math.PI * 2);
+  ctx.ellipse(sx + 7, sy + 6, 5, 1.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(sx + 16, sy + 13, 6, 1.7, 0, 0, Math.PI * 2);
   ctx.fill();
-  softLine(sx + 3, sy + 18, sx + 10, sy + 18, "rgba(220,245,255,0.18)", 1.2, 1);
-  softLine(sx + 14, sy + 8, sx + 20, sy + 8, "rgba(220,245,255,0.20)", 1.2, 1);
 }
 
 function drawStoneTile(sx, sy, x, y, palette, major = false) {
   const stone = seededNoise(x * 3, y * 5) > 0.5 ? palette.stoneA : palette.stoneB;
   fillRoundedRect(sx + 1, sy + 1, TILE - 2, TILE - 2, 5, stone);
+
+  const grad = ctx.createLinearGradient(sx, sy, sx, sy + TILE);
+  grad.addColorStop(0, "rgba(255,255,255,0.10)");
+  grad.addColorStop(1, "rgba(0,0,0,0.12)");
+  ctx.fillStyle = grad;
+  roundedRectPath(sx + 1, sy + 1, TILE - 2, TILE - 2, 5);
+  ctx.fill();
+
   ctx.fillStyle = "rgba(255,255,255,0.08)";
   ctx.beginPath();
   ctx.ellipse(sx + 9, sy + 7, 6, 2, -0.15, 0, Math.PI * 2);
   ctx.ellipse(sx + 15, sy + 16, 4.5, 1.8, 0.15, 0, Math.PI * 2);
   ctx.fill();
-  softLine(sx + 6, sy + 8, sx + 12, sy + 13, major ? "rgba(90,72,56,0.32)" : "rgba(54,48,42,0.26)", 1.3, 1);
-  softLine(sx + 12, sy + 13, sx + 17, sy + 10, major ? "rgba(90,72,56,0.32)" : "rgba(54,48,42,0.26)", 1.3, 1);
-  if (major) fillRoundedRect(sx + 3, sy + 17, 18, 3, 2, "rgba(58,47,39,0.14)");
+
+  softLine(sx + 5, sy + 6, sx + 12, sy + 11, major ? "rgba(90,72,56,0.32)" : "rgba(54,48,42,0.24)", 1.2, 1);
+  softLine(sx + 12, sy + 11, sx + 17, sy + 8, major ? "rgba(90,72,56,0.30)" : "rgba(54,48,42,0.22)", 1.2, 1);
+  softLine(sx + 8, sy + 17, sx + 15, sy + 19, "rgba(255,255,255,0.12)", 0.9, 0.7);
+
+  if (major) {
+    fillRoundedRect(sx + 3, sy + 17, 18, 3, 2, "rgba(58,47,39,0.16)");
+    fillRoundedRect(sx + 4, sy + 4, 6, 4, 2, "rgba(255,255,255,0.06)");
+  }
 }
 
 function drawAshTile(sx, sy, x, y, palette) {
   ctx.fillStyle = seededNoise(x * 2, y * 3) > 0.5 ? "#5a2d23" : "#6b3527";
   ctx.fillRect(sx, sy, TILE, TILE);
+
+  const grad = ctx.createLinearGradient(sx, sy, sx, sy + TILE);
+  grad.addColorStop(0, "rgba(255,208,148,0.08)");
+  grad.addColorStop(1, "rgba(26,14,11,0.16)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(sx, sy, TILE, TILE);
+
   ctx.fillStyle = "rgba(255,190,120,0.10)";
   ctx.beginPath();
   ctx.ellipse(sx + 9, sy + 15, 6, 2.4, -0.25, 0, Math.PI * 2);
   ctx.ellipse(sx + 18, sy + 7, 4, 1.8, 0.3, 0, Math.PI * 2);
   ctx.fill();
-  softLine(sx + 5, sy + 17, sx + 11, sy + 11, "rgba(255,146,79,0.32)", 1.4, 1);
-  softLine(sx + 15, sy + 12, sx + 18, sy + 6, palette.light, 1.1, 0.7);
+
+  softLine(sx + 5, sy + 17, sx + 11, sy + 11, "rgba(255,146,79,0.30)", 1.3, 1);
+  softLine(sx + 15, sy + 12, sx + 18, sy + 6, palette.light, 1.0, 0.65);
+  ctx.fillStyle = "rgba(0,0,0,0.14)";
+  ctx.beginPath();
+  ctx.arc(sx + 6, sy + 9, 1.2, 0, Math.PI * 2);
+  ctx.arc(sx + 16, sy + 18, 1.0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawTile(tile, sx, sy, x, y, theme) {
@@ -3816,6 +3908,13 @@ function drawInteractables() {
   ctx.fillStyle = "rgba(255,236,187,0.20)";
   ctx.fillRect(sx + 23, wallY + 9, 3, 2);
   ctx.fillRect(sx + item.w - 30, wallY + 9, 3, 2);
+  ctx.fillStyle = "#8c6f44";
+  ctx.fillRect(sx + item.w - 18, roofY + 2, 6, 12);
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.fillRect(sx + item.w - 18, roofY + 12, 6, 2);
+  ctx.fillStyle = "rgba(255,227,154,0.26)";
+  ctx.beginPath(); ctx.ellipse(sx + item.w - 10, wallY + 15, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+  fillRoundedRect(sx + item.w - 12, wallY + 10, 4, 9, 2, "#7f5d31");
   if (item.targetAreaId) {
     ctx.fillStyle = "rgba(255,214,124,0.38)";
     ctx.beginPath(); ctx.ellipse(sx + item.w / 2, sy + item.h - 4, 11, 3, 0, 0, Math.PI * 2); ctx.fill();
@@ -3859,6 +3958,8 @@ function drawInteractables() {
   ctx.fill();
   ctx.fillStyle = colors.tunic;
   fillRoundedRect(sx + 7, sy + 11, 10, 10, 4, colors.tunic);
+  fillRoundedRect(sx + 5, sy + 12, 2, 8, 2, colors.cloak);
+  fillRoundedRect(sx + 17, sy + 12, 2, 8, 2, colors.cloak);
   ctx.fillStyle = colors.trim;
   fillRoundedRect(sx + 9, sy + 13, 6, 5, 2, colors.trim);
   ctx.fillStyle = "#f0d8bb";
@@ -3869,8 +3970,8 @@ function drawInteractables() {
   ctx.beginPath(); ctx.arc(sx + 10.5, sy + 8, 0.8, 0, Math.PI * 2); ctx.arc(sx + 13.5, sy + 8, 0.8, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = "rgba(255,255,255,0.16)";
   ctx.fillRect(sx + 7, sy + 12, 2, 7);
-  if (item.role === "Guard") fillRoundedRect(sx + 17, sy + 10, 3, 12, 2, "#c9d7ef");
-  if (item.role === "Merchant") fillRoundedRect(sx + 4, sy + 14, 3, 7, 2, "#a37a49");
+  if (item.role === "Guard") { fillRoundedRect(sx + 17, sy + 10, 3, 12, 2, "#c9d7ef"); fillRoundedRect(sx + 2, sy + 11, 4, 8, 3, "#93a6b8"); }
+  if (item.role === "Merchant") { fillRoundedRect(sx + 4, sy + 14, 3, 7, 2, "#a37a49"); fillRoundedRect(sx + 18, sy + 6, 2, 8, 2, "#d2a76a"); }
 } else if (item.type === "crackedWall") {
 
         fillRoundedRect(sx + 4, sy + 5, item.w - 8, item.h - 10, 5, "#7f7468");
@@ -3989,6 +4090,7 @@ function drawEnemies() {
       const trim = enemy.tint === "embersteel" ? "#dfbb86" : enemy.tint === "vine" ? "#cae7aa" : "#e4efff";
       const cloak = enemy.tint === "embersteel" ? "#5c2f20" : enemy.tint === "vine" ? "#2d4427" : "#2f3e66";
       fillRoundedRect(sx - 8, sy - 9, 16, 18, 5, armor);
+      fillRoundedRect(sx - 10, sy - 2, 4, 10, 3, "#9aa8ba");
       fillRoundedRect(sx - 6, sy - 6, 12, 8, 3, trim);
       fillRoundedRect(sx - 7, sy + 4, 14, 8, 4, cloak);
       ctx.fillStyle = "#ecd5b0";
@@ -3999,6 +4101,7 @@ function drawEnemies() {
       fillRoundedRect(sx - 11, sy - 3, 4, 12, 3, "#b6c8df");
     } else if (enemy.tint === "moss") {
       fillRoundedRect(sx - 8, sy - 5, 16, 12, 5, enemy.hurt > 0 ? "#ffffff" : "#4c7f43");
+      fillRoundedRect(sx - 10, sy - 3, 3, 8, 2, "#30502a");
       fillRoundedRect(sx - 6, sy - 8, 12, 6, 4, "#7fbf6c");
       fillRoundedRect(sx - 4, sy - 1, 8, 6, 3, "#d4efb3");
       ctx.fillStyle = "#191511";
@@ -4007,6 +4110,7 @@ function drawEnemies() {
       softLine(sx + 8, sy + 1, sx + 11, sy + 8, "#274120", 1.4, 1);
     } else if (enemy.tint === "stone") {
       fillRoundedRect(sx - 8, sy - 6, 16, 14, 5, enemy.hurt > 0 ? "#ffffff" : "#918a7c");
+      fillRoundedRect(sx - 10, sy - 4, 3, 9, 2, "#6b655d");
       fillRoundedRect(sx - 5, sy - 4, 10, 7, 4, "#d8ccbb");
       ctx.fillStyle = "#2a2118";
       ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.fill();
@@ -4014,6 +4118,7 @@ function drawEnemies() {
       fillRoundedRect(sx + 4, sy + 4, 3, 4, 1, "#4c4238");
     } else {
       fillRoundedRect(sx - 8, sy - 6, 16, 14, 5, enemy.hurt > 0 ? "#ffffff" : "#8e4c31");
+      fillRoundedRect(sx - 10, sy - 4, 3, 9, 2, "#5b2c1f");
       fillRoundedRect(sx - 6, sy - 4, 12, 7, 4, "#ffc693");
       ctx.fillStyle = "#2a2118";
       ctx.beginPath(); ctx.arc(sx - 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 2, sy - 1, 0.8, 0, Math.PI * 2); ctx.fill();
@@ -4044,14 +4149,17 @@ function drawPlayer() {
     ctx.fillStyle = "#7d5d36";
     ctx.beginPath(); ctx.arc(sx, sy - 5.4, 5.4, Math.PI, Math.PI * 2); ctx.fill();
     fillRoundedRect(sx - 8, sy - 12, 16, 6, 4, "#517042");
+    fillRoundedRect(sx - 6, sy - 10, 12, 3, 2, "rgba(255,255,255,0.12)");
     fillRoundedRect(sx - 7, sy - 2, 14, 10, 4, "#dfebc7");
     fillRoundedRect(sx - 8, sy + 1, 16, 9, 5, "#406f43");
     fillRoundedRect(sx - 9, sy + 1, 3, 8, 2, "#d8e3f2");
+    fillRoundedRect(sx - 11, sy + 1, 2, 7, 2, "#4f6478");
     fillRoundedRect(sx - 6, sy + 9, 4, 8, 2, "#8d6a39");
     fillRoundedRect(sx + 2, sy + 9, 4, 8, 2, "#8d6a39");
     ctx.fillStyle = "#2b2118";
     ctx.beginPath(); ctx.arc(sx - 1.6, sy - 3.1, 0.8, 0, Math.PI * 2); ctx.arc(sx + 1.6, sy - 3.1, 0.8, 0, Math.PI * 2); ctx.fill();
     fillRoundedRect(sx + 6, sy - 1, 3, 12, 2, "#9c7a46");
+    fillRoundedRect(sx - 2, sy + 1, 4, 2, 1, "#8f5e36");
 
     const weapon = activeWeaponData();
     if (p.isRunning) {
