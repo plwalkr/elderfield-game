@@ -3,8 +3,8 @@
   --bg-0: #08120d;
   --bg-1: #15271e;
   --bg-2: #243c30;
-  --panel: rgba(23, 20, 13, 0.82);
-  --panel-soft: rgba(36, 29, 18, 0.74);
+  --panel: rgba(28, 20, 10, 0.92);
+  --panel-soft: rgba(41, 30, 14, 0.86);
   --line: rgba(240, 214, 136, 0.22);
   --text: #f8f4e8;
   --muted: #c8cfba;
@@ -23,7 +23,7 @@ html, body {
     radial-gradient(circle at top, rgba(104, 144, 106, 0.20), transparent 40%),
     linear-gradient(180deg, var(--bg-2), var(--bg-0));
   color: var(--text);
-  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 body { min-height: 100vh; overflow: hidden; }
 button { font: inherit; }
@@ -42,14 +42,14 @@ button { font: inherit; }
 
 .title-panel,
 .game-panel {
-  background: linear-gradient(180deg, rgba(18, 27, 20, 0.84), rgba(13, 20, 15, 0.70));
+  background: linear-gradient(180deg, rgba(22, 31, 18, 0.92), rgba(11, 17, 10, 0.88));
   border: 1px solid var(--line);
-  box-shadow: 0 18px 40px var(--shadow);
+  box-shadow: 0 12px 0 rgba(0,0,0,0.24), 0 18px 40px var(--shadow);
   min-height: 0;
 }
 
 .title-panel {
-  border-radius: 24px;
+  border-radius: 8px;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -86,7 +86,7 @@ h1 {
 }
 .story-seed span {
   padding: 10px 12px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: rgba(13, 24, 18, 0.78);
   border: 1px solid rgba(255,255,255,0.06);
   color: #d6e5c4;
@@ -103,14 +103,14 @@ h1 {
 }
 .legend span {
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 4px;
   background: var(--panel-soft);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: #dbe9c8;
 }
 
 .game-panel {
-  border-radius: 28px;
+  border-radius: 8px;
   padding: 10px;
   display: flex;
   min-height: 0;
@@ -121,7 +121,7 @@ h1 {
   width: 100%;
   height: 100%;
   min-height: 0;
-  border-radius: 22px;
+  border-radius: 6px;
   overflow: hidden;
   background: #0a100a;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -153,8 +153,8 @@ canvas {
 .status-pill,
 .build-watermark,
 .mini-badge {
-  background: rgba(31, 27, 18, 0.95);
-  border: 2px solid rgba(214, 183, 94, 0.74);
+  background: rgba(37, 27, 12, 0.96);
+  border: 2px solid rgba(214, 183, 94, 0.82);
   box-shadow: 0 8px 24px rgba(0,0,0,0.28);
 }
 
@@ -239,7 +239,7 @@ canvas {
 .slot {
   width: 30px;
   height: 30px;
-  border-radius: 3px;
+  border-radius: 2px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.05);
   position: relative;
@@ -439,7 +439,7 @@ canvas {
 .primary-btn,
 .ghost-btn {
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
+  border-radius: 4px;
   cursor: pointer;
 }
 .debug-copy-btn {
@@ -478,7 +478,7 @@ canvas {
   transform: translate(-50%, -50%);
   width: min(470px, calc(100% - 32px));
   padding: 24px 22px;
-  border-radius: 24px;
+  border-radius: 8px;
   background: linear-gradient(180deg, rgba(9, 17, 12, 0.92), rgba(8, 13, 9, 0.96));
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 24px 54px rgba(0,0,0,0.42);

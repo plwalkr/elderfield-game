@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.15.0";
+  const GAME_VERSION = "v3.16.0";
   const BUILD_DATE = "2026-03-23";
-  const BUILD_NAME = "ALTTP Vision Surge";
+  const BUILD_NAME = "Dawnrest Benchmark Rebuild";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
-  const START_ZONE = "Greenhollow";
+  const START_ZONE = "Dawnrest";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield ALTTP Vision Surge 3/4D";
+  const RENDER_STYLE = "Elderfield Dawnrest Benchmark Rebuild 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -1181,35 +1181,50 @@
     clearRect(area, 120, 40, 18, 8, 13);
     clearRect(area, 124, 30, 7, 6, 13);
 
+    // Dawnrest benchmark rebuild — one authored proving ground instead of a soft filler village
     clearRect(area, 92, 66, 34, 20, 0);
     paintGround(area, 92, 66, 34, 20, 0);
-    fillRect(area, 102, 71, 13, 10, 3, false);
-    carvePath(area, 81, 80, 108, 80, 3);
-    carvePath(area, 108, 75, 108, 80, 3);
-    carvePath(area, 98, 75, 120, 75, 3);
-    placeWaterPatch(area, 117, 83, 6, 3);
-    fillRect(area, 95, 69, 10, 7, 4, true);
-    fillRect(area, 111, 69, 11, 8, 4, true);
-    fillRect(area, 97, 79, 9, 5, 4, true);
-    fillRect(area, 114, 79, 9, 5, 4, true);
-    fillRect(area, 94, 67, 30, 1, 11, true);
-    fillRect(area, 94, 76, 30, 1, 11, true);
-    fillRect(area, 96, 84, 28, 1, 11, true);
-    fillRect(area, 94, 67, 1, 18, 11, true);
-    fillRect(area, 123, 67, 1, 18, 11, true);
-    clearRect(area, 106, 76, 7, 2, 0);
-    clearRect(area, 106, 84, 8, 2, 0);
-    fillRect(area, 101, 76, 7, 1, 7, false);
-    fillRect(area, 113, 76, 7, 1, 7, false);
-    fillRect(area, 101, 84, 7, 1, 7, false);
-    fillRect(area, 114, 84, 7, 1, 7, false);
-    fillRect(area, 95, 77, 1, 7, 11, true);
-    fillRect(area, 122, 77, 1, 7, 11, true);
+
+    // lower road and village frontage
+    fillRect(area, 92, 80, 34, 6, 3, false);
+    fillRect(area, 104, 79, 10, 2, 3, false);
+    fillRect(area, 96, 79, 4, 1, 7, false);
+    fillRect(area, 116, 79, 4, 1, 7, false);
+    scatterStones(area, 100, 78, 16, 2, 10);
+
+    // raised green shelf that gives Dawnrest a proper ALTTP-like benchmark silhouette
+    fillRect(area, 95, 68, 28, 10, 9, false);
+    fillRect(area, 95, 77, 28, 1, 9, true);
+    clearRect(area, 107, 77, 4, 1, 3);
+    clearRect(area, 108, 76, 2, 1, 3);
+    clearRect(area, 109, 75, 1, 1, 3);
+
+    // hedges and yard structure
+    fillRect(area, 95, 74, 8, 1, 11, true);
+    fillRect(area, 115, 74, 8, 1, 11, true);
+    fillRect(area, 98, 68, 1, 10, 11, true);
+    fillRect(area, 120, 68, 1, 10, 11, true);
+    fillRect(area, 103, 72, 12, 3, 3, false);
+    fillRect(area, 105, 74, 8, 2, 3, false);
+
+    // anchor the benchmark screen with edge forest instead of empty filler
+    placeForestPatch(area, 92, 67, 4, 5);
+    placeForestPatch(area, 121, 67, 5, 5);
+    placeForestPatch(area, 92, 75, 3, 4);
+    placeForestPatch(area, 123, 75, 3, 4);
+
+    // keep the upper lawn walkable while preserving the cliff line
+    for (let iy = 68; iy <= 76; iy += 1) {
+      for (let ix = 95; ix <= 122; ix += 1) {
+        if (area.world[iy][ix] === 9) area.solids[iy][ix] = false;
+      }
+    }
+    for (let ix = 107; ix <= 110; ix += 1) area.solids[77][ix] = false;
 
     area.interactables.push({
       type: "townSign",
-      x: 92 * TILE,
-      y: 79 * TILE,
+      x: 93 * TILE,
+      y: 81 * TILE,
       w: TILE,
       h: TILE,
       text: "Dawnrest — lantern refuge of the old Warden road. Keep peace within the stones.",
@@ -1217,32 +1232,32 @@
 
     area.interactables.push({
       type: "house",
-      x: 95 * TILE,
-      y: 68 * TILE,
-      w: TILE * 10,
-      h: TILE * 8,
+      x: 96 * TILE,
+      y:  68 * TILE,
+      w:  TILE * 9,
+      h:  TILE * 7,
       label: "Lantern Market",
       text: "Warm light and road dust cling to the little market house. Someone here still trades like the old kingdom might return.",
-      roof: "green",
+      roof: "moss",
     });
 
     area.interactables.push({
       type: "house",
-      x: 111 * TILE,
-      y: 68 * TILE,
-      w: TILE * 11,
-      h: TILE * 9,
+      x: 108 * TILE,
+      y:  67 * TILE,
+      w:  TILE * 13,
+      h:  TILE * 9,
       label: "Warden Hall",
       text: "The hall is small, but the old crest still hangs above its door. Dawnrest remembers who kept the roads once.",
-      roof: "slate",
+      roof: "crimson",
     });
 
     area.interactables.push({
       type: "house",
-      x: 97 * TILE,
-      y: 78 * TILE,
-      w: TILE * 9,
-      h: TILE * 6,
+      x: 96 * TILE,
+      y:  79 * TILE,
+      w:  TILE * 9,
+      h:  TILE * 6,
       label: "Baker's Hearth",
       text: "Fresh bread, cedar smoke, and rain-dried herbs. It feels like the sort of place legends would miss when they leave.",
       roof: "amber",
@@ -1251,18 +1266,18 @@
     area.interactables.push({
       type: "house",
       x: 114 * TILE,
-      y: 78 * TILE,
-      w: TILE * 9,
-      h: TILE * 6,
+      y:  79 * TILE,
+      w:  TILE * 9,
+      h:  TILE * 6,
       label: "Scholar's Loft",
       text: "Pages, charcoal, and old maps cover the scholar's loft. The roads of Elderfield are still being remembered here.",
-      roof: "green",
+      roof: "slate",
     });
 
     area.interactables.push({
       type: "well",
-      x: 107 * TILE,
-      y: 78 * TILE,
+      x: 108 * TILE,
+      y: 81 * TILE,
       w: TILE * 2,
       h: TILE * 2,
       text: "The old well water is cold and clear. Coins glitter below. Someone whispers that wishes sink deeper than water in Dawnrest.",
@@ -1270,8 +1285,8 @@
 
     area.interactables.push({
       type: "npc",
-      x: 101 * TILE,
-      y: 77 * TILE,
+      x: 104 * TILE,
+      y: 76 * TILE,
       w: TILE,
       h: TILE,
       name: "Mara of the Lantern Market",
@@ -1282,8 +1297,8 @@
 
     area.interactables.push({
       type: "npc",
-      x: 117 * TILE,
-      y: 77 * TILE,
+      x: 118 * TILE,
+      y: 82 * TILE,
       w: TILE,
       h: TILE,
       name: "Oren Valewright",
@@ -1294,8 +1309,8 @@
 
     area.interactables.push({
       type: "npc",
-      x: 109 * TILE,
-      y: 73 * TILE,
+      x: 116 * TILE,
+      y: 76 * TILE,
       w: TILE,
       h: TILE,
       name: "Ser Rowan Ashmere",
@@ -1306,7 +1321,7 @@
 
     area.interactables.push({
       type: "npc",
-      x: 98 * TILE,
+      x: 99 * TILE,
       y: 82 * TILE,
       w: TILE,
       h: TILE,
@@ -1318,8 +1333,8 @@
 
     area.interactables.push({
       type: "npc",
-      x: 121 * TILE,
-      y: 82 * TILE,
+      x: 111 * TILE,
+      y: 84 * TILE,
       w: TILE,
       h: TILE,
       name: "Cael the Roadwalker",
@@ -1368,8 +1383,8 @@
       {
         type: "prop",
         propKind: "cart",
-        x: 105 * TILE,
-        y: 84 * TILE,
+        x: 104 * TILE,
+        y: 83 * TILE,
         w: TILE * 3,
         h: TILE * 2,
         text: "A little road-cart waits under canvas and flour sacks. Dawnrest survives by whatever trade can still limp down the old roads.",
@@ -1377,8 +1392,8 @@
       {
         type: "prop",
         propKind: "lanternPost",
-        x: 103 * TILE,
-        y: 74 * TILE,
+        x: 104 * TILE,
+        y: 77 * TILE,
         w: TILE,
         h: TILE * 2,
         text: "A Dawnrest lantern post burns with a steady village warmth.",
@@ -1387,7 +1402,7 @@
         type: "prop",
         propKind: "lanternPost",
         x: 113 * TILE,
-        y: 74 * TILE,
+        y: 77 * TILE,
         w: TILE,
         h: TILE * 2,
         text: "Someone keeps the lantern glass polished. Small mercies still count in Elderfield.",
@@ -1685,18 +1700,18 @@ area.interactables.push({
       scholarHouse.enterText = "The scholar's loft smells of vellum, candle smoke, and old roads.";
     }
 
-    area.spawns.start = { x: 80.5 * TILE, y: 88.5 * TILE };
+    area.spawns.start = { x: 108.5 * TILE, y: 84.5 * TILE };
     area.spawns.fromRuins = { x: 78.5 * TILE, y: 18.5 * TILE };
     area.spawns.fromRootwood = { x: 128.5 * TILE, y: 35.5 * TILE };
     area.spawns.fromEmber = { x: 26.5 * TILE, y: 35.5 * TILE };
-    area.spawns.dawnrestMarketDoor = { x: 100.5 * TILE, y: 79.2 * TILE };
-    area.spawns.dawnrestHallDoor = { x: 116.5 * TILE, y: 79.2 * TILE };
-    area.spawns.dawnrestBakerDoor = { x: 101.5 * TILE, y: 85.6 * TILE };
-    area.spawns.dawnrestScholarDoor = { x: 118.0 * TILE, y: 85.6 * TILE };
+    area.spawns.dawnrestMarketDoor = { x: 100.5 * TILE, y: 76.2 * TILE };
+    area.spawns.dawnrestHallDoor = { x: 114.5 * TILE, y: 76.2 * TILE };
+    area.spawns.dawnrestBakerDoor = { x: 100.5 * TILE, y: 84.8 * TILE };
+    area.spawns.dawnrestScholarDoor = { x: 118.5 * TILE, y: 84.8 * TILE };
 
     const enemySpots = [
-      [42, 65], [54, 58], [62, 74], [95, 63], [107, 79], [117, 42], [131, 26], [134, 47],
-      [22, 39], [34, 31], [20, 51], [68, 20], [88, 26], [100, 18], [143, 48], [122, 69], [53, 44], [85, 48]
+      [42, 65], [54, 58], [62, 74], [95, 63], [90, 79], [117, 42], [131, 26], [134, 47],
+      [22, 39], [34, 31], [20, 51], [68, 20], [88, 26], [100, 18], [143, 48], [126, 70], [53, 44], [85, 48]
     ];
     enemySpots.forEach((spot, index) => {
       const ex = (spot[0] + 0.5) * TILE;
@@ -3490,7 +3505,7 @@ function burst(x, y, palette) {
     touchState.right = false;
     if (next) {
       setDebugAction("pause-open");
-      setMessage("Paused — Esc resumes. Save from the pause menu or press S.", 999);
+      setMessage("Paused — Esc resumes. Save from the pause menu or press S. Dawnrest is now the benchmark screen.", 999);
     } else {
       setDebugAction("pause-closed");
       setMessage(state.objectiveText, 2.4);
@@ -3624,6 +3639,7 @@ function drawAtmosphere() {
   }
 
   
+
 function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
   const palette = themeColors(theme);
   const check = (x + y) % 2 === 0;
@@ -3634,33 +3650,33 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
     const base = check ? grassTheme.grassA : grassTheme.grassB;
     targetCtx.fillStyle = base;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,255,255,0.12)";
-    targetCtx.fillRect(sx, sy, TILE, 2);
-    targetCtx.fillStyle = "rgba(0,0,0,0.10)";
-    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
     targetCtx.fillStyle = grassTheme.light;
-    targetCtx.fillRect(sx + 4, sy + 4, 3, 1);
-    targetCtx.fillRect(sx + 14, sy + 7, 2, 1);
-    targetCtx.fillRect(sx + 9, sy + 13, 3, 1);
+    targetCtx.fillRect(sx, sy, TILE, 2);
+    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+    targetCtx.fillRect(sx + 2, sy + 3, 4, 1);
+    targetCtx.fillRect(sx + 14, sy + 4, 3, 1);
+    targetCtx.fillRect(sx + 8, sy + 7, 5, 1);
     targetCtx.fillStyle = grassTheme.mid;
-    targetCtx.fillRect(sx + 3, sy + 6, 2, 2);
-    targetCtx.fillRect(sx + 16, sy + 11, 2, 2);
-    targetCtx.fillRect(sx + 7, sy + 15, 2, 2);
+    targetCtx.fillRect(sx + 4, sy + 6, 3, 2);
+    targetCtx.fillRect(sx + 15, sy + 9, 4, 2);
+    targetCtx.fillRect(sx + 7, sy + 14, 4, 2);
     targetCtx.fillStyle = grassTheme.dark;
-    targetCtx.fillRect(sx + 6, sy + 9, 1, 4);
-    targetCtx.fillRect(sx + 12, sy + 12, 1, 4);
-    targetCtx.fillRect(sx + 18, sy + 8, 1, 4);
-    if (n > 0.54) {
+    targetCtx.fillRect(sx + 3, sy + 11, 2, 5);
+    targetCtx.fillRect(sx + 11, sy + 9, 2, 6);
+    targetCtx.fillRect(sx + 18, sy + 12, 2, 4);
+    targetCtx.fillRect(sx + 6, sy + 18, 5, 1);
+    targetCtx.fillRect(sx + 14, sy + 17, 4, 1);
+    if (n > 0.55) {
       targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-      targetCtx.fillRect(sx + 19, sy + 16, 2, 1);
-      targetCtx.fillRect(sx + 2, sy + 18, 2, 1);
+      targetCtx.fillRect(sx + 18, sy + 5, 2, 1);
+      targetCtx.fillRect(sx + 5, sy + 16, 2, 1);
     }
     if (tile === 5) {
       targetCtx.fillStyle = "#ffe27b";
-      targetCtx.fillRect(sx + 7, sy + 8, 2, 2);
+      targetCtx.fillRect(sx + 7, sy + 9, 2, 2);
       targetCtx.fillRect(sx + 15, sy + 14, 2, 2);
       targetCtx.fillStyle = "#fff6be";
-      targetCtx.fillRect(sx + 8, sy + 8, 1, 1);
+      targetCtx.fillRect(sx + 8, sy + 9, 1, 1);
       targetCtx.fillRect(sx + 16, sy + 14, 1, 1);
     } else if (tile === 6) {
       targetCtx.fillStyle = "#efd9ff";
@@ -3669,8 +3685,19 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
       targetCtx.fillStyle = "#ffd9ea";
       targetCtx.fillRect(sx + 9, sy + 7, 1, 1);
       targetCtx.fillRect(sx + 16, sy + 13, 1, 1);
+    } else if (tile === 11) {
+      targetCtx.fillStyle = "#23461b";
+      targetCtx.fillRect(sx + 1, sy + 9, TILE - 2, 10);
+      targetCtx.fillRect(sx + 3, sy + 6, TILE - 6, 4);
+      targetCtx.fillStyle = "#41792f";
+      targetCtx.fillRect(sx + 2, sy + 10, TILE - 4, 4);
+      targetCtx.fillRect(sx + 4, sy + 7, TILE - 8, 2);
+      targetCtx.fillStyle = "#9ed66d";
+      targetCtx.fillRect(sx + 5, sy + 8, 4, 1);
+      targetCtx.fillRect(sx + 14, sy + 9, 3, 1);
+      targetCtx.fillRect(sx + 8, sy + 12, 5, 1);
     } else if (tile === 13) {
-      targetCtx.fillStyle = "#20411c";
+      targetCtx.fillStyle = "#2a471f";
       targetCtx.fillRect(sx + 4, sy + 8, 4, 10);
       targetCtx.fillRect(sx + 11, sy + 10, 4, 8);
       targetCtx.fillRect(sx + 17, sy + 6, 3, 9);
@@ -3678,17 +3705,6 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
       targetCtx.fillRect(sx + 3, sy + 7, 6, 2);
       targetCtx.fillRect(sx + 10, sy + 9, 6, 2);
       targetCtx.fillRect(sx + 16, sy + 5, 5, 2);
-    } else if (tile === 11) {
-      targetCtx.fillStyle = "#244d1c";
-      targetCtx.fillRect(sx + 1, sy + 9, TILE - 2, 9);
-      targetCtx.fillRect(sx + 3, sy + 6, TILE - 6, 4);
-      targetCtx.fillStyle = "#5d9443";
-      targetCtx.fillRect(sx + 2, sy + 10, TILE - 4, 4);
-      targetCtx.fillRect(sx + 4, sy + 7, TILE - 8, 2);
-      targetCtx.fillStyle = "#a8dd76";
-      targetCtx.fillRect(sx + 5, sy + 8, 4, 1);
-      targetCtx.fillRect(sx + 14, sy + 9, 3, 1);
-      targetCtx.fillRect(sx + 8, sy + 12, 5, 1);
     }
     return;
   }
@@ -3696,12 +3712,11 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
   if (tile === 2) {
     targetCtx.fillStyle = check ? palette.waterA : palette.waterB;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,255,255,0.18)";
-    targetCtx.fillRect(sx, sy, TILE, 1);
-    targetCtx.fillStyle = "#bfe7ff";
-    targetCtx.fillRect(sx + 3, sy + 4, 8, 1);
-    targetCtx.fillRect(sx + 12, sy + 9, 7, 1);
-    targetCtx.fillRect(sx + 5, sy + 15, 11, 1);
+    targetCtx.fillStyle = "#c6ecff";
+    targetCtx.fillRect(sx + 2, sy + 3, 8, 1);
+    targetCtx.fillRect(sx + 12, sy + 6, 5, 1);
+    targetCtx.fillRect(sx + 5, sy + 12, 10, 1);
+    targetCtx.fillRect(sx + 13, sy + 17, 6, 1);
     targetCtx.fillStyle = "rgba(0,0,0,0.16)";
     targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
     return;
@@ -3710,17 +3725,17 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
   if (tile === 3) {
     targetCtx.fillStyle = check ? palette.pathA : palette.pathB;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,236,194,0.22)";
-    targetCtx.fillRect(sx + 2, sy + 2, TILE - 4, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.10)";
-    targetCtx.fillRect(sx + 1, sy + TILE - 3, TILE - 2, 2);
-    targetCtx.fillStyle = "rgba(135,96,49,0.24)";
-    targetCtx.fillRect(sx + 5, sy + 6, 13, 1);
-    targetCtx.fillRect(sx + 6, sy + 14, 12, 1);
-    targetCtx.fillRect(sx + 9, sy + 10, 7, 1);
-    targetCtx.fillStyle = "rgba(255,243,215,0.12)";
-    targetCtx.fillRect(sx + 4, sy + 17, 2, 2);
-    targetCtx.fillRect(sx + 17, sy + 11, 2, 2);
+    targetCtx.fillStyle = "rgba(255,242,198,0.18)";
+    targetCtx.fillRect(sx + 1, sy + 2, TILE - 2, 1);
+    targetCtx.fillStyle = "rgba(130,90,43,0.22)";
+    targetCtx.fillRect(sx + 3, sy + 7, 4, 1);
+    targetCtx.fillRect(sx + 10, sy + 5, 6, 1);
+    targetCtx.fillRect(sx + 16, sy + 10, 3, 1);
+    targetCtx.fillRect(sx + 5, sy + 14, 7, 1);
+    targetCtx.fillRect(sx + 13, sy + 16, 4, 1);
+    targetCtx.fillStyle = "rgba(255,250,233,0.12)";
+    targetCtx.fillRect(sx + 6, sy + 18, 2, 1);
+    targetCtx.fillRect(sx + 18, sy + 12, 2, 1);
     return;
   }
 
@@ -3735,7 +3750,7 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
     targetCtx.fillStyle = "rgba(0,0,0,0.18)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
     targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
-    targetCtx.strokeStyle = "rgba(83,66,43,0.45)";
+    targetCtx.strokeStyle = "rgba(83,66,43,0.35)";
     targetCtx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
     targetCtx.fillStyle = "rgba(255,255,255,0.10)";
     targetCtx.fillRect(sx + 4, sy + 5, 7, 1);
@@ -3752,16 +3767,26 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
   }
 
   if (tile === 9) {
-    targetCtx.fillStyle = theme === "rootwood" ? "#546948" : theme === "ember" ? "#7a4a34" : "#7b7c73";
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = theme === "rootwood" ? "#7f9870" : theme === "ember" ? "#a86949" : "#a6a28d";
-    targetCtx.fillRect(sx + 2, sy + 3, TILE - 4, 5);
-    targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 7);
-    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 6, sy + 5, 4, 1);
-    targetCtx.fillRect(sx + 13, sy + 8, 3, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-    targetCtx.fillRect(sx + 7, sy + 15, 9, 2);
+    const grassTop = check ? palette.grassA : palette.grassB;
+    targetCtx.fillStyle = grassTop;
+    targetCtx.fillRect(sx, sy, TILE, 8);
+    targetCtx.fillStyle = palette.light;
+    targetCtx.fillRect(sx, sy, TILE, 2);
+    targetCtx.fillStyle = palette.mid;
+    targetCtx.fillRect(sx + 4, sy + 4, 4, 1);
+    targetCtx.fillRect(sx + 14, sy + 5, 5, 1);
+    targetCtx.fillStyle = palette.cliffA;
+    targetCtx.fillRect(sx, sy + 8, TILE, 10);
+    targetCtx.fillStyle = palette.cliffB;
+    targetCtx.fillRect(sx, sy + 18, TILE, 6);
+    targetCtx.fillStyle = "rgba(255,239,182,0.18)";
+    targetCtx.fillRect(sx + 1, sy + 8, TILE - 2, 1);
+    targetCtx.fillStyle = "rgba(255,255,255,0.07)";
+    targetCtx.fillRect(sx + 3, sy + 12, 4, 1);
+    targetCtx.fillRect(sx + 13, sy + 13, 5, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx + 5, sy + 16, 3, 1);
+    targetCtx.fillRect(sx + 15, sy + 19, 3, 1);
     return;
   }
 
@@ -3803,6 +3828,7 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
 }
 
 
+
 function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
   if (tile === 1) {
     const region = area.id === "overworld"
@@ -3815,68 +3841,68 @@ function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
             ? "Crownfall Ruins"
             : area.name;
     let trunk = "#6c4727";
-    let canopyDark = "#296021";
-    let canopyMid = "#3f822f";
-    let canopyHi = "#9be069";
+    let canopyDark = "#24521e";
+    let canopyMid = "#3f7c30";
+    let canopyHi = "#a7df74";
     if (region === "Rootwood March") {
       trunk = "#5b3c22";
-      canopyDark = "#234b1c";
-      canopyMid = "#4f7f36";
-      canopyHi = "#a4d874";
+      canopyDark = "#203b19";
+      canopyMid = "#456e32";
+      canopyHi = "#8fba61";
     } else if (region === "Crownfall Ruins") {
       trunk = "#6c5031";
-      canopyDark = "#385524";
-      canopyMid = "#668748";
-      canopyHi = "#bfdd8d";
+      canopyDark = "#355224";
+      canopyMid = "#5f7f44";
+      canopyHi = "#bfdc8e";
     } else if (region === "Cinderreach") {
       trunk = "#6c3f28";
-      canopyDark = "#5a3120";
-      canopyMid = "#935a37";
-      canopyHi = "#d89a61";
+      canopyDark = "#4f2a1d";
+      canopyMid = "#855136";
+      canopyHi = "#d59662";
     }
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
     targetCtx.fillRect(sx + 4, sy + 20, 16, 2);
     targetCtx.fillStyle = trunk;
-    targetCtx.fillRect(sx + 9, sy + 13, 6, 8);
-    targetCtx.fillRect(sx + 8, sy + 17, 8, 2);
+    targetCtx.fillRect(sx + 10, sy + 14, 4, 7);
+    targetCtx.fillRect(sx + 8, sy + 18, 8, 2);
     targetCtx.fillStyle = canopyDark;
-    targetCtx.fillRect(sx + 4, sy + 4, 16, 3);
-    targetCtx.fillRect(sx + 2, sy + 7, 20, 4);
-    targetCtx.fillRect(sx + 1, sy + 11, 22, 4);
-    targetCtx.fillRect(sx + 3, sy + 15, 18, 3);
+    targetCtx.fillRect(sx + 3, sy + 4, 18, 3);
+    targetCtx.fillRect(sx + 1, sy + 7, 22, 5);
+    targetCtx.fillRect(sx + 2, sy + 12, 20, 4);
+    targetCtx.fillRect(sx + 5, sy + 16, 14, 2);
     targetCtx.fillStyle = canopyMid;
     targetCtx.fillRect(sx + 5, sy + 5, 14, 2);
-    targetCtx.fillRect(sx + 4, sy + 8, 16, 2);
-    targetCtx.fillRect(sx + 5, sy + 12, 14, 2);
-    targetCtx.fillRect(sx + 6, sy + 16, 12, 1);
+    targetCtx.fillRect(sx + 3, sy + 8, 18, 2);
+    targetCtx.fillRect(sx + 4, sy + 13, 16, 2);
     targetCtx.fillStyle = canopyHi;
     targetCtx.fillRect(sx + 7, sy + 6, 4, 1);
     targetCtx.fillRect(sx + 13, sy + 7, 3, 1);
     targetCtx.fillRect(sx + 8, sy + 10, 4, 1);
-    targetCtx.fillRect(sx + 15, sy + 12, 2, 1);
+    targetCtx.fillRect(sx + 15, sy + 11, 2, 1);
   } else if (tile === 4) {
     targetCtx.fillStyle = "rgba(0,0,0,0.16)";
     targetCtx.fillRect(sx + 4, sy + 18, 16, 3);
     targetCtx.fillStyle = "#76828c";
     targetCtx.fillRect(sx + 4, sy + 9, 16, 7);
-    targetCtx.fillStyle = "#b9c2c8";
+    targetCtx.fillStyle = "#c5d0d6";
     targetCtx.fillRect(sx + 6, sy + 6, 12, 6);
     targetCtx.fillStyle = "#e8eef2";
     targetCtx.fillRect(sx + 9, sy + 8, 4, 2);
     targetCtx.fillStyle = "rgba(0,0,0,0.14)";
     targetCtx.fillRect(sx + 8, sy + 14, 7, 2);
   } else if (tile === 9) {
-    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
     targetCtx.fillRect(sx + 2, sy + 19, 20, 3);
-    targetCtx.fillStyle = area.theme === "rootwood" ? "#5d5138" : area.theme === "ember" ? "#764734" : "#776d5a";
-    targetCtx.fillRect(sx + 2, sy + 8, 20, 9);
-    targetCtx.fillStyle = area.theme === "rootwood" ? "#8f7a55" : area.theme === "ember" ? "#9f6342" : "#b1a38a";
-    targetCtx.fillRect(sx + 4, sy + 5, 16, 5);
+    targetCtx.fillStyle = "#7f6337";
+    targetCtx.fillRect(sx + 2, sy + 9, 20, 6);
+    targetCtx.fillStyle = "#a4804d";
+    targetCtx.fillRect(sx + 4, sy + 6, 16, 4);
     targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 7, sy + 7, 4, 1);
-    targetCtx.fillRect(sx + 14, sy + 8, 3, 1);
+    targetCtx.fillRect(sx + 7, sy + 8, 4, 1);
+    targetCtx.fillRect(sx + 14, sy + 9, 3, 1);
   }
 }
+
 
 
 function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
@@ -3887,7 +3913,7 @@ function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
   const east = x < area.width - 1 ? area.world[y][x + 1] : tile;
   const palette = themeColors(area.theme);
   const groundish = new Set([0, 3, 5, 6, 11, 13, 1, 4]);
-  const raised = new Set([7, 8, 9, 12, 14, 15, 16]);
+  const raised = new Set([9, 14, 15, 16]);
 
   if (groundish.has(tile) && south === 2) {
     targetCtx.fillStyle = palette.bank;
@@ -3897,37 +3923,31 @@ function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
     targetCtx.fillStyle = "rgba(0,0,0,0.12)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
   }
-  if (groundish.has(tile) && north === 2) {
-    targetCtx.fillStyle = "rgba(233,245,218,0.10)";
-    targetCtx.fillRect(sx + 1, sy, TILE - 2, 1);
+  if (tile === 9 && groundish.has(south)) {
+    targetCtx.fillStyle = "rgba(255,241,184,0.20)";
+    targetCtx.fillRect(sx, sy + 7, TILE, 1);
+    targetCtx.fillStyle = palette.cliffA;
+    targetCtx.fillRect(sx, sy + 8, TILE, 9);
+    targetCtx.fillStyle = palette.cliffB;
+    targetCtx.fillRect(sx, sy + 17, TILE, 7);
+    targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+    targetCtx.fillRect(sx + 3, sy + 11, 4, 1);
+    targetCtx.fillRect(sx + 14, sy + 13, 3, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.13)";
+    targetCtx.fillRect(sx + 6, sy + 16, 3, 1);
+    targetCtx.fillRect(sx + 16, sy + 20, 2, 1);
   }
-  if (groundish.has(tile) && (east === 2 || west === 2)) {
-    targetCtx.fillStyle = "rgba(121,161,99,0.22)";
-    if (east === 2) targetCtx.fillRect(sx + TILE - 2, sy + 1, 2, TILE - 2);
-    if (west === 2) targetCtx.fillRect(sx, sy + 1, 2, TILE - 2);
+  if (tile === 9 && groundish.has(east)) {
+    targetCtx.fillStyle = palette.cliffB;
+    targetCtx.fillRect(sx + TILE - 2, sy + 8, 2, TILE - 8);
   }
-
-  if (raised.has(tile) && groundish.has(south)) {
-    targetCtx.fillStyle = "#d7c88b";
-    targetCtx.fillRect(sx, sy + TILE - 10, TILE, 2);
-    targetCtx.fillStyle = palette.cliffA || "#9a7740";
-    targetCtx.fillRect(sx, sy + TILE - 8, TILE, 5);
-    targetCtx.fillStyle = palette.cliffB || "#745028";
-    targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
-    for (let bx = 1; bx < TILE - 2; bx += 6) {
-      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-      targetCtx.fillRect(sx + bx, sy + TILE - 7, 2, 1);
-      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-      targetCtx.fillRect(sx + bx + 1, sy + TILE - 4, 2, 1);
-    }
+  if (tile === 9 && groundish.has(west)) {
+    targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+    targetCtx.fillRect(sx, sy + 8, 1, TILE - 8);
   }
-  if (raised.has(tile) && groundish.has(east)) {
-    targetCtx.fillStyle = palette.cliffB || "#745028";
-    targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
-  }
-  if (raised.has(tile) && groundish.has(west)) {
-    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx, sy, 1, TILE);
+  if (groundish.has(tile) && north === 9) {
+    targetCtx.fillStyle = "rgba(0,0,0,0.10)";
+    targetCtx.fillRect(sx, sy, TILE, 1);
   }
 }
 
@@ -3936,7 +3956,7 @@ function drawMacroRelief(targetCtx, area) {
   const width = area.width * TILE;
   const height = area.height * TILE;
   for (let y = 18; y < height; y += 72) {
-    targetCtx.fillStyle = "rgba(255,255,255,0.008)";
+    targetCtx.fillStyle = "rgba(255,255,255,0.005)";
     targetCtx.fillRect(0, y, width, 1);
   }
 }
@@ -4338,6 +4358,7 @@ function drawFlower(x, y, color) {
 
 
 
+
 function drawHumanoidFigure(x, y, opts = {}) {
   const walk = opts.walk || 0;
   const moving = !!opts.moving;
@@ -4347,48 +4368,51 @@ function drawHumanoidFigure(x, y, opts = {}) {
   const cloak = opts.cloak || "#4f6c41";
   const tunic = opts.tunic || "#d8dfb9";
   const trim = opts.trim || "#f1dfa9";
-  const hair = opts.hair || "#775534";
+  const hair = opts.hair || "#b88762";
   const boots = opts.boots || "#6d4e2d";
-  const skin = opts.skin || "#ecd2b3";
+  const skin = opts.skin || "#f0d0ad";
   const accent = opts.accent || "#93aebd";
   const shieldColor = opts.shieldColor || accent;
+  const capColor = opts.capColor || cloak;
 
   px(x - 7, y + 13, 14, 2, "rgba(0,0,0,0.22)");
   px(x - 4, y + 9 + stride, 3, 5, boots);
   px(x + 1, y + 9 - stride, 3, 5, boots);
 
   if (facing === "up") {
-    px(x - 5, y - 8 + bob, 10, 2, cloak);
-    px(x - 4, y - 6 + bob, 8, 3, hair);
-    px(x - 3, y - 3 + bob, 6, 5, skin);
+    px(x - 5, y - 8 + bob, 10, 3, capColor);
+    px(x - 4, y - 5 + bob, 8, 3, hair);
     px(x - 5, y + 1 + bob, 10, 8, cloak);
     px(x - 3, y + 2 + bob, 6, 5, tunic);
     px(x - 3, y + 5 + bob, 6, 1, trim);
-    px(x - 6, y + 4 + bob, 2, 5, cloak);
-    px(x + 4, y + 4 + bob, 2, 5, cloak);
+    px(x - 6, y + 3 + bob, 2, 5, cloak);
+    px(x + 4, y + 3 + bob, 2, 5, cloak);
   } else if (facing === "left" || facing === "right") {
     const sign = facing === "left" ? -1 : 1;
-    px(x - 5, y - 7 + bob, 8, 3, hair);
-    px(x - 4, y - 4 + bob, 7, 5, skin);
-    px(x + (sign > 0 ? 1 : -4), y - 2 + bob, 3, 2, skin);
-    px(x + (sign > 0 ? 2 : -5), y - 4 + bob, 2, 2, hair);
+    px(x - 4, y - 8 + bob, 8, 3, capColor);
+    px(x + (sign > 0 ? 2 : -4), y - 7 + bob, 3, 1, capColor);
+    px(x - 3, y - 5 + bob, 6, 5, skin);
+    px(x + (sign > 0 ? 2 : -4), y - 2 + bob, 2, 2, skin);
     px(x + (sign > 0 ? 1 : -2), y - 1 + bob, 1, 1, "#241b16");
     px(x - 5, y + 1 + bob, 10, 8, cloak);
     px(x - 3, y + 2 + bob, 6, 5, tunic);
     px(x - 3, y + 5 + bob, 6, 1, trim);
     px(x - 6, y + 3 + bob, 2, 5, cloak);
     px(x + 4, y + 3 + bob, 2, 5, cloak);
+    px(x + (sign > 0 ? -4 : -3), y - 5 + bob, 2, 2, hair);
     if (opts.shield) {
       px(x + (sign < 0 ? -9 : 6), y + 2 + bob, 4, 7, shieldColor);
       px(x + (sign < 0 ? -8 : 7), y + 3 + bob, 2, 5, "rgba(255,255,255,0.18)");
     }
   } else {
-    px(x - 5, y - 8 + bob, 10, 2, cloak);
-    px(x - 4, y - 6 + bob, 8, 3, hair);
+    px(x - 5, y - 8 + bob, 10, 3, capColor);
+    px(x - 7, y - 6 + bob, 2, 2, capColor);
+    px(x + 5, y - 6 + bob, 2, 2, capColor);
+    px(x - 4, y - 5 + bob, 8, 2, hair);
     px(x - 4, y - 3 + bob, 8, 6, skin);
-    px(x - 3, y - 1 + bob, 1, 1, "#241b16");
-    px(x + 2, y - 1 + bob, 1, 1, "#241b16");
-    px(x - 1, y + 1 + bob, 2, 1, "#a56f45");
+    px(x - 2, y - 1 + bob, 1, 1, "#241b16");
+    px(x + 1, y - 1 + bob, 1, 1, "#241b16");
+    px(x - 1, y + 1 + bob, 2, 1, "#b87a4a");
     px(x - 5, y + 1 + bob, 10, 8, cloak);
     px(x - 3, y + 2 + bob, 6, 5, tunic);
     px(x - 3, y + 5 + bob, 6, 1, trim);
@@ -4401,9 +4425,9 @@ function drawHumanoidFigure(x, y, opts = {}) {
   }
 
   if (opts.hood) {
-    px(x - 5, y - 8 + bob, 10, 2, cloak);
-    px(x - 5, y - 6 + bob, 2, 5, cloak);
-    px(x + 3, y - 6 + bob, 2, 5, cloak);
+    px(x - 5, y - 8 + bob, 10, 3, cloak);
+    px(x - 6, y - 5 + bob, 2, 4, cloak);
+    px(x + 4, y - 5 + bob, 2, 4, cloak);
   }
   if (opts.lantern) {
     const lx = facing === "left" ? x - 9 : x + 7;
@@ -4414,37 +4438,39 @@ function drawHumanoidFigure(x, y, opts = {}) {
 }
 
 
+
 function drawHouseAsset(item, sx, sy) {
   const roofMap = {
     slate: { top: "#8a7868", face: "#665848", dark: "#493d31", hi: "#d7cab7" },
     amber: { top: "#bc7a4c", face: "#915b35", dark: "#62381f", hi: "#efbf85" },
-    moss: { top: "#8a8d53", face: "#696c3f", dark: "#424528", hi: "#d5d99a" },
-    green: { top: "#b56c59", face: "#8c4f3d", dark: "#5f2f23", hi: "#e6b29a" }
+    moss: { top: "#7e8a4c", face: "#626c38", dark: "#424826", hi: "#d0db8e" },
+    green: { top: "#5f8751", face: "#45623c", dark: "#2d4128", hi: "#bdd9a4" },
+    crimson: { top: "#b86455", face: "#8e4334", dark: "#5e281e", hi: "#ebb19f" }
   };
-  const roof = roofMap[item.roof] || roofMap.green;
-  const wallDark = "#96673c";
-  const wallLight = "#c99865";
+  const roof = roofMap[item.roof] || roofMap.crimson;
+  const wallDark = "#97663a";
+  const wallLight = "#c99662";
   const beam = "#654226";
   const stone = "#8d8475";
   const door = "#2d2119";
   const w = item.w;
   const h = item.h;
-  const wallY = sy + 31;
+  const wallY = sy + 32;
   const doorX = sx + Math.floor(w / 2) - 10;
 
-  px(sx + 10, sy + h - 8, w - 20, 3, "rgba(0,0,0,0.22)");
-  px(sx + 12, sy + h - 12, w - 24, 5, stone);
-  px(sx + 14, sy + h - 11, w - 28, 2, "#c9c2b2");
+  px(sx + 10, sy + h - 8, w - 20, 3, "rgba(0,0,0,0.24)");
+  px(sx + 12, sy + h - 11, w - 24, 4, stone);
+  px(sx + 14, sy + h - 10, w - 28, 2, "#cfc6b6");
 
-  px(sx + 20, sy + 7, w - 40, 4, roof.top);
-  px(sx + 16, sy + 11, w - 32, 4, roof.top);
-  px(sx + 12, sy + 15, w - 24, 4, roof.top);
-  px(sx + 8, sy + 19, w - 16, 11, roof.face);
-  px(sx + 10, sy + 21, w - 20, 2, roof.hi);
-  px(sx + 10, sy + 29, w - 20, 2, roof.dark);
-  for (let rx = sx + 14; rx < sx + w - 12; rx += 8) {
-    px(rx, sy + 24, 5, 1, roof.dark);
-    px(rx + 1, sy + 26, 5, 1, "rgba(255,255,255,0.10)");
+  px(sx + 18, sy + 6, w - 36, 4, roof.top);
+  px(sx + 14, sy + 10, w - 28, 4, roof.top);
+  px(sx + 10, sy + 14, w - 20, 4, roof.top);
+  px(sx + 6, sy + 18, w - 12, 12, roof.face);
+  px(sx + 8, sy + 20, w - 16, 2, roof.hi);
+  px(sx + 8, sy + 28, w - 16, 2, roof.dark);
+  for (let rx = sx + 10; rx < sx + w - 10; rx += 8) {
+    px(rx, sy + 22, 5, 1, roof.dark);
+    px(rx + 1, sy + 24, 5, 1, "rgba(255,255,255,0.10)");
   }
 
   px(sx + 10, wallY, w - 20, h - (wallY - sy) - 14, wallDark);
@@ -4458,11 +4484,12 @@ function drawHouseAsset(item, sx, sy) {
   px(doorX + 2, sy + h - 31, 16, 22, door);
   px(doorX + 4, sy + h - 33, 12, 4, "#9a7047");
   px(doorX + 6, sy + h - 24, 2, 3, "rgba(255,222,152,0.18)");
+  px(doorX + 12, sy + h - 21, 2, 3, "rgba(255,210,120,0.10)");
   px(doorX - 6, sy + h - 24, 32, 2, "#9a764f");
   px(doorX - 6, sy + h - 22, 5, 12, beam);
   px(doorX + 21, sy + h - 22, 5, 12, beam);
 
-  for (const wx of [sx + 24, sx + w - 36]) {
+  for (const wx of [sx + 22, sx + w - 34]) {
     px(wx, wallY + 8, 10, 11, beam);
     px(wx + 2, wallY + 10, 6, 7, "#35506a");
     px(wx + 2, wallY + 10, 6, 1, "rgba(255,224,170,0.16)");
@@ -4470,10 +4497,12 @@ function drawHouseAsset(item, sx, sy) {
     px(wx, wallY + 19, 10, 2, "#7d6042");
   }
 
-  px(sx + 4, sy + 22, 4, 13, roof.dark);
-  px(sx + w - 8, sy + 22, 4, 13, roof.dark);
-  px(sx + w - 14, wallY + 12, 4, 10, "#7d5c31");
-  px(sx + w - 15, wallY + 22, 6, 1, "rgba(255,214,134,0.22)");
+  px(sx + 4, sy + 20, 4, 12, roof.dark);
+  px(sx + w - 8, sy + 20, 4, 12, roof.dark);
+  px(sx + w - 16, wallY + 8, 5, 14, "#7b5a32");
+  px(sx + w - 17, wallY + 8, 7, 2, "#a18053");
+  px(sx + w - 15, wallY + 11, 3, 9, "#5f4a2d");
+  px(sx + w - 15, wallY + 7, 3, 2, "#ccb37c");
 }
 
 
@@ -4853,10 +4882,11 @@ function drawPlayer() {
       walk,
       moving: p.isMoving,
       facing,
-      cloak: "#4a7a3e",
-      tunic: "#d9dfb2",
+      cloak: "#3d7f34",
+      capColor: "#2f8c31",
+      tunic: "#d8d6a9",
       trim: "#f6df94",
-      hair: "#77552f",
+      hair: "#cf9f80",
       boots: "#8b6739",
       accent: "#8ca5bf",
       shield: true,
