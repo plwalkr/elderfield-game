@@ -1,10 +1,10 @@
-# Elderfield — v3.14.0 ALTTP Benchmark Reset
+# Elderfield — v3.15.0 ALTTP Vision Surge
 
-This is a **big visual benchmark pass** plus a real pause feature.
+This is a **bigger visual reset pass** with a cleaner pause panel and manual save from pause.
 
-The goal of v3.14.0 is to stop inching forward and make Elderfield read much more like the direction you actually want: a stronger **A Link to the Past / late-SNES / early-GBA adventure feel** instead of a smooth procedural prototype.
+The goal of v3.15.0 is to stop inching forward and make Elderfield read much more like the direction you actually want: a stronger **A Link to the Past / late-SNES / early-GBA adventure feel** instead of a smooth procedural prototype.
 
-## New in v3.14.0
+## New in v3.15.0
 
 - added a real **Esc pause toggle** with an in-game pause panel and frozen gameplay state
 - pushed the main render grammar much harder toward **bright ALttP-like grass / path / cliff readability**
@@ -13,7 +13,7 @@ The goal of v3.14.0 is to stop inching forward and make Elderfield read much mor
 - rebuilt the shared **player / NPC / knight body language** to feel more like little fantasy sprite people
 - refreshed enemy body rendering so the world reads less like abstract blobs
 - added a stronger **Dawnrest hedge-and-yard benchmark composition** to start pushing one screen toward a more authored Zelda village look
-- updated build strings/UI text to **v3.14.0 • ALTTP Benchmark Reset**
+- updated build strings/UI text to **v3.15.0 • ALTTP Vision Surge**
 
 ## Files
 
@@ -38,8 +38,8 @@ This is still canvas-drawn art, not imported sprite sheets. So this is not the f
 
 ## Verify after upload
 
-- on-screen build badge: `v3.14.0 • ALTTP Benchmark Reset`
-- debug/build info showing **v3.14.0**
+- on-screen build badge: `v3.15.0 • ALTTP Vision Surge`
+- debug/build info showing **v3.15.0**
 - `Esc` pauses and resumes the game cleanly
 - Dawnrest feels more structured and Zelda-like
 - houses feel more iconic and readable

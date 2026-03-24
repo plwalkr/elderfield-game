@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.14.0";
+  const GAME_VERSION = "v3.15.0";
   const BUILD_DATE = "2026-03-23";
-  const BUILD_NAME = "ALTTP Benchmark Reset";
+  const BUILD_NAME = "ALTTP Vision Surge";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Greenhollow";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield ALTTP Benchmark Reset 3/4D";
+  const RENDER_STYLE = "Elderfield ALTTP Vision Surge 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -169,6 +169,7 @@
       vignette: null,
       sizeKey: "",
     },
+    pauseButtons: [],
   };
 
   function currentArea() {
@@ -2603,6 +2604,74 @@ function buildWardensHallInterior() {
     return { ...dirs[Math.floor(Math.random() * dirs.length)] };
   }
 
+  function screenToCanvas(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = state.logicalWidth / rect.width;
+    const scaleY = state.logicalHeight / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  }
+
+  function getPauseLayout() {
+    const boxW = 438;
+    const boxH = 248;
+    const bx = Math.floor((state.logicalWidth - boxW) / 2);
+    const by = Math.floor((state.logicalHeight - boxH) / 2);
+    const buttons = [
+      { label: "Resume", action: "resume", x: bx + 34, y: by + 180, w: 112, h: 28 },
+      { label: "Save", action: "save", x: bx + 162, y: by + 180, w: 112, h: 28 },
+      { label: "Copy Debug", action: "copy", x: bx + 290, y: by + 180, w: 114, h: 28 },
+    ];
+    return { bx, by, boxW, boxH, buttons };
+  }
+
+  function wrapPauseLines(text, maxChars = 44) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let current = "";
+    for (const word of words) {
+      const trial = current ? `${current} ${word}` : word;
+      if (trial.length > maxChars && current) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = trial;
+      }
+    }
+    if (current) lines.push(current);
+    return lines.slice(0, 3);
+  }
+
+  function activatePauseAction(action) {
+    if (!state.paused) return;
+    if (action === "resume") {
+      togglePause(false);
+      return;
+    }
+    if (action === "save") {
+      const ok = saveGame("manual", false);
+      setDebugAction(ok ? "pause-save" : "pause-save-failed");
+      if (!ok) setMessage("Save failed.", 1.8);
+      refreshDebugPanel();
+      return;
+    }
+    if (action === "copy") {
+      copyDebugReport();
+    }
+  }
+
+  function pauseButtonAt(x, y) {
+    const layout = getPauseLayout();
+    for (const button of layout.buttons) {
+      if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
+        return button;
+      }
+    }
+    return null;
+  }
+
   function screenToWorld(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = state.logicalWidth / rect.width;
@@ -3421,7 +3490,7 @@ function burst(x, y, palette) {
     touchState.right = false;
     if (next) {
       setDebugAction("pause-open");
-      setMessage("Paused — Esc resumes your road.", 999);
+      setMessage("Paused — Esc resumes. Save from the pause menu or press S.", 999);
     } else {
       setDebugAction("pause-closed");
       setMessage(state.objectiveText, 2.4);
@@ -3562,112 +3631,117 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
 
   if (tile === 0 || tile === 1 || tile === 4 || tile === 5 || tile === 6 || tile === 13 || tile === 11) {
     const grassTheme = tile === 13 ? themeColors("rootwood") : palette;
-    targetCtx.fillStyle = check ? grassTheme.grassA : grassTheme.grassB;
+    const base = check ? grassTheme.grassA : grassTheme.grassB;
+    targetCtx.fillStyle = base;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = grassTheme.dark;
-    targetCtx.fillRect(sx, sy, TILE, 1);
+    targetCtx.fillStyle = "rgba(255,255,255,0.12)";
+    targetCtx.fillRect(sx, sy, TILE, 2);
+    targetCtx.fillStyle = "rgba(0,0,0,0.10)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
-    targetCtx.fillRect(sx, sy, 1, TILE);
-    targetCtx.fillStyle = grassTheme.mid;
-    targetCtx.fillRect(sx + 3, sy + 5, 4, 1);
-    targetCtx.fillRect(sx + 14, sy + 8, 3, 1);
-    targetCtx.fillRect(sx + 7, sy + 14, 5, 1);
     targetCtx.fillStyle = grassTheme.light;
-    targetCtx.fillRect(sx + 5, sy + 4, 2, 1);
-    targetCtx.fillRect(sx + 15, sy + 7, 2, 1);
-    targetCtx.fillRect(sx + 9, sy + 13, 2, 1);
+    targetCtx.fillRect(sx + 4, sy + 4, 3, 1);
+    targetCtx.fillRect(sx + 14, sy + 7, 2, 1);
+    targetCtx.fillRect(sx + 9, sy + 13, 3, 1);
+    targetCtx.fillStyle = grassTheme.mid;
+    targetCtx.fillRect(sx + 3, sy + 6, 2, 2);
+    targetCtx.fillRect(sx + 16, sy + 11, 2, 2);
+    targetCtx.fillRect(sx + 7, sy + 15, 2, 2);
     targetCtx.fillStyle = grassTheme.dark;
-    targetCtx.fillRect(sx + 6, sy + 10, 1, 4);
+    targetCtx.fillRect(sx + 6, sy + 9, 1, 4);
     targetCtx.fillRect(sx + 12, sy + 12, 1, 4);
-    targetCtx.fillRect(sx + 17, sy + 9, 1, 4);
-    if (n > 0.55) {
-      targetCtx.fillStyle = grassTheme.mid;
-      targetCtx.fillRect(sx + 19, sy + 15, 2, 1);
-      targetCtx.fillRect(sx + 2, sy + 17, 2, 1);
+    targetCtx.fillRect(sx + 18, sy + 8, 1, 4);
+    if (n > 0.54) {
+      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
+      targetCtx.fillRect(sx + 19, sy + 16, 2, 1);
+      targetCtx.fillRect(sx + 2, sy + 18, 2, 1);
     }
     if (tile === 5) {
-      targetCtx.fillStyle = "#ffe17a";
+      targetCtx.fillStyle = "#ffe27b";
       targetCtx.fillRect(sx + 7, sy + 8, 2, 2);
       targetCtx.fillRect(sx + 15, sy + 14, 2, 2);
-      targetCtx.fillStyle = "#fff7bf";
+      targetCtx.fillStyle = "#fff6be";
       targetCtx.fillRect(sx + 8, sy + 8, 1, 1);
       targetCtx.fillRect(sx + 16, sy + 14, 1, 1);
     } else if (tile === 6) {
-      targetCtx.fillStyle = "#efd8ff";
+      targetCtx.fillStyle = "#efd9ff";
       targetCtx.fillRect(sx + 8, sy + 7, 2, 2);
       targetCtx.fillRect(sx + 15, sy + 13, 2, 2);
       targetCtx.fillStyle = "#ffd9ea";
       targetCtx.fillRect(sx + 9, sy + 7, 1, 1);
       targetCtx.fillRect(sx + 16, sy + 13, 1, 1);
     } else if (tile === 13) {
-      targetCtx.fillStyle = "#294324";
-      targetCtx.fillRect(sx + 5, sy + 7, 2, 10);
-      targetCtx.fillRect(sx + 12, sy + 10, 2, 8);
-      targetCtx.fillRect(sx + 17, sy + 6, 2, 9);
-      targetCtx.fillStyle = "#86aa63";
-      targetCtx.fillRect(sx + 4, sy + 6, 5, 2);
-      targetCtx.fillRect(sx + 11, sy + 9, 5, 2);
-      targetCtx.fillRect(sx + 16, sy + 5, 4, 2);
+      targetCtx.fillStyle = "#20411c";
+      targetCtx.fillRect(sx + 4, sy + 8, 4, 10);
+      targetCtx.fillRect(sx + 11, sy + 10, 4, 8);
+      targetCtx.fillRect(sx + 17, sy + 6, 3, 9);
+      targetCtx.fillStyle = "#7fb65c";
+      targetCtx.fillRect(sx + 3, sy + 7, 6, 2);
+      targetCtx.fillRect(sx + 10, sy + 9, 6, 2);
+      targetCtx.fillRect(sx + 16, sy + 5, 5, 2);
     } else if (tile === 11) {
-      targetCtx.fillStyle = "#26461f";
-      targetCtx.fillRect(sx + 1, sy + 8, TILE - 2, 10);
-      targetCtx.fillRect(sx + 3, sy + 5, TILE - 6, 5);
-      targetCtx.fillStyle = "#4c7d3d";
-      targetCtx.fillRect(sx + 2, sy + 9, TILE - 4, 5);
-      targetCtx.fillRect(sx + 4, sy + 6, TILE - 8, 3);
-      targetCtx.fillStyle = "#8ec76f";
-      targetCtx.fillRect(sx + 5, sy + 7, 4, 1);
-      targetCtx.fillRect(sx + 14, sy + 8, 3, 1);
+      targetCtx.fillStyle = "#244d1c";
+      targetCtx.fillRect(sx + 1, sy + 9, TILE - 2, 9);
+      targetCtx.fillRect(sx + 3, sy + 6, TILE - 6, 4);
+      targetCtx.fillStyle = "#5d9443";
+      targetCtx.fillRect(sx + 2, sy + 10, TILE - 4, 4);
+      targetCtx.fillRect(sx + 4, sy + 7, TILE - 8, 2);
+      targetCtx.fillStyle = "#a8dd76";
+      targetCtx.fillRect(sx + 5, sy + 8, 4, 1);
+      targetCtx.fillRect(sx + 14, sy + 9, 3, 1);
       targetCtx.fillRect(sx + 8, sy + 12, 5, 1);
     }
     return;
   }
+
   if (tile === 2) {
     targetCtx.fillStyle = check ? palette.waterA : palette.waterB;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "#9bd7ff";
-    targetCtx.fillRect(sx + 3, sy + 4, 8, 1);
-    targetCtx.fillRect(sx + 12, sy + 10, 7, 1);
-    targetCtx.fillRect(sx + 6, sy + 16, 10, 1);
-    targetCtx.fillStyle = "rgba(255,255,255,0.20)";
+    targetCtx.fillStyle = "rgba(255,255,255,0.18)";
     targetCtx.fillRect(sx, sy, TILE, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+    targetCtx.fillStyle = "#bfe7ff";
+    targetCtx.fillRect(sx + 3, sy + 4, 8, 1);
+    targetCtx.fillRect(sx + 12, sy + 9, 7, 1);
+    targetCtx.fillRect(sx + 5, sy + 15, 11, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
     targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
     return;
   }
+
   if (tile === 3) {
     targetCtx.fillStyle = check ? palette.pathA : palette.pathB;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,240,210,0.28)";
-    targetCtx.fillRect(sx + 1, sy + 1, TILE - 2, 1);
-    targetCtx.fillRect(sx + 1, sy + 1, 1, TILE - 2);
-    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-    targetCtx.fillRect(sx + 2, sy + TILE - 3, TILE - 4, 2);
-    targetCtx.fillRect(sx + TILE - 3, sy + 2, 2, TILE - 4);
-    targetCtx.fillStyle = "rgba(120,92,59,0.28)";
-    targetCtx.fillRect(sx + 5, sy + 6, 2, 2);
-    targetCtx.fillRect(sx + 15, sy + 13, 2, 2);
-    targetCtx.fillRect(sx + 10, sy + 10, 3, 1);
+    targetCtx.fillStyle = "rgba(255,236,194,0.22)";
+    targetCtx.fillRect(sx + 2, sy + 2, TILE - 4, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.10)";
+    targetCtx.fillRect(sx + 1, sy + TILE - 3, TILE - 2, 2);
+    targetCtx.fillStyle = "rgba(135,96,49,0.24)";
+    targetCtx.fillRect(sx + 5, sy + 6, 13, 1);
+    targetCtx.fillRect(sx + 6, sy + 14, 12, 1);
+    targetCtx.fillRect(sx + 9, sy + 10, 7, 1);
+    targetCtx.fillStyle = "rgba(255,243,215,0.12)";
+    targetCtx.fillRect(sx + 4, sy + 17, 2, 2);
+    targetCtx.fillRect(sx + 17, sy + 11, 2, 2);
     return;
   }
+
   if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
     const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
     const top = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
     targetCtx.fillStyle = top;
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,255,255,0.16)";
+    targetCtx.fillStyle = "rgba(255,255,255,0.18)";
     targetCtx.fillRect(sx, sy, TILE, 2);
     targetCtx.fillRect(sx, sy, 2, TILE);
     targetCtx.fillStyle = "rgba(0,0,0,0.18)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
     targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
-    targetCtx.strokeStyle = "rgba(70,62,50,0.40)";
+    targetCtx.strokeStyle = "rgba(83,66,43,0.45)";
     targetCtx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
     targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 4, sy + 5, 6, 1);
-    targetCtx.fillRect(sx + 13, sy + 9, 5, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-    targetCtx.fillRect(sx + 8, sy + 16, 7, 1);
+    targetCtx.fillRect(sx + 4, sy + 5, 7, 1);
+    targetCtx.fillRect(sx + 13, sy + 9, 4, 1);
+    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+    targetCtx.fillRect(sx + 6, sy + 15, 10, 1);
     if (tile === 12) {
       targetCtx.fillStyle = "rgba(255,255,255,0.12)";
       targetCtx.fillRect(sx + 5, sy + 8, 2, 1);
@@ -3676,49 +3750,54 @@ function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
     }
     return;
   }
+
   if (tile === 9) {
-    targetCtx.fillStyle = theme === "rootwood" ? "#3c5636" : theme === "ember" ? "#6a4031" : "#72756e";
+    targetCtx.fillStyle = theme === "rootwood" ? "#546948" : theme === "ember" ? "#7a4a34" : "#7b7c73";
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = theme === "rootwood" ? "#5c7d50" : theme === "ember" ? "#94583c" : "#98988e";
-    targetCtx.fillRect(sx + 2, sy + 2, TILE - 4, 7);
-    targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 8);
+    targetCtx.fillStyle = theme === "rootwood" ? "#7f9870" : theme === "ember" ? "#a86949" : "#a6a28d";
+    targetCtx.fillRect(sx + 2, sy + 3, TILE - 4, 5);
+    targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 7);
     targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 5, sy + 5, 4, 1);
+    targetCtx.fillRect(sx + 6, sy + 5, 4, 1);
     targetCtx.fillRect(sx + 13, sy + 8, 3, 1);
     targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-    targetCtx.fillRect(sx + 7, sy + 15, 8, 2);
+    targetCtx.fillRect(sx + 7, sy + 15, 9, 2);
     return;
   }
+
   if (tile === 10) {
-    targetCtx.fillStyle = "#1a2231";
+    targetCtx.fillStyle = "#1c2b3a";
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "#6fb7ff";
+    targetCtx.fillStyle = "#72bbff";
     targetCtx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
     targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
-    targetCtx.fillStyle = "rgba(180,220,255,0.20)";
+    targetCtx.fillStyle = "rgba(180,220,255,0.22)";
     targetCtx.fillRect(sx + 6, sy + 6, 12, 12);
     return;
   }
+
   if (tile === 15) {
-    targetCtx.fillStyle = check ? "#7c4b31" : "#90553a";
+    targetCtx.fillStyle = check ? "#8b5832" : "#a4683d";
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,180,116,0.14)";
-    targetCtx.fillRect(sx + 3, sy + 4, 6, 1);
-    targetCtx.fillRect(sx + 12, sy + 10, 5, 1);
+    targetCtx.fillStyle = "rgba(255,196,125,0.14)";
+    targetCtx.fillRect(sx + 4, sy + 5, 6, 1);
+    targetCtx.fillRect(sx + 12, sy + 11, 5, 1);
     targetCtx.fillStyle = "rgba(0,0,0,0.16)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
     return;
   }
+
   if (tile === 16) {
-    targetCtx.fillStyle = seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6a3a2a" : "#7b4330";
+    targetCtx.fillStyle = seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6d3b28" : "#804631";
     targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,210,146,0.10)";
+    targetCtx.fillStyle = "rgba(255,209,148,0.10)";
     targetCtx.fillRect(sx + 5, sy + 14, 10, 1);
     targetCtx.fillRect(sx + 12, sy + 6, 7, 1);
     targetCtx.fillStyle = "rgba(0,0,0,0.12)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
     return;
   }
+
   targetCtx.fillStyle = "magenta";
   targetCtx.fillRect(sx, sy, TILE, TILE);
 }
@@ -3735,63 +3814,63 @@ function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
           : area.theme === "ruins"
             ? "Crownfall Ruins"
             : area.name;
-    let trunk = "#6a472a";
-    let canopyDark = "#24461d";
-    let canopyMid = "#3b7430";
-    let canopyHi = "#7fc15d";
+    let trunk = "#6c4727";
+    let canopyDark = "#296021";
+    let canopyMid = "#3f822f";
+    let canopyHi = "#9be069";
     if (region === "Rootwood March") {
-      trunk = "#5a3b25";
-      canopyDark = "#1f3b1d";
-      canopyMid = "#47703a";
-      canopyHi = "#93bb66";
+      trunk = "#5b3c22";
+      canopyDark = "#234b1c";
+      canopyMid = "#4f7f36";
+      canopyHi = "#a4d874";
     } else if (region === "Crownfall Ruins") {
       trunk = "#6c5031";
-      canopyDark = "#324323";
-      canopyMid = "#617d46";
-      canopyHi = "#b4cd83";
+      canopyDark = "#385524";
+      canopyMid = "#668748";
+      canopyHi = "#bfdd8d";
     } else if (region === "Cinderreach") {
-      trunk = "#6a3e2a";
-      canopyDark = "#552a1d";
-      canopyMid = "#8f5636";
-      canopyHi = "#d5945c";
+      trunk = "#6c3f28";
+      canopyDark = "#5a3120";
+      canopyMid = "#935a37";
+      canopyHi = "#d89a61";
     }
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
+    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
     targetCtx.fillRect(sx + 4, sy + 20, 16, 2);
     targetCtx.fillStyle = trunk;
-    targetCtx.fillRect(sx + 10, sy + 12, 4, 9);
+    targetCtx.fillRect(sx + 9, sy + 13, 6, 8);
     targetCtx.fillRect(sx + 8, sy + 17, 8, 2);
     targetCtx.fillStyle = canopyDark;
-    targetCtx.fillRect(sx + 4, sy + 6, 16, 3);
-    targetCtx.fillRect(sx + 2, sy + 9, 20, 4);
-    targetCtx.fillRect(sx + 1, sy + 12, 22, 4);
+    targetCtx.fillRect(sx + 4, sy + 4, 16, 3);
+    targetCtx.fillRect(sx + 2, sy + 7, 20, 4);
+    targetCtx.fillRect(sx + 1, sy + 11, 22, 4);
     targetCtx.fillRect(sx + 3, sy + 15, 18, 3);
     targetCtx.fillStyle = canopyMid;
-    targetCtx.fillRect(sx + 6, sy + 4, 12, 2);
-    targetCtx.fillRect(sx + 4, sy + 7, 16, 2);
-    targetCtx.fillRect(sx + 5, sy + 10, 14, 2);
-    targetCtx.fillRect(sx + 6, sy + 13, 12, 2);
+    targetCtx.fillRect(sx + 5, sy + 5, 14, 2);
+    targetCtx.fillRect(sx + 4, sy + 8, 16, 2);
+    targetCtx.fillRect(sx + 5, sy + 12, 14, 2);
+    targetCtx.fillRect(sx + 6, sy + 16, 12, 1);
     targetCtx.fillStyle = canopyHi;
-    targetCtx.fillRect(sx + 7, sy + 5, 4, 1);
-    targetCtx.fillRect(sx + 13, sy + 6, 3, 1);
-    targetCtx.fillRect(sx + 9, sy + 9, 3, 1);
-    targetCtx.fillRect(sx + 15, sy + 11, 3, 1);
+    targetCtx.fillRect(sx + 7, sy + 6, 4, 1);
+    targetCtx.fillRect(sx + 13, sy + 7, 3, 1);
+    targetCtx.fillRect(sx + 8, sy + 10, 4, 1);
+    targetCtx.fillRect(sx + 15, sy + 12, 2, 1);
   } else if (tile === 4) {
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-    targetCtx.fillRect(sx + 4, sy + 18, 15, 3);
-    targetCtx.fillStyle = "#6e767d";
-    targetCtx.fillRect(sx + 4, sy + 8, 16, 8);
-    targetCtx.fillStyle = "#9fa9b0";
-    targetCtx.fillRect(sx + 6, sy + 6, 12, 7);
-    targetCtx.fillStyle = "#dfe8ef";
-    targetCtx.fillRect(sx + 9, sy + 8, 4, 2);
-    targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-    targetCtx.fillRect(sx + 8, sy + 14, 6, 2);
-  } else if (tile === 9) {
     targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+    targetCtx.fillRect(sx + 4, sy + 18, 16, 3);
+    targetCtx.fillStyle = "#76828c";
+    targetCtx.fillRect(sx + 4, sy + 9, 16, 7);
+    targetCtx.fillStyle = "#b9c2c8";
+    targetCtx.fillRect(sx + 6, sy + 6, 12, 6);
+    targetCtx.fillStyle = "#e8eef2";
+    targetCtx.fillRect(sx + 9, sy + 8, 4, 2);
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
+    targetCtx.fillRect(sx + 8, sy + 14, 7, 2);
+  } else if (tile === 9) {
+    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
     targetCtx.fillRect(sx + 2, sy + 19, 20, 3);
-    targetCtx.fillStyle = area.theme === "rootwood" ? "#5e4b31" : area.theme === "ember" ? "#6b4230" : "#6a6458";
-    targetCtx.fillRect(sx + 2, sy + 7, 20, 10);
-    targetCtx.fillStyle = area.theme === "rootwood" ? "#7b6341" : area.theme === "ember" ? "#91573d" : "#9f9687";
+    targetCtx.fillStyle = area.theme === "rootwood" ? "#5d5138" : area.theme === "ember" ? "#764734" : "#776d5a";
+    targetCtx.fillRect(sx + 2, sy + 8, 20, 9);
+    targetCtx.fillStyle = area.theme === "rootwood" ? "#8f7a55" : area.theme === "ember" ? "#9f6342" : "#b1a38a";
     targetCtx.fillRect(sx + 4, sy + 5, 16, 5);
     targetCtx.fillStyle = "rgba(255,255,255,0.10)";
     targetCtx.fillRect(sx + 7, sy + 7, 4, 1);
@@ -3812,43 +3891,43 @@ function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
 
   if (groundish.has(tile) && south === 2) {
     targetCtx.fillStyle = palette.bank;
-    targetCtx.fillRect(sx, sy + TILE - 5, TILE, 3);
-    targetCtx.fillStyle = "rgba(255,255,255,0.20)";
+    targetCtx.fillRect(sx, sy + TILE - 4, TILE, 2);
+    targetCtx.fillStyle = "rgba(255,255,255,0.18)";
     targetCtx.fillRect(sx + 1, sy + TILE - 5, TILE - 2, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
+    targetCtx.fillStyle = "rgba(0,0,0,0.12)";
     targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
   }
   if (groundish.has(tile) && north === 2) {
-    targetCtx.fillStyle = "rgba(233,245,218,0.12)";
-    targetCtx.fillRect(sx + 1, sy, TILE - 2, 2);
+    targetCtx.fillStyle = "rgba(233,245,218,0.10)";
+    targetCtx.fillRect(sx + 1, sy, TILE - 2, 1);
   }
   if (groundish.has(tile) && (east === 2 || west === 2)) {
-    targetCtx.fillStyle = "rgba(121,161,99,0.30)";
-    if (east === 2) targetCtx.fillRect(sx + TILE - 3, sy + 1, 3, TILE - 2);
-    if (west === 2) targetCtx.fillRect(sx, sy + 1, 3, TILE - 2);
+    targetCtx.fillStyle = "rgba(121,161,99,0.22)";
+    if (east === 2) targetCtx.fillRect(sx + TILE - 2, sy + 1, 2, TILE - 2);
+    if (west === 2) targetCtx.fillRect(sx, sy + 1, 2, TILE - 2);
   }
 
   if (raised.has(tile) && groundish.has(south)) {
-    targetCtx.fillStyle = "#d8d1a6";
+    targetCtx.fillStyle = "#d7c88b";
     targetCtx.fillRect(sx, sy + TILE - 10, TILE, 2);
-    targetCtx.fillStyle = palette.cliffA || "#776238";
+    targetCtx.fillStyle = palette.cliffA || "#9a7740";
     targetCtx.fillRect(sx, sy + TILE - 8, TILE, 5);
-    targetCtx.fillStyle = palette.cliffB || "#584123";
+    targetCtx.fillStyle = palette.cliffB || "#745028";
     targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
-    for (let bx = 2; bx < TILE - 2; bx += 6) {
-      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-      targetCtx.fillRect(sx + bx, sy + TILE - 7, 3, 1);
-      targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-      targetCtx.fillRect(sx + bx + 1, sy + TILE - 4, 3, 1);
+    for (let bx = 1; bx < TILE - 2; bx += 6) {
+      targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+      targetCtx.fillRect(sx + bx, sy + TILE - 7, 2, 1);
+      targetCtx.fillStyle = "rgba(0,0,0,0.12)";
+      targetCtx.fillRect(sx + bx + 1, sy + TILE - 4, 2, 1);
     }
   }
   if (raised.has(tile) && groundish.has(east)) {
-    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-    targetCtx.fillRect(sx + TILE - 3, sy, 3, TILE);
+    targetCtx.fillStyle = palette.cliffB || "#745028";
+    targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
   }
   if (raised.has(tile) && groundish.has(west)) {
-    targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-    targetCtx.fillRect(sx, sy, 2, TILE);
+    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
+    targetCtx.fillRect(sx, sy, 1, TILE);
   }
 }
 
@@ -3925,29 +4004,29 @@ function drawMacroRelief(targetCtx, area) {
 function themeColors(theme) {
   if (theme === "rootwood") {
     return {
-      grassA: "#5f7b48", grassB: "#75955a", dark: "#304126", mid: "#9fbe7a", light: "#d7e9af",
-      stoneA: "#6b7461", stoneB: "#87907a", pathA: "#8b8d78", pathB: "#a4a78d",
-      waterA: "#29586b", waterB: "#3b7f8b", accent: "#d3efaf", bank: "#90b06a", cliffA: "#4a5c3a", cliffB: "#314126"
+      grassA: "#5b963b", grassB: "#69a944", dark: "#2f5d20", mid: "#84c15c", light: "#d9efaa",
+      stoneA: "#94a184", stoneB: "#b8c1a5", pathA: "#9a7a42", pathB: "#b08d52",
+      waterA: "#2b6492", waterB: "#4c87b0", accent: "#f2edbb", bank: "#7ead55", cliffA: "#826236", cliffB: "#5f4324"
     };
   }
   if (theme === "ember") {
     return {
-      grassA: "#87553d", grassB: "#9f6548", dark: "#4b291d", mid: "#cc8e58", light: "#f4c07f",
-      stoneA: "#7b6157", stoneB: "#9a7c6f", pathA: "#a27958", pathB: "#be9370",
-      waterA: "#8e5d37", waterB: "#b87745", accent: "#ffd7ad", bank: "#b57f57", cliffA: "#6c4734", cliffB: "#4d2d21"
+      grassA: "#8f5d34", grassB: "#a87040", dark: "#5c331c", mid: "#ce9558", light: "#f3c986",
+      stoneA: "#8d7568", stoneB: "#af9585", pathA: "#9f7244", pathB: "#bb8750",
+      waterA: "#6f4d2a", waterB: "#9f6a35", accent: "#ffd6a6", bank: "#b7844f", cliffA: "#7a4d2d", cliffB: "#5b321b"
     };
   }
   if (theme === "ruins") {
     return {
-      grassA: "#6e8b52", grassB: "#80a25f", dark: "#334028", mid: "#b4c78c", light: "#e7f0c6",
-      stoneA: "#9a8c6c", stoneB: "#b8a98b", pathA: "#c5d7bc", pathB: "#d7e6cf",
-      waterA: "#4a7287", waterB: "#6995a7", accent: "#fff2cb", bank: "#98bb7c", cliffA: "#786a4e", cliffB: "#61553f"
+      grassA: "#73aa47", grassB: "#85b959", dark: "#355f22", mid: "#9fd16c", light: "#e8f4bf",
+      stoneA: "#b7b78e", stoneB: "#d4cfab", pathA: "#bea76c", pathB: "#d1bb82",
+      waterA: "#4a7eaa", waterB: "#72a4ca", accent: "#fff2cb", bank: "#92bf66", cliffA: "#8b6d3d", cliffB: "#664925"
     };
   }
   return {
-    grassA: "#5fa24d", grassB: "#68ab55", dark: "#2c5424", mid: "#8fcf73", light: "#dbf3ba",
-    stoneA: "#86907b", stoneB: "#a2ab98", pathA: "#caeccf", pathB: "#dff7df",
-    waterA: "#406e95", waterB: "#5f8eb1", accent: "#fff2ba", bank: "#96c675", cliffA: "#5a7b42", cliffB: "#3d592d"
+    grassA: "#72b541", grassB: "#82c64c", dark: "#316820", mid: "#95d55d", light: "#e6f5af",
+    stoneA: "#a8b59e", stoneB: "#c8d2bf", pathA: "#af8748", pathB: "#c59c5b",
+    waterA: "#427cb4", waterB: "#6aa5d2", accent: "#fff4bf", bank: "#98c96a", cliffA: "#9a7740", cliffB: "#745028"
   };
 }
 
@@ -4262,8 +4341,8 @@ function drawFlower(x, y, color) {
 function drawHumanoidFigure(x, y, opts = {}) {
   const walk = opts.walk || 0;
   const moving = !!opts.moving;
-  const stride = moving ? Math.round(Math.sin(walk * 7.2) * 1.5) : 0;
-  const bob = moving ? Math.round(Math.cos(walk * 7.2) * 0.5) : 0;
+  const stride = moving ? Math.round(Math.sin(walk * 7.5) * 1.5) : 0;
+  const bob = moving ? Math.round(Math.cos(walk * 7.5) * 0.5) : 0;
   const facing = opts.facing || "down";
   const cloak = opts.cloak || "#4f6c41";
   const tunic = opts.tunic || "#d8dfb9";
@@ -4279,95 +4358,94 @@ function drawHumanoidFigure(x, y, opts = {}) {
   px(x + 1, y + 9 - stride, 3, 5, boots);
 
   if (facing === "up") {
-    px(x - 5, y + 1 + bob, 10, 9, cloak);
-    px(x - 4, y + 2 + bob, 8, 6, tunic);
-    px(x - 4, y - 6 + bob, 8, 7, hair);
-    px(x - 3, y - 4 + bob, 6, 5, skin);
-    px(x - 5, y + 3 + bob, 2, 5, cloak);
-    px(x + 3, y + 3 + bob, 2, 5, cloak);
-    px(x - 3, y + 4 + bob, 6, 1, trim);
+    px(x - 5, y - 8 + bob, 10, 2, cloak);
+    px(x - 4, y - 6 + bob, 8, 3, hair);
+    px(x - 3, y - 3 + bob, 6, 5, skin);
+    px(x - 5, y + 1 + bob, 10, 8, cloak);
+    px(x - 3, y + 2 + bob, 6, 5, tunic);
+    px(x - 3, y + 5 + bob, 6, 1, trim);
+    px(x - 6, y + 4 + bob, 2, 5, cloak);
+    px(x + 4, y + 4 + bob, 2, 5, cloak);
   } else if (facing === "left" || facing === "right") {
     const sign = facing === "left" ? -1 : 1;
-    px(x - 5, y + 1 + bob, 10, 9, cloak);
-    px(x - 4, y + 2 + bob, 8, 6, tunic);
-    px(x - 4, y - 6 + bob, 8, 3, hair);
-    px(x - 4, y - 3 + bob, 7, 5, skin);
-    px(x + (sign > 0 ? 1 : -4), y - 1 + bob, 3, 2, skin);
+    px(x - 5, y - 7 + bob, 8, 3, hair);
+    px(x - 4, y - 4 + bob, 7, 5, skin);
+    px(x + (sign > 0 ? 1 : -4), y - 2 + bob, 3, 2, skin);
     px(x + (sign > 0 ? 2 : -5), y - 4 + bob, 2, 2, hair);
     px(x + (sign > 0 ? 1 : -2), y - 1 + bob, 1, 1, "#241b16");
-    px(x - 4, y + 4 + bob, 8, 1, trim);
-    px(x - 6, y + 4 + bob, 2, 4, cloak);
-    px(x + 4, y + 4 + bob, 2, 4, cloak);
+    px(x - 5, y + 1 + bob, 10, 8, cloak);
+    px(x - 3, y + 2 + bob, 6, 5, tunic);
+    px(x - 3, y + 5 + bob, 6, 1, trim);
+    px(x - 6, y + 3 + bob, 2, 5, cloak);
+    px(x + 4, y + 3 + bob, 2, 5, cloak);
     if (opts.shield) {
-      px(x + (sign < 0 ? -9 : 6), y + 3 + bob, 4, 6, shieldColor);
-      px(x + (sign < 0 ? -8 : 7), y + 4 + bob, 2, 4, "rgba(255,255,255,0.18)");
+      px(x + (sign < 0 ? -9 : 6), y + 2 + bob, 4, 7, shieldColor);
+      px(x + (sign < 0 ? -8 : 7), y + 3 + bob, 2, 5, "rgba(255,255,255,0.18)");
     }
   } else {
-    px(x - 5, y + 1 + bob, 10, 9, cloak);
-    px(x - 4, y + 2 + bob, 8, 6, tunic);
-    px(x - 3, y + 4 + bob, 6, 1, trim);
-    px(x - 4, y - 7 + bob, 8, 3, hair);
-    px(x - 5, y - 4 + bob, 10, 2, cloak);
+    px(x - 5, y - 8 + bob, 10, 2, cloak);
+    px(x - 4, y - 6 + bob, 8, 3, hair);
     px(x - 4, y - 3 + bob, 8, 6, skin);
     px(x - 3, y - 1 + bob, 1, 1, "#241b16");
     px(x + 2, y - 1 + bob, 1, 1, "#241b16");
-    px(x - 1, y + 1 + bob, 2, 1, "#9c6d48");
-    px(x - 6, y + 4 + bob, 2, 5, cloak);
-    px(x + 4, y + 4 + bob, 2, 5, cloak);
+    px(x - 1, y + 1 + bob, 2, 1, "#a56f45");
+    px(x - 5, y + 1 + bob, 10, 8, cloak);
+    px(x - 3, y + 2 + bob, 6, 5, tunic);
+    px(x - 3, y + 5 + bob, 6, 1, trim);
+    px(x - 6, y + 3 + bob, 2, 6, cloak);
+    px(x + 4, y + 3 + bob, 2, 6, cloak);
     if (opts.shield) {
-      px(x - 10, y + 3 + bob, 4, 6, shieldColor);
-      px(x - 9, y + 4 + bob, 2, 4, "rgba(255,255,255,0.18)");
+      px(x - 10, y + 2 + bob, 4, 7, shieldColor);
+      px(x - 9, y + 3 + bob, 2, 5, "rgba(255,255,255,0.18)");
     }
   }
 
   if (opts.hood) {
-    px(x - 5, y - 7 + bob, 10, 2, cloak);
-    px(x - 5, y - 5 + bob, 2, 5, cloak);
-    px(x + 3, y - 5 + bob, 2, 5, cloak);
+    px(x - 5, y - 8 + bob, 10, 2, cloak);
+    px(x - 5, y - 6 + bob, 2, 5, cloak);
+    px(x + 3, y - 6 + bob, 2, 5, cloak);
   }
   if (opts.lantern) {
     const lx = facing === "left" ? x - 9 : x + 7;
-    px(lx, y + 4 + bob, 2, 6, "#745630");
-    px(lx - 1, y + 9 + bob, 4, 4, "#cda562");
-    px(lx, y + 10 + bob, 2, 2, "#fff0bc");
+    px(lx, y + 3 + bob, 2, 6, "#745630");
+    px(lx - 1, y + 8 + bob, 4, 4, "#cda562");
+    px(lx, y + 9 + bob, 2, 2, "#fff0bc");
   }
 }
 
 
 function drawHouseAsset(item, sx, sy) {
   const roofMap = {
-    slate: { top: "#8d7158", face: "#6e5642", dark: "#4d3a2a", hi: "#d6bc8d" },
-    amber: { top: "#b47a4c", face: "#8e5a34", dark: "#5f3920", hi: "#f1c47f" },
-    moss: { top: "#7a7f50", face: "#5d653d", dark: "#394127", hi: "#ced796" },
-    green: { top: "#7d8458", face: "#626a42", dark: "#39452b", hi: "#d6d79c" }
+    slate: { top: "#8a7868", face: "#665848", dark: "#493d31", hi: "#d7cab7" },
+    amber: { top: "#bc7a4c", face: "#915b35", dark: "#62381f", hi: "#efbf85" },
+    moss: { top: "#8a8d53", face: "#696c3f", dark: "#424528", hi: "#d5d99a" },
+    green: { top: "#b56c59", face: "#8c4f3d", dark: "#5f2f23", hi: "#e6b29a" }
   };
   const roof = roofMap[item.roof] || roofMap.green;
-  const wallDark = "#8f6840";
-  const wallLight = "#caa070";
+  const wallDark = "#96673c";
+  const wallLight = "#c99865";
   const beam = "#654226";
-  const stone = "#8c8b8a";
+  const stone = "#8d8475";
   const door = "#2d2119";
   const w = item.w;
   const h = item.h;
-  const roofTopY = sy + 6;
-  const roofFaceY = sy + 18;
-  const wallY = sy + 30;
+  const wallY = sy + 31;
   const doorX = sx + Math.floor(w / 2) - 10;
 
-  px(sx + 12, sy + h - 8, w - 24, 3, "rgba(0,0,0,0.22)");
+  px(sx + 10, sy + h - 8, w - 20, 3, "rgba(0,0,0,0.22)");
   px(sx + 12, sy + h - 12, w - 24, 5, stone);
-  px(sx + 14, sy + h - 11, w - 28, 2, "#b8b7b4");
+  px(sx + 14, sy + h - 11, w - 28, 2, "#c9c2b2");
 
-  px(sx + 18, roofTopY + 2, w - 36, 4, roof.top);
-  px(sx + 14, roofTopY + 6, w - 28, 4, roof.top);
-  px(sx + 10, roofTopY + 10, w - 20, 5, roof.top);
-  px(sx + 6, roofFaceY, w - 12, 10, roof.face);
-  px(sx + 8, roofFaceY + 2, w - 16, 2, roof.hi);
-  for (let rx = sx + 12; rx < sx + w - 10; rx += 8) {
-    px(rx, roofFaceY + 5, 5, 1, roof.dark);
-    px(rx + 1, roofFaceY + 7, 5, 1, "rgba(255,255,255,0.10)");
+  px(sx + 20, sy + 7, w - 40, 4, roof.top);
+  px(sx + 16, sy + 11, w - 32, 4, roof.top);
+  px(sx + 12, sy + 15, w - 24, 4, roof.top);
+  px(sx + 8, sy + 19, w - 16, 11, roof.face);
+  px(sx + 10, sy + 21, w - 20, 2, roof.hi);
+  px(sx + 10, sy + 29, w - 20, 2, roof.dark);
+  for (let rx = sx + 14; rx < sx + w - 12; rx += 8) {
+    px(rx, sy + 24, 5, 1, roof.dark);
+    px(rx + 1, sy + 26, 5, 1, "rgba(255,255,255,0.10)");
   }
-  px(sx + 10, roofFaceY + 10, w - 20, 2, roof.dark);
 
   px(sx + 10, wallY, w - 20, h - (wallY - sy) - 14, wallDark);
   px(sx + 14, wallY + 3, w - 28, h - (wallY - sy) - 20, wallLight);
@@ -4378,24 +4456,24 @@ function drawHouseAsset(item, sx, sy) {
 
   px(doorX, sy + h - 34, 20, 26, beam);
   px(doorX + 2, sy + h - 31, 16, 22, door);
-  px(doorX + 4, sy + h - 33, 12, 4, "#8f6c47");
+  px(doorX + 4, sy + h - 33, 12, 4, "#9a7047");
   px(doorX + 6, sy + h - 24, 2, 3, "rgba(255,222,152,0.18)");
+  px(doorX - 6, sy + h - 24, 32, 2, "#9a764f");
   px(doorX - 6, sy + h - 22, 5, 12, beam);
   px(doorX + 21, sy + h - 22, 5, 12, beam);
-  px(doorX - 6, sy + h - 24, 32, 2, "#9a764f");
 
-  for (const wx of [sx + 23, sx + w - 35]) {
+  for (const wx of [sx + 24, sx + w - 36]) {
     px(wx, wallY + 8, 10, 11, beam);
-    px(wx + 2, wallY + 10, 6, 7, "#2d4253");
+    px(wx + 2, wallY + 10, 6, 7, "#35506a");
     px(wx + 2, wallY + 10, 6, 1, "rgba(255,224,170,0.16)");
     px(wx + 4, wallY + 13, 1, 4, "rgba(255,255,255,0.14)");
     px(wx, wallY + 19, 10, 2, "#7d6042");
   }
 
-  px(sx + 4, roofFaceY + 3, 4, 13, roof.dark);
-  px(sx + w - 8, roofFaceY + 3, 4, 13, roof.dark);
-  px(sx + w - 13, wallY + 12, 4, 10, "#7d5c31");
-  px(sx + w - 14, wallY + 22, 6, 1, "rgba(255,214,134,0.22)");
+  px(sx + 4, sy + 22, 4, 13, roof.dark);
+  px(sx + w - 8, sy + 22, 4, 13, roof.dark);
+  px(sx + w - 14, wallY + 12, 4, 10, "#7d5c31");
+  px(sx + w - 15, wallY + 22, 6, 1, "rgba(255,214,134,0.22)");
 }
 
 
@@ -4982,36 +5060,60 @@ function drawDebug() {
 
   function drawPauseOverlay() {
     if (!state.paused) return;
+    const layout = getPauseLayout();
+    state.pauseButtons = layout.buttons;
     ctx.save();
-    ctx.fillStyle = "rgba(14, 18, 26, 0.72)";
+    ctx.fillStyle = "rgba(12, 16, 24, 0.72)";
     ctx.fillRect(0, 0, state.logicalWidth, state.logicalHeight);
-    const boxW = 360;
-    const boxH = 184;
-    const bx = Math.floor((state.logicalWidth - boxW) / 2);
-    const by = Math.floor((state.logicalHeight - boxH) / 2);
-    ctx.fillStyle = "#1a2331";
+    const { bx, by, boxW, boxH, buttons } = layout;
+    ctx.fillStyle = "#2b2217";
     ctx.fillRect(bx, by, boxW, boxH);
-    ctx.fillStyle = "#3a516d";
+    ctx.fillStyle = "#8f6f3b";
     ctx.fillRect(bx + 4, by + 4, boxW - 8, boxH - 8);
-    ctx.fillStyle = "#101822";
+    ctx.fillStyle = "#1a2114";
     ctx.fillRect(bx + 10, by + 10, boxW - 20, boxH - 20);
-    ctx.fillStyle = "#e7e1c6";
-    ctx.font = "bold 28px Georgia, serif";
+    ctx.fillStyle = "#f0e3b0";
+    ctx.font = "bold 26px Georgia, serif";
     ctx.textAlign = "center";
-    ctx.fillText("PAUSED", bx + boxW / 2, by + 46);
-    ctx.font = "16px Georgia, serif";
-    ctx.fillStyle = "#cfd8e3";
-    ctx.fillText(state.zoneName || "Kingdom of Elderfield", bx + boxW / 2, by + 74);
-    ctx.fillStyle = "#d4c58a";
-    ctx.fillText("Esc to resume", bx + boxW / 2, by + 102);
-    ctx.fillStyle = "#aeb8c6";
+    ctx.fillText("PAUSED", bx + boxW / 2, by + 38);
+    ctx.font = "15px Georgia, serif";
+    ctx.fillStyle = "#d8ddb8";
+    ctx.fillText(state.zoneName || "Kingdom of Elderfield", bx + boxW / 2, by + 62);
+
+    ctx.textAlign = "left";
+    ctx.font = "bold 14px Georgia, serif";
+    ctx.fillStyle = "#f0d486";
+    ctx.fillText("Objective", bx + 24, by + 92);
     ctx.font = "14px Georgia, serif";
-    const lines = [
-      `Objective: ${state.objectiveText}`,
-      `Relics: ${state.rewardsOwned.length}/3   Rupees: ${state.rupees}`,
-      "Move WASD • Attack click • Interact Enter / right click"
-    ];
-    lines.forEach((line, i) => ctx.fillText(line, bx + boxW / 2, by + 132 + i * 20));
+    ctx.fillStyle = "#dae0c5";
+    wrapPauseLines(state.objectiveText, 48).forEach((line, i) => {
+      ctx.fillText(line, bx + 24, by + 112 + i * 16);
+    });
+
+    ctx.fillStyle = "#8f7a49";
+    ctx.fillRect(bx + 22, by + 154, boxW - 44, 1);
+    ctx.font = "13px Georgia, serif";
+    ctx.fillStyle = "#d3c89f";
+    ctx.fillText(`Relics ${state.rewardsOwned.length}/3`, bx + 24, by + 171);
+    ctx.fillText(`Rupees ${state.rupees}`, bx + 136, by + 171);
+    ctx.fillText(`Save ${state.save.hasSave ? "ready" : "new"}`, bx + 228, by + 171);
+
+    buttons.forEach((button) => {
+      ctx.fillStyle = "#5c4426";
+      ctx.fillRect(button.x, button.y, button.w, button.h);
+      ctx.fillStyle = "#b79255";
+      ctx.fillRect(button.x + 2, button.y + 2, button.w - 4, button.h - 4);
+      ctx.fillStyle = "#2a2316";
+      ctx.fillRect(button.x + 5, button.y + 5, button.w - 10, button.h - 10);
+      ctx.fillStyle = "#efe3b4";
+      ctx.textAlign = "center";
+      ctx.font = "bold 13px Georgia, serif";
+      ctx.fillText(button.label, button.x + button.w / 2, button.y + 18);
+    });
+
+    ctx.font = "12px Georgia, serif";
+    ctx.fillStyle = "#c3ccb6";
+    ctx.fillText("Esc resume • S save • C copy debug", bx + boxW / 2, by + boxH - 16);
     ctx.restore();
   }
 
@@ -5096,6 +5198,19 @@ function drawDebug() {
       if (state.running) togglePause();
       return;
     }
+    if (state.paused) {
+      if (event.code === "KeyS") {
+        event.preventDefault();
+        activatePauseAction("save");
+      } else if (event.code === "KeyC") {
+        event.preventDefault();
+        activatePauseAction("copy");
+      } else if (event.code === "Enter" || event.code === "Space") {
+        event.preventDefault();
+        activatePauseAction("resume");
+      }
+      return;
+    }
     if (event.code === "F3" || event.code === "Backquote") {
       toggleDebug();
       return;
@@ -5138,8 +5253,6 @@ function drawDebug() {
       return;
     }
 
-    if (state.paused) return;
-
     keys[event.code] = true;
     if (event.code === "Enter") {
       event.preventDefault();
@@ -5178,7 +5291,13 @@ function drawDebug() {
 
   canvas.addEventListener("pointerdown", (event) => {
     event.preventDefault();
-    if (!state.running || state.paused) return;
+    if (!state.running) return;
+    if (state.paused) {
+      const p = screenToCanvas(event.clientX, event.clientY);
+      const button = pauseButtonAt(p.x, p.y);
+      if (button) activatePauseAction(button.action);
+      return;
+    }
     const worldPoint = screenToWorld(event.clientX, event.clientY);
     pointerState.x = worldPoint.x;
     pointerState.y = worldPoint.y;

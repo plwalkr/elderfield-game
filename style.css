@@ -3,12 +3,12 @@
   --bg-0: #08120d;
   --bg-1: #15271e;
   --bg-2: #243c30;
-  --panel: rgba(14, 22, 16, 0.74);
-  --panel-soft: rgba(19, 30, 23, 0.66);
-  --line: rgba(233, 227, 197, 0.13);
+  --panel: rgba(23, 20, 13, 0.82);
+  --panel-soft: rgba(36, 29, 18, 0.74);
+  --line: rgba(240, 214, 136, 0.22);
   --text: #f8f4e8;
   --muted: #c8cfba;
-  --gold: #f0d48b;
+  --gold: #f2d17b;
   --leaf: #8dc586;
   --danger: #f29090;
   --shadow: rgba(0, 0, 0, 0.30);
@@ -153,8 +153,8 @@ canvas {
 .status-pill,
 .build-watermark,
 .mini-badge {
-  background: rgba(10, 20, 18, 0.92);
-  border: 2px solid rgba(214, 193, 122, 0.46);
+  background: rgba(31, 27, 18, 0.95);
+  border: 2px solid rgba(214, 183, 94, 0.74);
   box-shadow: 0 8px 24px rgba(0,0,0,0.28);
 }
 
@@ -164,7 +164,7 @@ canvas {
   align-items: center;
   gap: 7px;
   padding: 4px 9px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 .hearts-chip { padding-right: 12px; }
 .counter-chip { min-width: 66px; justify-content: center; }
@@ -233,7 +233,7 @@ canvas {
   align-items: center;
   gap: 5px;
   padding: 5px;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .slot {
@@ -253,7 +253,7 @@ canvas {
   content: "";
   position: absolute;
   inset: 10px;
-  border-radius: 4px;
+  border-radius: 2px;
   background: rgba(28, 28, 28, 0.7);
 }
 .slot.weapon-sword::before,
