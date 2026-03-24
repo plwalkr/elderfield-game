@@ -42,15 +42,15 @@
   const INVULN_TIME = 0.7;
   const BASE_ATTACK_COOLDOWN = 0.26;
   const BASE_ATTACK_TIME = 0.13;
-  const GAME_VERSION = "v3.16.0";
+  const GAME_VERSION = "v3.17.0";
   const BUILD_DATE = "2026-03-23";
-  const BUILD_NAME = "Dawnrest Benchmark Rebuild";
+  const BUILD_NAME = "Dawnrest Style-Lab";
   const SAVE_KEY = "elderfield-save-v2_7";
   const HEART_FRAGMENTS_PER_VESSEL = 2;
   const AUTOSAVE_INTERVAL = 8.5;
   const START_ZONE = "Dawnrest";
   const WORLD_AREA_NAME = "Kingdom of Elderfield";
-  const RENDER_STYLE = "Elderfield Dawnrest Benchmark Rebuild 3/4D";
+  const RENDER_STYLE = "Elderfield Dawnrest Style-Lab 3/4D";
   const STORY = {
     kingdom: "Elderfield",
     princess: "Princess Elaria Vale",
@@ -1181,45 +1181,43 @@
     clearRect(area, 120, 40, 18, 8, 13);
     clearRect(area, 124, 30, 7, 6, 13);
 
-    // Dawnrest benchmark rebuild — one authored proving ground instead of a soft filler village
+    // Dawnrest Style-Lab — one clearer ALttP-inspired proving ground
     clearRect(area, 92, 66, 34, 20, 0);
     paintGround(area, 92, 66, 34, 20, 0);
 
-    // lower road and village frontage
+    // lower road
     fillRect(area, 92, 80, 34, 6, 3, false);
-    fillRect(area, 104, 79, 10, 2, 3, false);
-    fillRect(area, 96, 79, 4, 1, 7, false);
-    fillRect(area, 116, 79, 4, 1, 7, false);
-    scatterStones(area, 100, 78, 16, 2, 10);
+    fillRect(area, 105, 79, 8, 2, 3, false);
 
-    // raised green shelf that gives Dawnrest a proper ALTTP-like benchmark silhouette
+    // upper village shelf and center stair break
     fillRect(area, 95, 68, 28, 10, 9, false);
-    fillRect(area, 95, 77, 28, 1, 9, true);
-    clearRect(area, 107, 77, 4, 1, 3);
-    clearRect(area, 108, 76, 2, 1, 3);
-    clearRect(area, 109, 75, 1, 1, 3);
+    clearRect(area, 108, 77, 3, 1, 3);
+    clearRect(area, 108, 76, 3, 1, 3);
 
-    // hedges and yard structure
-    fillRect(area, 95, 74, 8, 1, 11, true);
-    fillRect(area, 115, 74, 8, 1, 11, true);
-    fillRect(area, 98, 68, 1, 10, 11, true);
-    fillRect(area, 120, 68, 1, 10, 11, true);
-    fillRect(area, 103, 72, 12, 3, 3, false);
-    fillRect(area, 105, 74, 8, 2, 3, false);
+    // left hedge clusters and yard shaping
+    fillRect(area, 95, 70, 6, 4, 11, true);
+    fillRect(area, 100, 73, 4, 2, 11, true);
+    fillRect(area, 119, 73, 3, 2, 11, true);
 
-    // anchor the benchmark screen with edge forest instead of empty filler
-    placeForestPatch(area, 92, 67, 4, 5);
-    placeForestPatch(area, 121, 67, 5, 5);
-    placeForestPatch(area, 92, 75, 3, 4);
-    placeForestPatch(area, 123, 75, 3, 4);
+    // stone border like the reference yard edge
+    fillRect(area, 101, 78, 4, 1, 7, false);
+    fillRect(area, 117, 78, 4, 1, 7, false);
+    fillRect(area, 113, 77, 2, 1, 7, false);
 
-    // keep the upper lawn walkable while preserving the cliff line
-    for (let iy = 68; iy <= 76; iy += 1) {
+    // small path apron in front of the hall
+    fillRect(area, 108, 74, 7, 3, 3, false);
+    fillRect(area, 110, 77, 3, 1, 3, false);
+
+    // edge trees for framing, not clutter
+    placeForestPatch(area, 92, 69, 3, 5);
+    placeForestPatch(area, 122, 69, 4, 5);
+
+    // keep upper lawn walkable
+    for (let iy = 68; iy <= 77; iy += 1) {
       for (let ix = 95; ix <= 122; ix += 1) {
         if (area.world[iy][ix] === 9) area.solids[iy][ix] = false;
       }
     }
-    for (let ix = 107; ix <= 110; ix += 1) area.solids[77][ix] = false;
 
     area.interactables.push({
       type: "townSign",
@@ -1234,8 +1232,8 @@
       type: "house",
       x: 96 * TILE,
       y:  68 * TILE,
-      w:  TILE * 9,
-      h:  TILE * 7,
+      w:  TILE * 8,
+      h:  TILE * 6,
       label: "Lantern Market",
       text: "Warm light and road dust cling to the little market house. Someone here still trades like the old kingdom might return.",
       roof: "moss",
@@ -1243,10 +1241,10 @@
 
     area.interactables.push({
       type: "house",
-      x: 108 * TILE,
+      x: 106 * TILE,
       y:  67 * TILE,
-      w:  TILE * 13,
-      h:  TILE * 9,
+      w:  TILE * 10,
+      h:  TILE * 8,
       label: "Warden Hall",
       text: "The hall is small, but the old crest still hangs above its door. Dawnrest remembers who kept the roads once.",
       roof: "crimson",
@@ -1256,7 +1254,7 @@
       type: "house",
       x: 96 * TILE,
       y:  79 * TILE,
-      w:  TILE * 9,
+      w:  TILE * 8,
       h:  TILE * 6,
       label: "Baker's Hearth",
       text: "Fresh bread, cedar smoke, and rain-dried herbs. It feels like the sort of place legends would miss when they leave.",
@@ -1265,9 +1263,9 @@
 
     area.interactables.push({
       type: "house",
-      x: 114 * TILE,
+      x: 117 * TILE,
       y:  79 * TILE,
-      w:  TILE * 9,
+      w:  TILE * 8,
       h:  TILE * 6,
       label: "Scholar's Loft",
       text: "Pages, charcoal, and old maps cover the scholar's loft. The roads of Elderfield are still being remembered here.",
@@ -1276,7 +1274,7 @@
 
     area.interactables.push({
       type: "well",
-      x: 108 * TILE,
+      x: 110 * TILE,
       y: 81 * TILE,
       w: TILE * 2,
       h: TILE * 2,
@@ -1285,7 +1283,7 @@
 
     area.interactables.push({
       type: "npc",
-      x: 104 * TILE,
+      x: 101 * TILE,
       y: 76 * TILE,
       w: TILE,
       h: TILE,
@@ -1297,7 +1295,7 @@
 
     area.interactables.push({
       type: "npc",
-      x: 118 * TILE,
+      x: 120 * TILE,
       y: 82 * TILE,
       w: TILE,
       h: TILE,
@@ -1309,7 +1307,7 @@
 
     area.interactables.push({
       type: "npc",
-      x: 116 * TILE,
+      x: 114 * TILE,
       y: 76 * TILE,
       w: TILE,
       h: TILE,
@@ -1383,7 +1381,7 @@
       {
         type: "prop",
         propKind: "cart",
-        x: 104 * TILE,
+        x: 105 * TILE,
         y: 83 * TILE,
         w: TILE * 3,
         h: TILE * 2,
@@ -1401,7 +1399,7 @@
       {
         type: "prop",
         propKind: "lanternPost",
-        x: 113 * TILE,
+        x: 116 * TILE,
         y: 77 * TILE,
         w: TILE,
         h: TILE * 2,
@@ -1700,14 +1698,14 @@ area.interactables.push({
       scholarHouse.enterText = "The scholar's loft smells of vellum, candle smoke, and old roads.";
     }
 
-    area.spawns.start = { x: 108.5 * TILE, y: 84.5 * TILE };
+    area.spawns.start = { x: 110.5 * TILE, y: 84.5 * TILE };
     area.spawns.fromRuins = { x: 78.5 * TILE, y: 18.5 * TILE };
     area.spawns.fromRootwood = { x: 128.5 * TILE, y: 35.5 * TILE };
     area.spawns.fromEmber = { x: 26.5 * TILE, y: 35.5 * TILE };
-    area.spawns.dawnrestMarketDoor = { x: 100.5 * TILE, y: 76.2 * TILE };
-    area.spawns.dawnrestHallDoor = { x: 114.5 * TILE, y: 76.2 * TILE };
-    area.spawns.dawnrestBakerDoor = { x: 100.5 * TILE, y: 84.8 * TILE };
-    area.spawns.dawnrestScholarDoor = { x: 118.5 * TILE, y: 84.8 * TILE };
+    area.spawns.dawnrestMarketDoor = { x: 99.5 * TILE, y: 75.8 * TILE };
+    area.spawns.dawnrestHallDoor = { x: 111.0 * TILE, y: 76.0 * TILE };
+    area.spawns.dawnrestBakerDoor = { x: 99.5 * TILE, y: 84.8 * TILE };
+    area.spawns.dawnrestScholarDoor = { x: 120.5 * TILE, y: 84.8 * TILE };
 
     const enemySpots = [
       [42, 65], [54, 58], [62, 74], [95, 63], [90, 79], [117, 42], [131, 26], [134, 47],
@@ -3505,7 +3503,7 @@ function burst(x, y, palette) {
     touchState.right = false;
     if (next) {
       setDebugAction("pause-open");
-      setMessage("Paused — Esc resumes. Save from the pause menu or press S. Dawnrest is now the benchmark screen.", 999);
+      setMessage("Paused — Esc resumes. Save from the pause menu or press S. Dawnrest Style-Lab is the current art proof.", 999);
     } else {
       setDebugAction("pause-closed");
       setMessage(state.objectiveText, 2.4);
@@ -3640,191 +3638,148 @@ function drawAtmosphere() {
 
   
 
+function pxt(targetCtx, x, y, w = 1, h = 1, color = "#fff") {
+  targetCtx.fillStyle = color;
+  targetCtx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+}
+
+function plotSprite(targetCtx, x, y, scale, rows, palette) {
+  for (let ry = 0; ry < rows.length; ry += 1) {
+    const row = rows[ry];
+    for (let rx = 0; rx < row.length; rx += 1) {
+      const ch = row[rx];
+      if (ch === ".") continue;
+      const color = palette[ch];
+      if (!color) continue;
+      pxt(targetCtx, x + rx * scale, y + ry * scale, scale, scale, color);
+    }
+  }
+}
+
 function drawCachedTile(targetCtx, tile, sx, sy, x, y, theme) {
   const palette = themeColors(theme);
   const check = (x + y) % 2 === 0;
   const n = seededNoise(x * 7 + 5, y * 9 + 3);
 
-  if (tile === 0 || tile === 1 || tile === 4 || tile === 5 || tile === 6 || tile === 13 || tile === 11) {
+  if (tile === 0 || tile === 1 || tile === 4 || tile === 5 || tile === 6 || tile === 11 || tile === 13) {
     const grassTheme = tile === 13 ? themeColors("rootwood") : palette;
     const base = check ? grassTheme.grassA : grassTheme.grassB;
-    targetCtx.fillStyle = base;
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = grassTheme.light;
-    targetCtx.fillRect(sx, sy, TILE, 2);
-    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 2, sy + 3, 4, 1);
-    targetCtx.fillRect(sx + 14, sy + 4, 3, 1);
-    targetCtx.fillRect(sx + 8, sy + 7, 5, 1);
-    targetCtx.fillStyle = grassTheme.mid;
-    targetCtx.fillRect(sx + 4, sy + 6, 3, 2);
-    targetCtx.fillRect(sx + 15, sy + 9, 4, 2);
-    targetCtx.fillRect(sx + 7, sy + 14, 4, 2);
-    targetCtx.fillStyle = grassTheme.dark;
-    targetCtx.fillRect(sx + 3, sy + 11, 2, 5);
-    targetCtx.fillRect(sx + 11, sy + 9, 2, 6);
-    targetCtx.fillRect(sx + 18, sy + 12, 2, 4);
-    targetCtx.fillRect(sx + 6, sy + 18, 5, 1);
-    targetCtx.fillRect(sx + 14, sy + 17, 4, 1);
+    pxt(targetCtx, sx, sy, TILE, TILE, base);
+    pxt(targetCtx, sx, sy, TILE, 2, grassTheme.light);
+    pxt(targetCtx, sx + 2, sy + 4, 4, 2, grassTheme.mid);
+    pxt(targetCtx, sx + 15, sy + 5, 3, 2, grassTheme.mid);
+    pxt(targetCtx, sx + 7, sy + 10, 3, 4, grassTheme.dark);
+    pxt(targetCtx, sx + 16, sy + 12, 2, 4, grassTheme.dark);
+    pxt(targetCtx, sx + 4, sy + 16, 4, 2, grassTheme.mid);
+    pxt(targetCtx, sx + 11, sy + 18, 5, 1, "rgba(0,0,0,0.12)");
     if (n > 0.55) {
-      targetCtx.fillStyle = "rgba(255,255,255,0.08)";
-      targetCtx.fillRect(sx + 18, sy + 5, 2, 1);
-      targetCtx.fillRect(sx + 5, sy + 16, 2, 1);
+      pxt(targetCtx, sx + 18, sy + 7, 2, 1, "rgba(255,255,255,0.10)");
+      pxt(targetCtx, sx + 6, sy + 19, 2, 1, "rgba(255,255,255,0.08)");
     }
     if (tile === 5) {
-      targetCtx.fillStyle = "#ffe27b";
-      targetCtx.fillRect(sx + 7, sy + 9, 2, 2);
-      targetCtx.fillRect(sx + 15, sy + 14, 2, 2);
-      targetCtx.fillStyle = "#fff6be";
-      targetCtx.fillRect(sx + 8, sy + 9, 1, 1);
-      targetCtx.fillRect(sx + 16, sy + 14, 1, 1);
+      pxt(targetCtx, sx + 7, sy + 9, 2, 2, "#ffe57a");
+      pxt(targetCtx, sx + 8, sy + 8, 1, 1, "#fff9c0");
+      pxt(targetCtx, sx + 15, sy + 14, 2, 2, "#fff2a0");
     } else if (tile === 6) {
-      targetCtx.fillStyle = "#efd9ff";
-      targetCtx.fillRect(sx + 8, sy + 7, 2, 2);
-      targetCtx.fillRect(sx + 15, sy + 13, 2, 2);
-      targetCtx.fillStyle = "#ffd9ea";
-      targetCtx.fillRect(sx + 9, sy + 7, 1, 1);
-      targetCtx.fillRect(sx + 16, sy + 13, 1, 1);
+      pxt(targetCtx, sx + 8, sy + 7, 2, 2, "#f3d4ff");
+      pxt(targetCtx, sx + 15, sy + 13, 2, 2, "#ffd9ea");
     } else if (tile === 11) {
-      targetCtx.fillStyle = "#23461b";
-      targetCtx.fillRect(sx + 1, sy + 9, TILE - 2, 10);
-      targetCtx.fillRect(sx + 3, sy + 6, TILE - 6, 4);
-      targetCtx.fillStyle = "#41792f";
-      targetCtx.fillRect(sx + 2, sy + 10, TILE - 4, 4);
-      targetCtx.fillRect(sx + 4, sy + 7, TILE - 8, 2);
-      targetCtx.fillStyle = "#9ed66d";
-      targetCtx.fillRect(sx + 5, sy + 8, 4, 1);
-      targetCtx.fillRect(sx + 14, sy + 9, 3, 1);
-      targetCtx.fillRect(sx + 8, sy + 12, 5, 1);
+      pxt(targetCtx, sx, sy + 8, TILE, 10, "#21471d");
+      pxt(targetCtx, sx + 2, sy + 6, TILE - 4, 4, "#376c2c");
+      pxt(targetCtx, sx + 4, sy + 10, TILE - 8, 4, "#4b8b39");
+      pxt(targetCtx, sx + 5, sy + 7, 4, 1, "#b7e88f");
+      pxt(targetCtx, sx + 14, sy + 9, 3, 1, "#b7e88f");
     } else if (tile === 13) {
-      targetCtx.fillStyle = "#2a471f";
-      targetCtx.fillRect(sx + 4, sy + 8, 4, 10);
-      targetCtx.fillRect(sx + 11, sy + 10, 4, 8);
-      targetCtx.fillRect(sx + 17, sy + 6, 3, 9);
-      targetCtx.fillStyle = "#7fb65c";
-      targetCtx.fillRect(sx + 3, sy + 7, 6, 2);
-      targetCtx.fillRect(sx + 10, sy + 9, 6, 2);
-      targetCtx.fillRect(sx + 16, sy + 5, 5, 2);
+      pxt(targetCtx, sx + 4, sy + 8, 4, 10, "#2c471d");
+      pxt(targetCtx, sx + 11, sy + 10, 4, 8, "#2c471d");
+      pxt(targetCtx, sx + 17, sy + 6, 3, 9, "#2c471d");
+      pxt(targetCtx, sx + 3, sy + 7, 6, 2, "#6ca64d");
+      pxt(targetCtx, sx + 10, sy + 9, 6, 2, "#7bb85a");
+      pxt(targetCtx, sx + 16, sy + 5, 5, 2, "#8bc867");
     }
     return;
   }
 
   if (tile === 2) {
-    targetCtx.fillStyle = check ? palette.waterA : palette.waterB;
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "#c6ecff";
-    targetCtx.fillRect(sx + 2, sy + 3, 8, 1);
-    targetCtx.fillRect(sx + 12, sy + 6, 5, 1);
-    targetCtx.fillRect(sx + 5, sy + 12, 10, 1);
-    targetCtx.fillRect(sx + 13, sy + 17, 6, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-    targetCtx.fillRect(sx, sy + TILE - 3, TILE, 3);
+    const base = check ? palette.waterA : palette.waterB;
+    pxt(targetCtx, sx, sy, TILE, TILE, base);
+    pxt(targetCtx, sx, sy, TILE, 2, "#bfe6ff");
+    pxt(targetCtx, sx + 2, sy + 5, 6, 1, "#e7fbff");
+    pxt(targetCtx, sx + 12, sy + 8, 5, 1, "#d7f7ff");
+    pxt(targetCtx, sx + 6, sy + 13, 9, 1, "rgba(255,255,255,0.45)");
+    pxt(targetCtx, sx, sy + TILE - 4, TILE, 4, "rgba(0,0,0,0.14)");
     return;
   }
 
   if (tile === 3) {
-    targetCtx.fillStyle = check ? palette.pathA : palette.pathB;
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,242,198,0.18)";
-    targetCtx.fillRect(sx + 1, sy + 2, TILE - 2, 1);
-    targetCtx.fillStyle = "rgba(130,90,43,0.22)";
-    targetCtx.fillRect(sx + 3, sy + 7, 4, 1);
-    targetCtx.fillRect(sx + 10, sy + 5, 6, 1);
-    targetCtx.fillRect(sx + 16, sy + 10, 3, 1);
-    targetCtx.fillRect(sx + 5, sy + 14, 7, 1);
-    targetCtx.fillRect(sx + 13, sy + 16, 4, 1);
-    targetCtx.fillStyle = "rgba(255,250,233,0.12)";
-    targetCtx.fillRect(sx + 6, sy + 18, 2, 1);
-    targetCtx.fillRect(sx + 18, sy + 12, 2, 1);
+    const base = check ? palette.pathA : palette.pathB;
+    pxt(targetCtx, sx, sy, TILE, TILE, base);
+    pxt(targetCtx, sx, sy, TILE, 2, "rgba(255,245,212,0.18)");
+    pxt(targetCtx, sx + 4, sy + 7, 3, 2, "rgba(100,73,40,0.24)");
+    pxt(targetCtx, sx + 11, sy + 5, 4, 2, "rgba(100,73,40,0.22)");
+    pxt(targetCtx, sx + 16, sy + 10, 2, 2, "rgba(100,73,40,0.24)");
+    pxt(targetCtx, sx + 5, sy + 15, 6, 2, "rgba(100,73,40,0.20)");
+    pxt(targetCtx, sx + 14, sy + 17, 3, 2, "rgba(255,246,221,0.12)");
     return;
   }
 
   if (tile === 7 || tile === 8 || tile === 12 || tile === 14) {
     const stoneTheme = tile === 14 ? themeColors("ruins") : palette;
     const top = seededNoise(x * 3, y * 5) > 0.5 ? stoneTheme.stoneA : stoneTheme.stoneB;
-    targetCtx.fillStyle = top;
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,255,255,0.18)";
-    targetCtx.fillRect(sx, sy, TILE, 2);
-    targetCtx.fillRect(sx, sy, 2, TILE);
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
-    targetCtx.fillRect(sx + TILE - 2, sy, 2, TILE);
-    targetCtx.strokeStyle = "rgba(83,66,43,0.35)";
-    targetCtx.strokeRect(sx + 0.5, sy + 0.5, TILE - 1, TILE - 1);
-    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 4, sy + 5, 7, 1);
-    targetCtx.fillRect(sx + 13, sy + 9, 4, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-    targetCtx.fillRect(sx + 6, sy + 15, 10, 1);
+    pxt(targetCtx, sx, sy, TILE, TILE, top);
+    pxt(targetCtx, sx, sy, TILE, 2, "rgba(255,255,255,0.18)");
+    pxt(targetCtx, sx, sy + TILE - 2, TILE, 2, "rgba(0,0,0,0.18)");
+    pxt(targetCtx, sx + 4, sy + 5, 7, 1, "rgba(255,255,255,0.10)");
+    pxt(targetCtx, sx + 13, sy + 10, 4, 1, "rgba(255,255,255,0.08)");
+    pxt(targetCtx, sx + 6, sy + 15, 8, 1, "rgba(0,0,0,0.16)");
     if (tile === 12) {
-      targetCtx.fillStyle = "rgba(255,255,255,0.12)";
-      targetCtx.fillRect(sx + 5, sy + 8, 2, 1);
-      targetCtx.fillRect(sx + 11, sy + 13, 2, 1);
-      targetCtx.fillRect(sx + 16, sy + 10, 2, 1);
+      pxt(targetCtx, sx + 5, sy + 9, 2, 1, "rgba(255,255,255,0.10)");
+      pxt(targetCtx, sx + 15, sy + 12, 2, 1, "rgba(255,255,255,0.10)");
     }
     return;
   }
 
   if (tile === 9) {
     const grassTop = check ? palette.grassA : palette.grassB;
-    targetCtx.fillStyle = grassTop;
-    targetCtx.fillRect(sx, sy, TILE, 8);
-    targetCtx.fillStyle = palette.light;
-    targetCtx.fillRect(sx, sy, TILE, 2);
-    targetCtx.fillStyle = palette.mid;
-    targetCtx.fillRect(sx + 4, sy + 4, 4, 1);
-    targetCtx.fillRect(sx + 14, sy + 5, 5, 1);
-    targetCtx.fillStyle = palette.cliffA;
-    targetCtx.fillRect(sx, sy + 8, TILE, 10);
-    targetCtx.fillStyle = palette.cliffB;
-    targetCtx.fillRect(sx, sy + 18, TILE, 6);
-    targetCtx.fillStyle = "rgba(255,239,182,0.18)";
-    targetCtx.fillRect(sx + 1, sy + 8, TILE - 2, 1);
-    targetCtx.fillStyle = "rgba(255,255,255,0.07)";
-    targetCtx.fillRect(sx + 3, sy + 12, 4, 1);
-    targetCtx.fillRect(sx + 13, sy + 13, 5, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-    targetCtx.fillRect(sx + 5, sy + 16, 3, 1);
-    targetCtx.fillRect(sx + 15, sy + 19, 3, 1);
+    pxt(targetCtx, sx, sy, TILE, 8, grassTop);
+    pxt(targetCtx, sx, sy, TILE, 2, palette.light);
+    pxt(targetCtx, sx + 4, sy + 4, 4, 1, palette.mid);
+    pxt(targetCtx, sx + 14, sy + 5, 4, 1, palette.mid);
+    pxt(targetCtx, sx, sy + 8, TILE, 1, "#d9bc6c");
+    pxt(targetCtx, sx, sy + 9, TILE, 9, palette.cliffA);
+    pxt(targetCtx, sx, sy + 18, TILE, 6, palette.cliffB);
+    pxt(targetCtx, sx + 4, sy + 11, 1, 9, "rgba(255,236,170,0.16)");
+    pxt(targetCtx, sx + 12, sy + 10, 1, 10, "rgba(255,236,170,0.12)");
+    pxt(targetCtx, sx + 18, sy + 12, 1, 8, "rgba(255,236,170,0.12)");
+    pxt(targetCtx, sx + 7, sy + 15, 4, 1, "rgba(0,0,0,0.12)");
     return;
   }
 
   if (tile === 10) {
-    targetCtx.fillStyle = "#1c2b3a";
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "#72bbff";
-    targetCtx.fillRect(sx + 9, sy + 2, 6, TILE - 4);
-    targetCtx.fillRect(sx + 3, sy + 9, TILE - 6, 6);
-    targetCtx.fillStyle = "rgba(180,220,255,0.22)";
-    targetCtx.fillRect(sx + 6, sy + 6, 12, 12);
+    pxt(targetCtx, sx, sy, TILE, TILE, "#203040");
+    pxt(targetCtx, sx + 9, sy + 2, 6, TILE - 4, "#72bbff");
+    pxt(targetCtx, sx + 3, sy + 9, TILE - 6, 6, "#72bbff");
+    pxt(targetCtx, sx + 6, sy + 6, 12, 12, "rgba(180,220,255,0.22)");
     return;
   }
 
   if (tile === 15) {
-    targetCtx.fillStyle = check ? "#8b5832" : "#a4683d";
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,196,125,0.14)";
-    targetCtx.fillRect(sx + 4, sy + 5, 6, 1);
-    targetCtx.fillRect(sx + 12, sy + 11, 5, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    pxt(targetCtx, sx, sy, TILE, TILE, check ? "#8b5832" : "#a4683d");
+    pxt(targetCtx, sx + 4, sy + 5, 6, 1, "rgba(255,196,125,0.14)");
+    pxt(targetCtx, sx + 12, sy + 11, 5, 1, "rgba(255,196,125,0.10)");
+    pxt(targetCtx, sx, sy + TILE - 2, TILE, 2, "rgba(0,0,0,0.16)");
     return;
   }
 
   if (tile === 16) {
-    targetCtx.fillStyle = seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6d3b28" : "#804631";
-    targetCtx.fillRect(sx, sy, TILE, TILE);
-    targetCtx.fillStyle = "rgba(255,209,148,0.10)";
-    targetCtx.fillRect(sx + 5, sy + 14, 10, 1);
-    targetCtx.fillRect(sx + 12, sy + 6, 7, 1);
-    targetCtx.fillStyle = "rgba(0,0,0,0.12)";
-    targetCtx.fillRect(sx, sy + TILE - 2, TILE, 2);
+    pxt(targetCtx, sx, sy, TILE, TILE, seededNoise(Math.floor(x / 2), Math.floor(y / 2)) > 0.5 ? "#6d3b28" : "#804631");
+    pxt(targetCtx, sx + 5, sy + 14, 10, 1, "rgba(255,209,148,0.10)");
+    pxt(targetCtx, sx + 12, sy + 6, 7, 1, "rgba(255,209,148,0.10)");
+    pxt(targetCtx, sx, sy + TILE - 2, TILE, 2, "rgba(0,0,0,0.12)");
     return;
   }
 
-  targetCtx.fillStyle = "magenta";
-  targetCtx.fillRect(sx, sy, TILE, TILE);
+  pxt(targetCtx, sx, sy, TILE, TILE, "magenta");
 }
 
 
@@ -3840,66 +3795,40 @@ function drawCachedWorldObject(targetCtx, area, tile, sx, sy, x, y) {
           : area.theme === "ruins"
             ? "Crownfall Ruins"
             : area.name;
-    let trunk = "#6c4727";
-    let canopyDark = "#24521e";
-    let canopyMid = "#3f7c30";
-    let canopyHi = "#a7df74";
+    let trunk = "#6e4a28";
+    let canopyDark = "#2a5a24";
+    let canopyMid = "#3f7d31";
+    let canopyHi = "#9edb72";
     if (region === "Rootwood March") {
-      trunk = "#5b3c22";
-      canopyDark = "#203b19";
-      canopyMid = "#456e32";
-      canopyHi = "#8fba61";
-    } else if (region === "Crownfall Ruins") {
-      trunk = "#6c5031";
-      canopyDark = "#355224";
-      canopyMid = "#5f7f44";
-      canopyHi = "#bfdc8e";
+      trunk = "#5a3c23";
+      canopyDark = "#203d1c";
+      canopyMid = "#456c31";
+      canopyHi = "#8ebe63";
     } else if (region === "Cinderreach") {
-      trunk = "#6c3f28";
-      canopyDark = "#4f2a1d";
-      canopyMid = "#855136";
-      canopyHi = "#d59662";
+      trunk = "#6a4128";
+      canopyDark = "#4a291c";
+      canopyMid = "#865039";
+      canopyHi = "#d1935e";
     }
-    targetCtx.fillStyle = "rgba(0,0,0,0.18)";
-    targetCtx.fillRect(sx + 4, sy + 20, 16, 2);
-    targetCtx.fillStyle = trunk;
-    targetCtx.fillRect(sx + 10, sy + 14, 4, 7);
-    targetCtx.fillRect(sx + 8, sy + 18, 8, 2);
-    targetCtx.fillStyle = canopyDark;
-    targetCtx.fillRect(sx + 3, sy + 4, 18, 3);
-    targetCtx.fillRect(sx + 1, sy + 7, 22, 5);
-    targetCtx.fillRect(sx + 2, sy + 12, 20, 4);
-    targetCtx.fillRect(sx + 5, sy + 16, 14, 2);
-    targetCtx.fillStyle = canopyMid;
-    targetCtx.fillRect(sx + 5, sy + 5, 14, 2);
-    targetCtx.fillRect(sx + 3, sy + 8, 18, 2);
-    targetCtx.fillRect(sx + 4, sy + 13, 16, 2);
-    targetCtx.fillStyle = canopyHi;
-    targetCtx.fillRect(sx + 7, sy + 6, 4, 1);
-    targetCtx.fillRect(sx + 13, sy + 7, 3, 1);
-    targetCtx.fillRect(sx + 8, sy + 10, 4, 1);
-    targetCtx.fillRect(sx + 15, sy + 11, 2, 1);
+    pxt(targetCtx, sx + 4, sy + 21, 16, 2, "rgba(0,0,0,0.18)");
+    pxt(targetCtx, sx + 10, sy + 14, 4, 8, trunk);
+    pxt(targetCtx, sx + 7, sy + 4, 10, 2, canopyHi);
+    pxt(targetCtx, sx + 4, sy + 6, 16, 2, canopyMid);
+    pxt(targetCtx, sx + 2, sy + 8, 20, 4, canopyDark);
+    pxt(targetCtx, sx + 1, sy + 12, 22, 5, canopyMid);
+    pxt(targetCtx, sx + 4, sy + 16, 16, 3, canopyDark);
+    pxt(targetCtx, sx + 6, sy + 9, 4, 1, canopyHi);
+    pxt(targetCtx, sx + 14, sy + 10, 3, 1, canopyHi);
   } else if (tile === 4) {
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-    targetCtx.fillRect(sx + 4, sy + 18, 16, 3);
-    targetCtx.fillStyle = "#76828c";
-    targetCtx.fillRect(sx + 4, sy + 9, 16, 7);
-    targetCtx.fillStyle = "#c5d0d6";
-    targetCtx.fillRect(sx + 6, sy + 6, 12, 6);
-    targetCtx.fillStyle = "#e8eef2";
-    targetCtx.fillRect(sx + 9, sy + 8, 4, 2);
-    targetCtx.fillStyle = "rgba(0,0,0,0.14)";
-    targetCtx.fillRect(sx + 8, sy + 14, 7, 2);
+    pxt(targetCtx, sx + 4, sy + 19, 16, 2, "rgba(0,0,0,0.15)");
+    pxt(targetCtx, sx + 5, sy + 10, 14, 7, "#828d96");
+    pxt(targetCtx, sx + 7, sy + 7, 10, 5, "#cfd8de");
+    pxt(targetCtx, sx + 9, sy + 9, 6, 2, "#edf4f7");
   } else if (tile === 9) {
-    targetCtx.fillStyle = "rgba(0,0,0,0.16)";
-    targetCtx.fillRect(sx + 2, sy + 19, 20, 3);
-    targetCtx.fillStyle = "#7f6337";
-    targetCtx.fillRect(sx + 2, sy + 9, 20, 6);
-    targetCtx.fillStyle = "#a4804d";
-    targetCtx.fillRect(sx + 4, sy + 6, 16, 4);
-    targetCtx.fillStyle = "rgba(255,255,255,0.10)";
-    targetCtx.fillRect(sx + 7, sy + 8, 4, 1);
-    targetCtx.fillRect(sx + 14, sy + 9, 3, 1);
+    pxt(targetCtx, sx + 2, sy + 20, 20, 2, "rgba(0,0,0,0.14)");
+    pxt(targetCtx, sx + 4, sy + 8, 16, 5, "#efede0");
+    pxt(targetCtx, sx + 2, sy + 10, 20, 4, "#d6d2c0");
+    pxt(targetCtx, sx + 6, sy + 12, 12, 2, "#b4ae98");
   }
 }
 
@@ -3953,12 +3882,7 @@ function drawReliefEdges(targetCtx, area, x, y, sx, sy) {
 
 
 function drawMacroRelief(targetCtx, area) {
-  const width = area.width * TILE;
-  const height = area.height * TILE;
-  for (let y = 18; y < height; y += 72) {
-    targetCtx.fillStyle = "rgba(255,255,255,0.005)";
-    targetCtx.fillRect(0, y, width, 1);
-  }
+  return;
 }
 
 
@@ -4362,34 +4286,36 @@ function drawFlower(x, y, color) {
 function drawHumanoidFigure(x, y, opts = {}) {
   const walk = opts.walk || 0;
   const moving = !!opts.moving;
-  const stride = moving ? Math.round(Math.sin(walk * 7.5) * 1.5) : 0;
-  const bob = moving ? Math.round(Math.cos(walk * 7.5) * 0.5) : 0;
+  const stride = moving ? Math.round(Math.sin(walk * 8) * 1.5) : 0;
+  const bob = moving ? Math.round(Math.cos(walk * 8) * 0.5) : 0;
   const facing = opts.facing || "down";
-  const cloak = opts.cloak || "#4f6c41";
-  const tunic = opts.tunic || "#d8dfb9";
-  const trim = opts.trim || "#f1dfa9";
-  const hair = opts.hair || "#b88762";
+  const cloak = opts.cloak || "#44743b";
+  const tunic = opts.tunic || "#d7d3a7";
+  const trim = opts.trim || "#f4dfa3";
+  const hair = opts.hair || "#ba8b64";
   const boots = opts.boots || "#6d4e2d";
-  const skin = opts.skin || "#f0d0ad";
+  const skin = opts.skin || "#f1d0aa";
   const accent = opts.accent || "#93aebd";
   const shieldColor = opts.shieldColor || accent;
   const capColor = opts.capColor || cloak;
 
-  px(x - 7, y + 13, 14, 2, "rgba(0,0,0,0.22)");
-  px(x - 4, y + 9 + stride, 3, 5, boots);
-  px(x + 1, y + 9 - stride, 3, 5, boots);
+  px(x - 7, y + 13, 14, 2, "rgba(0,0,0,0.20)");
+  px(x - 4, y + 10 + stride, 3, 4, boots);
+  px(x + 1, y + 10 - stride, 3, 4, boots);
 
   if (facing === "up") {
     px(x - 5, y - 8 + bob, 10, 3, capColor);
-    px(x - 4, y - 5 + bob, 8, 3, hair);
+    px(x - 4, y - 5 + bob, 8, 2, hair);
+    px(x - 4, y - 3 + bob, 8, 3, skin);
     px(x - 5, y + 1 + bob, 10, 8, cloak);
     px(x - 3, y + 2 + bob, 6, 5, tunic);
     px(x - 3, y + 5 + bob, 6, 1, trim);
     px(x - 6, y + 3 + bob, 2, 5, cloak);
     px(x + 4, y + 3 + bob, 2, 5, cloak);
+    px(x - 2, y + 1 + bob, 4, 1, hair);
   } else if (facing === "left" || facing === "right") {
     const sign = facing === "left" ? -1 : 1;
-    px(x - 4, y - 8 + bob, 8, 3, capColor);
+    px(x - 5, y - 8 + bob, 10, 3, capColor);
     px(x + (sign > 0 ? 2 : -4), y - 7 + bob, 3, 1, capColor);
     px(x - 3, y - 5 + bob, 6, 5, skin);
     px(x + (sign > 0 ? 2 : -4), y - 2 + bob, 2, 2, skin);
@@ -4405,11 +4331,11 @@ function drawHumanoidFigure(x, y, opts = {}) {
       px(x + (sign < 0 ? -8 : 7), y + 3 + bob, 2, 5, "rgba(255,255,255,0.18)");
     }
   } else {
-    px(x - 5, y - 8 + bob, 10, 3, capColor);
-    px(x - 7, y - 6 + bob, 2, 2, capColor);
-    px(x + 5, y - 6 + bob, 2, 2, capColor);
+    px(x - 6, y - 8 + bob, 12, 3, capColor);
+    px(x - 8, y - 6 + bob, 2, 2, capColor);
+    px(x + 6, y - 6 + bob, 2, 2, capColor);
     px(x - 4, y - 5 + bob, 8, 2, hair);
-    px(x - 4, y - 3 + bob, 8, 6, skin);
+    px(x - 4, y - 3 + bob, 8, 5, skin);
     px(x - 2, y - 1 + bob, 1, 1, "#241b16");
     px(x + 1, y - 1 + bob, 1, 1, "#241b16");
     px(x - 1, y + 1 + bob, 2, 1, "#b87a4a");
@@ -4418,6 +4344,7 @@ function drawHumanoidFigure(x, y, opts = {}) {
     px(x - 3, y + 5 + bob, 6, 1, trim);
     px(x - 6, y + 3 + bob, 2, 6, cloak);
     px(x + 4, y + 3 + bob, 2, 6, cloak);
+    px(x - 1, y + 3 + bob, 2, 4, trim);
     if (opts.shield) {
       px(x - 10, y + 2 + bob, 4, 7, shieldColor);
       px(x - 9, y + 3 + bob, 2, 5, "rgba(255,255,255,0.18)");
@@ -4425,9 +4352,9 @@ function drawHumanoidFigure(x, y, opts = {}) {
   }
 
   if (opts.hood) {
-    px(x - 5, y - 8 + bob, 10, 3, cloak);
-    px(x - 6, y - 5 + bob, 2, 4, cloak);
-    px(x + 4, y - 5 + bob, 2, 4, cloak);
+    px(x - 6, y - 8 + bob, 12, 3, cloak);
+    px(x - 7, y - 5 + bob, 2, 4, cloak);
+    px(x + 5, y - 5 + bob, 2, 4, cloak);
   }
   if (opts.lantern) {
     const lx = facing === "left" ? x - 9 : x + 7;
@@ -4441,68 +4368,64 @@ function drawHumanoidFigure(x, y, opts = {}) {
 
 function drawHouseAsset(item, sx, sy) {
   const roofMap = {
-    slate: { top: "#8a7868", face: "#665848", dark: "#493d31", hi: "#d7cab7" },
-    amber: { top: "#bc7a4c", face: "#915b35", dark: "#62381f", hi: "#efbf85" },
-    moss: { top: "#7e8a4c", face: "#626c38", dark: "#424826", hi: "#d0db8e" },
+    slate: { top: "#8c7b69", face: "#6b5a48", dark: "#4f4234", hi: "#d9ccb9" },
+    amber: { top: "#b87847", face: "#925b36", dark: "#653920", hi: "#efbf84" },
+    moss: { top: "#8a8f4f", face: "#6c6f3c", dark: "#4c4e2a", hi: "#d4dc90" },
     green: { top: "#5f8751", face: "#45623c", dark: "#2d4128", hi: "#bdd9a4" },
-    crimson: { top: "#b86455", face: "#8e4334", dark: "#5e281e", hi: "#ebb19f" }
+    crimson: { top: "#b76a58", face: "#8d4738", dark: "#5f2b22", hi: "#eab3a0" }
   };
   const roof = roofMap[item.roof] || roofMap.crimson;
-  const wallDark = "#97663a";
-  const wallLight = "#c99662";
-  const beam = "#654226";
-  const stone = "#8d8475";
-  const door = "#2d2119";
+  const wall = "#c9ab7a";
+  const wallDark = "#a07f53";
+  const beam = "#6e4b2b";
+  const stone = "#cfcfc7";
+  const door = "#2a1d16";
   const w = item.w;
   const h = item.h;
-  const wallY = sy + 32;
+  const roofH = 28;
+  const wallY = sy + roofH;
   const doorX = sx + Math.floor(w / 2) - 10;
 
-  px(sx + 10, sy + h - 8, w - 20, 3, "rgba(0,0,0,0.24)");
-  px(sx + 12, sy + h - 11, w - 24, 4, stone);
-  px(sx + 14, sy + h - 10, w - 28, 2, "#cfc6b6");
+  px(sx + 8, sy + h - 8, w - 16, 3, "rgba(0,0,0,0.22)");
+  px(sx + 10, sy + h - 11, w - 20, 4, stone);
+  px(sx + 12, sy + h - 10, w - 24, 2, "#f1efe6");
 
-  px(sx + 18, sy + 6, w - 36, 4, roof.top);
-  px(sx + 14, sy + 10, w - 28, 4, roof.top);
-  px(sx + 10, sy + 14, w - 20, 4, roof.top);
-  px(sx + 6, sy + 18, w - 12, 12, roof.face);
-  px(sx + 8, sy + 20, w - 16, 2, roof.hi);
-  px(sx + 8, sy + 28, w - 16, 2, roof.dark);
+  px(sx + 18, sy + 4, w - 36, 4, roof.top);
+  px(sx + 14, sy + 8, w - 28, 4, roof.top);
+  px(sx + 10, sy + 12, w - 20, 4, roof.top);
+  px(sx + 6, sy + 16, w - 12, 6, roof.top);
+  px(sx + 4, sy + 22, w - 8, 10, roof.face);
+  px(sx + 6, sy + 24, w - 12, 2, roof.hi);
+  px(sx + 6, sy + 30, w - 12, 2, roof.dark);
   for (let rx = sx + 10; rx < sx + w - 10; rx += 8) {
-    px(rx, sy + 22, 5, 1, roof.dark);
-    px(rx + 1, sy + 24, 5, 1, "rgba(255,255,255,0.10)");
+    px(rx, sy + 25, 4, 1, roof.dark);
+    px(rx + 2, sy + 28, 4, 1, "rgba(255,255,255,0.12)");
   }
 
   px(sx + 10, wallY, w - 20, h - (wallY - sy) - 14, wallDark);
-  px(sx + 14, wallY + 3, w - 28, h - (wallY - sy) - 20, wallLight);
+  px(sx + 12, wallY + 2, w - 24, h - (wallY - sy) - 18, wall);
   px(sx + 12, wallY, 3, h - (wallY - sy) - 14, beam);
   px(sx + w - 15, wallY, 3, h - (wallY - sy) - 14, beam);
   px(sx + Math.floor(w / 2) - 1, wallY, 2, h - (wallY - sy) - 14, beam);
-  px(sx + 15, wallY + 2, w - 30, 1, "rgba(255,255,255,0.14)");
 
+  px(doorX - 4, sy + h - 24, 28, 2, "#9c7b52");
+  px(doorX - 2, sy + h - 22, 24, 2, beam);
   px(doorX, sy + h - 34, 20, 26, beam);
   px(doorX + 2, sy + h - 31, 16, 22, door);
   px(doorX + 4, sy + h - 33, 12, 4, "#9a7047");
   px(doorX + 6, sy + h - 24, 2, 3, "rgba(255,222,152,0.18)");
   px(doorX + 12, sy + h - 21, 2, 3, "rgba(255,210,120,0.10)");
-  px(doorX - 6, sy + h - 24, 32, 2, "#9a764f");
-  px(doorX - 6, sy + h - 22, 5, 12, beam);
-  px(doorX + 21, sy + h - 22, 5, 12, beam);
 
   for (const wx of [sx + 22, sx + w - 34]) {
-    px(wx, wallY + 8, 10, 11, beam);
-    px(wx + 2, wallY + 10, 6, 7, "#35506a");
-    px(wx + 2, wallY + 10, 6, 1, "rgba(255,224,170,0.16)");
-    px(wx + 4, wallY + 13, 1, 4, "rgba(255,255,255,0.14)");
-    px(wx, wallY + 19, 10, 2, "#7d6042");
+    px(wx, wallY + 7, 10, 10, beam);
+    px(wx + 2, wallY + 9, 6, 6, "#38526a");
+    px(wx + 2, wallY + 9, 6, 1, "rgba(255,232,176,0.18)");
+    px(wx + 4, wallY + 11, 1, 4, "rgba(255,255,255,0.12)");
+    px(wx, wallY + 17, 10, 2, "#7d6042");
   }
 
-  px(sx + 4, sy + 20, 4, 12, roof.dark);
-  px(sx + w - 8, sy + 20, 4, 12, roof.dark);
-  px(sx + w - 16, wallY + 8, 5, 14, "#7b5a32");
-  px(sx + w - 17, wallY + 8, 7, 2, "#a18053");
-  px(sx + w - 15, wallY + 11, 3, 9, "#5f4a2d");
-  px(sx + w - 15, wallY + 7, 3, 2, "#ccb37c");
+  px(sx + 4, sy + 22, 4, 10, roof.dark);
+  px(sx + w - 8, sy + 22, 4, 10, roof.dark);
 }
 
 
@@ -5206,7 +5129,7 @@ function drawDebug() {
       updateStartButtons();
       setMessage(state.save.hasSave ? "Continue your road or begin a new one." : "Press Start to begin your road through Elderfield.", 999);
     } else {
-      setMessage("Press Start, move with WASD, left-click or tap to attack, Enter or right-click to speak, and Esc to pause your road through Dawnrest.", 999);
+      setMessage("Press Start, move with WASD, left-click or tap to attack, Enter or right-click to speak, and Esc to pause. Dawnrest Style-Lab is the current art proof.", 999);
     }
     computeStatus();
     refreshDebugPanel();
